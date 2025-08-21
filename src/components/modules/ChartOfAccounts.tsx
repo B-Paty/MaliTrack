@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { chartOfAccounts, getCategoryOrder, formatCurrency, type Account } from "@/data/chartOfAccounts";
+import { useAccounts, type Account } from "@/hooks/useAccounts";
+import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 const categoryColors: { [key: string]: string } = {
@@ -21,21 +22,22 @@ const categoryColors: { [key: string]: string } = {
 export default function ChartOfAccounts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const { accounts, loading, error } = useAccounts();
 
-  const categories = Array.from(new Set(chartOfAccounts.map(account => account.category)))
+  const categories = Array.from(new Set(accounts.map(account => account.category)))
     .sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b));
 
   const filteredAccounts = useMemo(() => {
-    return chartOfAccounts
+    return accounts
       .filter(account => {
         const matchesSearch = 
-          account.accountCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          account.accountName.toLowerCase().includes(searchTerm.toLowerCase());
+          account.account_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          account.account_name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === "" || account.category === selectedCategory;
         return matchesSearch && matchesCategory;
       })
-      .sort((a, b) => a.accountCode.localeCompare(b.accountCode));
-  }, [searchTerm, selectedCategory]);
+      .sort((a, b) => a.account_code.localeCompare(b.account_code));
+  }, [accounts, searchTerm, selectedCategory]);
 
   const groupedAccounts = useMemo(() => {
     const grouped: { [key: string]: Account[] } = {};
@@ -51,10 +53,32 @@ export default function ChartOfAccounts() {
   const totalsByCategory = useMemo(() => {
     const totals: { [key: string]: number } = {};
     Object.entries(groupedAccounts).forEach(([category, accounts]) => {
-      totals[category] = accounts.reduce((sum, account) => sum + account.currentBalance, 0);
+      totals[category] = accounts.reduce((sum, account) => sum + account.current_balance, 0);
     });
     return totals;
   }, [groupedAccounts]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading accounts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -144,7 +168,7 @@ export default function ChartOfAccounts() {
                     <tbody>
                       {groupedAccounts[category]?.map((account, index) => (
                         <tr
-                          key={account.accountCode}
+                          key={account.account_code}
                           className={cn(
                             "border-b border-border/50 hover:bg-accent/50 transition-colors",
                             index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
@@ -152,25 +176,25 @@ export default function ChartOfAccounts() {
                         >
                           <td className="py-3 px-4">
                             <span className="font-mono font-semibold text-primary">
-                              {account.accountCode}
+                              {account.account_code}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             <span className="font-medium text-foreground">
-                              {account.accountName}
+                              {account.account_name}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-right">
                             <span className={cn(
                               "font-semibold",
-                              account.currentBalance > 0 ? "text-foreground" : "text-muted-foreground"
+                              account.current_balance > 0 ? "text-foreground" : "text-muted-foreground"
                             )}>
-                              {formatCurrency(account.currentBalance)}
+                              {formatCurrency(account.current_balance)}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <Badge variant={account.normalBalance === 'debit' ? 'secondary' : 'outline'}>
-                              {account.normalBalance}
+                            <Badge variant={account.normal_balance === 'debit' ? 'secondary' : 'outline'}>
+                              {account.normal_balance}
                             </Badge>
                           </td>
                         </tr>

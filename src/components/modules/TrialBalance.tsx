@@ -5,33 +5,35 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { chartOfAccounts, getCategoryOrder, formatCurrency } from "@/data/chartOfAccounts";
+import { useAccounts } from "@/hooks/useAccounts";
+import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 export default function TrialBalance() {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const { accounts, loading, error } = useAccounts();
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
-    const categories: { [key: string]: typeof chartOfAccounts } = {};
+    const categories: { [key: string]: typeof accounts } = {};
     let totalDebits = 0;
     let totalCredits = 0;
 
-    chartOfAccounts.forEach(account => {
+    accounts.forEach(account => {
       if (!categories[account.category]) {
         categories[account.category] = [];
       }
       categories[account.category].push(account);
 
       // Calculate debit/credit presentation based on account type and normal balance
-      const balance = account.currentBalance;
+      const balance = account.current_balance;
       
       if (balance > 0) {
         if (
           account.category === 'Current Asset' ||
           account.category === 'Fixed Asset' ||
           account.category === 'Expense' ||
-          (account.category === 'Equity' && account.normalBalance === 'debit') // Dividends Paid
+          (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
         ) {
           totalDebits += balance;
         } else {
@@ -53,10 +55,10 @@ export default function TrialBalance() {
       totalCredits,
       isBalanced
     };
-  }, []);
+  }, [accounts]);
 
-  const getBalancePresentation = (account: typeof chartOfAccounts[0]) => {
-    const balance = account.currentBalance;
+  const getBalancePresentation = (account: typeof accounts[0]) => {
+    const balance = account.current_balance;
     
     if (balance === 0) {
       return { debit: 0, credit: 0 };
@@ -67,7 +69,7 @@ export default function TrialBalance() {
       account.category === 'Current Asset' ||
       account.category === 'Fixed Asset' ||
       account.category === 'Expense' ||
-      (account.category === 'Equity' && account.normalBalance === 'debit') // Dividends Paid
+      (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
     ) {
       return { debit: balance, credit: 0 };
     } else {
@@ -75,11 +77,11 @@ export default function TrialBalance() {
     }
   };
 
-  const getCategoryTotal = (accounts: typeof chartOfAccounts) => {
+  const getCategoryTotal = (accountList: typeof accounts) => {
     let debitTotal = 0;
     let creditTotal = 0;
     
-    accounts.forEach(account => {
+    accountList.forEach(account => {
       const presentation = getBalancePresentation(account);
       debitTotal += presentation.debit;
       creditTotal += presentation.credit;
@@ -99,31 +101,53 @@ export default function TrialBalance() {
     'Expense': 'bg-warning/20 text-warning border-warning/30',
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading trial balance...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Trial Balance</h1>
-          <p className="text-muted-foreground">Verify that total debits equal total credits</p>
+          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Trial Balance</h1>
+          <p className="text-muted-foreground mt-2">Verify that total debits equal total credits across all accounts</p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge variant={trialBalanceData.isBalanced ? "default" : "destructive"} className="gap-2">
+          <Badge variant={trialBalanceData.isBalanced ? "default" : "destructive"} className="gap-2 text-sm px-4 py-2">
             {trialBalanceData.isBalanced ? (
               <>
-                <CheckCircle className="h-3 w-3" />
+                <CheckCircle className="h-4 w-4" />
                 Balanced
               </>
             ) : (
               <>
-                <AlertTriangle className="h-3 w-3" />
+                <AlertTriangle className="h-4 w-4" />
                 Out of Balance
               </>
             )}
           </Badge>
           
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow">
             <Download className="h-4 w-4" />
             Export PDF
           </Button>
@@ -154,7 +178,7 @@ export default function TrialBalance() {
             
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">Total Accounts</p>
-              <p className="text-2xl font-bold text-foreground">{chartOfAccounts.length}</p>
+              <p className="text-2xl font-bold text-foreground">{accounts.length}</p>
             </div>
             
             <div className="text-center">
@@ -170,8 +194,8 @@ export default function TrialBalance() {
       {/* Trial Balance Report */}
       <div className="space-y-4">
         {trialBalanceData.sortedCategories.map(category => {
-          const accounts = trialBalanceData.categories[category];
-          const categoryTotals = getCategoryTotal(accounts);
+          const accountList = trialBalanceData.categories[category];
+          const categoryTotals = getCategoryTotal(accountList);
           
           return (
             <Card key={category} className="shadow-card">
@@ -207,14 +231,14 @@ export default function TrialBalance() {
                       </tr>
                     </thead>
                     <tbody>
-                      {accounts
-                        .filter(account => account.currentBalance > 0)
+                      {accountList
+                        .filter(account => account.current_balance > 0)
                         .map((account, index) => {
                           const presentation = getBalancePresentation(account);
                           
                           return (
                             <tr
-                              key={account.accountCode}
+                              key={account.account_code}
                               className={cn(
                                 "border-b border-border/50 hover:bg-accent/50 transition-colors",
                                 index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
@@ -222,12 +246,12 @@ export default function TrialBalance() {
                             >
                               <td className="py-3 px-4">
                                 <span className="font-mono font-semibold text-primary">
-                                  {account.accountCode}
+                                  {account.account_code}
                                 </span>
                               </td>
                               <td className="py-3 px-4">
                                 <span className="font-medium text-foreground">
-                                  {account.accountName}
+                                  {account.account_name}
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-right">

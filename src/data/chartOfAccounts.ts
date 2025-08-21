@@ -82,7 +82,7 @@ export const chartOfAccounts: Account[] = [
 export const defaultCompanySettings: CompanySettings = {
   id: '1',
   companyName: 'QSA Solutions',
-  primaryColor: '#C81338',
+  primaryColor: '#a1052d',
 };
 
 // Sample transaction data
@@ -148,9 +148,9 @@ export const getCategoryOrder = (category: string): number => {
 };
 
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('sw-TZ', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'TZS',
     minimumFractionDigits: 2
   }).format(amount);
 };
