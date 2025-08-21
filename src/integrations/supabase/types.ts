@@ -14,13 +14,144 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chart_of_accounts: {
+        Row: {
+          account_code: string
+          account_name: string
+          category: string
+          created_at: string
+          current_balance: number
+          normal_balance: string
+          updated_at: string
+        }
+        Insert: {
+          account_code: string
+          account_name: string
+          category: string
+          created_at?: string
+          current_balance?: number
+          normal_balance: string
+          updated_at?: string
+        }
+        Update: {
+          account_code?: string
+          account_name?: string
+          category?: string
+          created_at?: string
+          current_balance?: number
+          normal_balance?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_settings: {
+        Row: {
+          company_name: string
+          created_at: string
+          id: string
+          logo_filename: string | null
+          logo_path: string | null
+          primary_color: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string
+          created_at?: string
+          id?: string
+          logo_filename?: string | null
+          logo_path?: string | null
+          primary_color?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          id?: string
+          logo_filename?: string | null
+          logo_path?: string | null
+          primary_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transaction_lines: {
+        Row: {
+          account_code: string
+          created_at: string
+          credit_amount: number
+          debit_amount: number
+          id: string
+          transaction_id: string
+        }
+        Insert: {
+          account_code: string
+          created_at?: string
+          credit_amount?: number
+          debit_amount?: number
+          id?: string
+          transaction_id: string
+        }
+        Update: {
+          account_code?: string
+          created_at?: string
+          credit_amount?: number
+          debit_amount?: number
+          id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_lines_account_code_fkey"
+            columns: ["account_code"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["account_code"]
+          },
+          {
+            foreignKeyName: "transaction_lines_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          reference_number: string
+          transaction_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_number: string
+          transaction_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_number?: string
+          transaction_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_reference_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
