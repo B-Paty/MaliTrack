@@ -276,11 +276,12 @@ export default function JournalEntry() {
                     <td className="py-4 px-3">
                       <Input
                         type="number"
-                        step="0.01"
+                        step="1"
                         min="0"
+                        max="999999999999"
                         value={line.debit_amount > 0 ? formatNumber(line.debit_amount) : ''}
                         onChange={(e) => updateLine(index, 'debit_amount', e.target.value)}
-                        placeholder="0.00"
+                        placeholder="0"
                         className="text-right font-mono h-11 focus:ring-2 focus:ring-primary/20"
                       />
                     </td>
@@ -288,11 +289,12 @@ export default function JournalEntry() {
                     <td className="py-4 px-3">
                       <Input
                         type="number"
-                        step="0.01"
+                        step="1"
                         min="0"
+                        max="999999999999"
                         value={line.credit_amount > 0 ? formatNumber(line.credit_amount) : ''}
                         onChange={(e) => updateLine(index, 'credit_amount', e.target.value)}
-                        placeholder="0.00"
+                        placeholder="0"
                         className="text-right font-mono h-11 focus:ring-2 focus:ring-primary/20"
                       />
                     </td>

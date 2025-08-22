@@ -85,53 +85,7 @@ export const defaultCompanySettings: CompanySettings = {
   primaryColor: '#a1052d',
 };
 
-// Sample transaction data
-export const sampleTransactions: Transaction[] = [
-  {
-    id: '1',
-    referenceNumber: 'REF-2025-0001',
-    transactionDate: '2025-01-15',
-    description: 'Office equipment purchase',
-    lines: [
-      {
-        id: '1-1',
-        accountCode: '1200',
-        accountName: 'Office Equipment',
-        debitAmount: 5000.00,
-        creditAmount: 0.00
-      },
-      {
-        id: '1-2',
-        accountCode: '1020',
-        accountName: 'Bank Account',
-        debitAmount: 0.00,
-        creditAmount: 5000.00
-      }
-    ]
-  },
-  {
-    id: '2',
-    referenceNumber: 'REF-2025-0002',
-    transactionDate: '2025-01-20',
-    description: 'Service revenue from client',
-    lines: [
-      {
-        id: '2-1',
-        accountCode: '1020',
-        accountName: 'Bank Account',
-        debitAmount: 15000.00,
-        creditAmount: 0.00
-      },
-      {
-        id: '2-2',
-        accountCode: '4020',
-        accountName: 'Service Revenue',
-        debitAmount: 0.00,
-        creditAmount: 15000.00
-      }
-    ]
-  }
-];
+// Note: Sample data removed as requested - all transactions now come from database
 
 export const getCategoryOrder = (category: string): number => {
   const order: { [key: string]: number } = {

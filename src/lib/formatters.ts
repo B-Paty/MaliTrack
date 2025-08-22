@@ -1,31 +1,31 @@
 /**
- * Format currency in Tanzanian Shilling (TZS)
+ * Format currency in Tanzanian Shilling (TZS) - Whole numbers only
  */
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('sw-TZ', {
     style: 'currency',
     currency: 'TZS',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount));
 };
 
 /**
- * Format number for input fields
+ * Format number for input fields - Whole numbers only, supports large amounts
  */
 export const formatNumber = (value: number): string => {
   return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(value));
 };
 
 /**
- * Parse string to number for calculations
+ * Parse string to number for calculations - Supports large whole numbers
  */
 export const parseNumber = (value: string): number => {
-  const cleanValue = value.replace(/[^0-9.-]/g, '');
-  const parsed = parseFloat(cleanValue);
+  const cleanValue = value.replace(/[^0-9]/g, '');
+  const parsed = parseInt(cleanValue, 10);
   return isNaN(parsed) ? 0 : parsed;
 };
 
