@@ -6,6 +6,8 @@ import JournalEntry from "@/components/modules/JournalEntry";
 import TrialBalance from "@/components/modules/TrialBalance";
 import FinancialStatements from "@/components/modules/FinancialStatements";
 import TaxSettings from "@/components/modules/TaxSettings";
+import { defaultCompanySettings } from "@/data/chartOfAccounts";
+import CompanySettings from "@/components/modules/CompanySettings";
 
 export default function AccountingSystem() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Search, Download, Filter } from "lucide-react";
+import AccountDetails from "./AccountDetails";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ const categoryColors: { [key: string]: string } = {
 export default function ChartOfAccounts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const { accounts, loading, error } = useAccounts();
 
   const categories = Array.from(new Set(accounts.map(account => account.category)))
@@ -77,6 +79,16 @@ export default function ChartOfAccounts() {
           <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
       </div>
+    );
+  }
+
+  // Show account details if an account is selected
+  if (selectedAccount) {
+    return (
+      <AccountDetails 
+        account={selectedAccount}
+        onBack={() => setSelectedAccount(null)}
+      />
     );
   }
 
@@ -170,9 +182,10 @@ export default function ChartOfAccounts() {
                         <tr
                           key={account.account_code}
                           className={cn(
-                            "border-b border-border/50 hover:bg-accent/50 transition-colors",
+                            "border-b border-border/50 hover:bg-accent/50 transition-colors cursor-pointer",
                             index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
                           )}
+                          onClick={() => setSelectedAccount(account)}
                         >
                           <td className="py-3 px-4">
                             <span className="font-mono font-semibold text-primary">

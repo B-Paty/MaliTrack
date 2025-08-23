@@ -119,5 +119,5 @@ All notable changes to this project will be documented in this file.
 
 **Last Updated:** January 21, 2025  
 **Version:** 1.0.0  
-**Developer:** Lovable AI Assistant  
+**Developer:** Brian PK  
 **Client:** QSA Solutions Tanzania

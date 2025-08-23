@@ -19,12 +19,38 @@ interface SidebarProps {
   onModuleChange: (module: string) => void;
 }
 
-const menuItems = [
-  { id: 'chart-of-accounts', label: 'Chart of Accounts', icon: Calculator },
-  { id: 'journal-entry', label: 'Journal Entry', icon: PlusCircle },
-  { id: 'trial-balance', label: 'Trial Balance', icon: BarChart3 },
-  { id: 'financial-statements', label: 'Financial Statements', icon: TrendingUp },
-  { id: 'company-settings', label: 'Company Settings', icon: Settings },
+// Group type for menu organization
+type MenuGroup = {
+  label: string;
+  items: Array<{
+    id: string;
+    label: string;
+    icon: any;
+  }>;
+};
+
+const menuGroups: MenuGroup[] = [
+  {
+    label: "Core Accounting",
+    items: [
+      { id: 'chart-of-accounts', label: 'Chart of Accounts', icon: Calculator },
+      { id: 'journal-entry', label: 'Journal Entry', icon: PlusCircle },
+    ]
+  },
+  {
+    label: "Reports & Analysis",
+    items: [
+      { id: 'trial-balance', label: 'Trial Balance', icon: BarChart3 },
+      { id: 'financial-statements', label: 'Financial Statements', icon: TrendingUp },
+    ]
+  },
+  {
+    label: "Settings & Configuration",
+    items: [
+      { id: 'tax-settings', label: 'Tax Settings', icon: FileText },
+      { id: 'company-settings', label: 'Company Settings', icon: Settings },
+    ]
+  }
 ];
 
 export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange }: SidebarProps) {
@@ -41,7 +67,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:top-0 lg:h-[calc(100vh-4rem)] lg:translate-x-0 lg:z-auto shadow-elevated",
+          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:top-0 lg:h-[calc(100vh-4rem)] lg:translate-x-0 lg:z-auto shadow-elevated",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -65,35 +91,42 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4">
-            <div className="space-y-2">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeModule === item.id;
-                
-                return (
-                  <Button
-                    key={item.id}
-                    variant={isActive ? "default" : "ghost"}
-                    className={cn(
-                      "w-full justify-start gap-3 h-11 transition-all duration-200",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-glow" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    )}
-                    onClick={() => {
-                      onModuleChange(item.id);
-                      // Close sidebar on mobile after selection
-                      if (window.innerWidth < 1024) {
-                        onClose();
-                      }
-                    }}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </Button>
-                );
-              })}
+          <nav className="flex-1 py-2 px-3">
+            <div className="space-y-4">
+              {menuGroups.map((group, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="px-2 mb-1">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{group.label}</h3>
+                  </div>
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeModule === item.id;
+                    
+                    return (
+                      <Button
+                        key={item.id}
+                        variant={isActive ? "default" : "ghost"}
+                        className={cn(
+                          "w-full justify-start gap-2 h-9 px-2 text-sm transition-all duration-200",
+                          isActive 
+                            ? "bg-primary text-primary-foreground shadow-glow" 
+                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        )}
+                        onClick={() => {
+                          onModuleChange(item.id);
+                          // Close sidebar on mobile after selection
+                          if (window.innerWidth < 1024) {
+                            onClose();
+                          }
+                        }}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="font-medium">{item.label}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </nav>
 

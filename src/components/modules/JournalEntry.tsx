@@ -19,6 +19,7 @@ interface JournalEntryForm {
 
 export default function JournalEntry() {
   const { toast } = useToast();
+  const MAX_AMOUNT = 100_000_000; // maximum allowed amount per line (100M)
   const { accounts, loading: accountsLoading } = useAccounts();
   const { createTransaction, loading: transactionLoading } = useTransactions();
   
@@ -79,17 +80,19 @@ export default function JournalEntry() {
             updatedLine.account_name = account?.account_name || '';
           }
           
-          // Ensure only debit OR credit is entered
+          // Ensure only debit OR credit is entered and clamp to MAX_AMOUNT
           if (field === 'debit_amount') {
             const numValue = typeof value === 'string' ? parseNumber(value) : value;
-            updatedLine.debit_amount = numValue;
-            if (numValue > 0) {
+            const clamped = Math.min(numValue, MAX_AMOUNT);
+            updatedLine.debit_amount = clamped;
+            if (clamped > 0) {
               updatedLine.credit_amount = 0;
             }
           } else if (field === 'credit_amount') {
             const numValue = typeof value === 'string' ? parseNumber(value) : value;
-            updatedLine.credit_amount = numValue;
-            if (numValue > 0) {
+            const clamped = Math.min(numValue, MAX_AMOUNT);
+            updatedLine.credit_amount = clamped;
+            if (clamped > 0) {
               updatedLine.debit_amount = 0;
             }
           }
@@ -275,10 +278,9 @@ export default function JournalEntry() {
                     
                     <td className="py-4 px-3">
                       <Input
-                        type="number"
-                        step="1"
-                        min="0"
-                        max="999999999999"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9,]*"
                         value={line.debit_amount > 0 ? formatNumber(line.debit_amount) : ''}
                         onChange={(e) => updateLine(index, 'debit_amount', e.target.value)}
                         placeholder="0"
@@ -288,10 +290,9 @@ export default function JournalEntry() {
                     
                     <td className="py-4 px-3">
                       <Input
-                        type="number"
-                        step="1"
-                        min="0"
-                        max="999999999999"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9,]*"
                         value={line.credit_amount > 0 ? formatNumber(line.credit_amount) : ''}
                         onChange={(e) => updateLine(index, 'credit_amount', e.target.value)}
                         placeholder="0"
