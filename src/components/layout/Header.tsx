@@ -1,5 +1,6 @@
 import { Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SettingsDialog } from "./SettingsDialog";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -31,9 +32,11 @@ export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-hover/20">
-          <Settings className="h-5 w-5" />
-        </Button>
+        <SettingsDialog>
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-hover/20">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </SettingsDialog>
         
         <div className="hidden md:flex items-center gap-2 text-primary-foreground/90 text-sm">
           <span>Welcome back!</span>
