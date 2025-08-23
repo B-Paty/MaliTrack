@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
   return (
-    <header className="h-16 bg-gradient-header border-b border-primary/20 flex items-center justify-between px-6 shadow-elevated">
+    <header className="h-16 bg-gradient-header border-b border-primary/20 flex items-center justify-between px-4 lg:px-6 shadow-elevated">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"

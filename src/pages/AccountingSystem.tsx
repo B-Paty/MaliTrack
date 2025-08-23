@@ -6,6 +6,7 @@ import JournalEntry from "@/components/modules/JournalEntry";
 import TrialBalance from "@/components/modules/TrialBalance";
 import FinancialStatements from "@/components/modules/FinancialStatements";
 import TaxSettings from "@/components/modules/TaxSettings";
+import Invoices from "@/components/modules/Invoices";
 import { defaultCompanySettings } from "@/data/chartOfAccounts";
 import CompanySettings from "@/components/modules/CompanySettings";
 
@@ -20,6 +21,8 @@ export default function AccountingSystem() {
         return <ChartOfAccounts />;
       case 'journal-entry':
         return <JournalEntry />;
+      case 'invoices':
+        return <Invoices />;
       case 'trial-balance':
         return <TrialBalance />;
       case 'financial-statements':
@@ -48,7 +51,7 @@ export default function AccountingSystem() {
           onModuleChange={setActiveModule}
         />
         
-        <main className="flex-1 p-6 lg:ml-0">
+        <main className="flex-1 p-4 lg:p-6 lg:ml-0 overflow-x-hidden">
           {renderActiveModule()}
         </main>
       </div>

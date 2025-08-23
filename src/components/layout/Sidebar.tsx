@@ -38,6 +38,12 @@ const menuGroups: MenuGroup[] = [
     ]
   },
   {
+    label: "Business Operations",
+    items: [
+      { id: 'invoices', label: 'Invoices', icon: FileText },
+    ]
+  },
+  {
     label: "Reports & Analysis",
     items: [
       { id: 'trial-balance', label: 'Trial Balance', icon: BarChart3 },
@@ -47,8 +53,8 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Settings & Configuration",
     items: [
-      { id: 'tax-settings', label: 'Tax Settings', icon: FileText },
-      { id: 'company-settings', label: 'Company Settings', icon: Settings },
+      { id: 'tax-settings', label: 'Tax Settings', icon: Settings },
+      { id: 'company-settings', label: 'Company Settings', icon: Building2 },
     ]
   }
 ];
