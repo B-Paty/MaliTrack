@@ -169,20 +169,27 @@ export default function Invoices() {
 
   // Export to PDF
   const exportToPDF = async (invoice: Invoice) => {
-    if (!invoicePreviewRef.current) return;
-    
-    setSelectedInvoice(invoice);
-    setIsPreviewOpen(true);
-    
-    // Wait for the dialog to render
-    setTimeout(async () => {
+    try {
+      setSelectedInvoice(invoice);
+      setIsPreviewOpen(true);
+      
+      // Wait for the dialog to render
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       const element = invoicePreviewRef.current;
-      if (!element) return;
+      if (!element) {
+        console.error('Invoice preview element not found');
+        return;
+      }
 
+      console.log('Generating PDF for invoice:', invoice.invoiceNumber);
+      
       const canvas = await html2canvas(element, {
         scale: 2,
-        logging: false,
-        useCORS: true
+        logging: true,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff'
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -206,8 +213,14 @@ export default function Invoices() {
       }
       
       pdf.save(`${invoice.invoiceNumber}.pdf`);
+      console.log('PDF generated successfully');
+      
+      // Close preview after a short delay
+      setTimeout(() => setIsPreviewOpen(false), 1000);
+    } catch (error) {
+      console.error('PDF export error:', error);
       setIsPreviewOpen(false);
-    }, 500);
+    }
   };
 
   const getStatusBadge = (status: Invoice['status']) => {

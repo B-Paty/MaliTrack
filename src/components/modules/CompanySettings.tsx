@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Upload, Save, Building2, Palette, Image, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function CompanySettings() {
   const { toast } = useToast();
@@ -16,9 +17,11 @@ export default function CompanySettings() {
   const [localSettings, setLocalSettings] = useState(settings);
 
   // Update local settings when database settings load
-  if (settings && !localSettings) {
-    setLocalSettings(settings);
-  }
+  React.useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -79,30 +82,52 @@ export default function CompanySettings() {
     }
 
     try {
-      await updateSettings(localSettings);
+      let updatedSettings = { ...localSettings };
 
-      // If there's a new logo file, simulate upload for now
+      // If there's a new logo file, upload it to Supabase Storage
       if (logoFile) {
-        // In a real implementation, you'd upload to Supabase Storage here
-        setTimeout(() => {
-          toast({
-            title: "Logo Uploaded",
-            description: `Logo "${logoFile.name}" has been saved successfully`,
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `logo-${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('company-logos')
+          .upload(fileName, logoFile, {
+            cacheControl: '3600',
+            upsert: false
           });
-          
-          if (localSettings) {
-            setLocalSettings({
-              ...localSettings,
-              logo_filename: logoFile.name,
-              logo_path: `/uploads/logos/${logoFile.name}`
-            });
-          }
-          
-          setLogoFile(null);
-        }, 1000);
+
+        if (uploadError) {
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload logo. Please try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Get public URL for the uploaded file
+        const { data: publicUrlData } = supabase.storage
+          .from('company-logos')
+          .getPublicUrl(fileName);
+
+        updatedSettings = {
+          ...updatedSettings,
+          logo_filename: logoFile.name,
+          logo_path: publicUrlData.publicUrl
+        };
+
+        toast({
+          title: "Logo Uploaded",
+          description: `Logo "${logoFile.name}" has been saved successfully`,
+        });
+        
+        setLogoFile(null);
+        setLogoPreview(null);
       }
+
+      await updateSettings(updatedSettings);
     } catch (error) {
-      // Error already handled in hook
+      console.error('Settings save error:', error);
     }
   };
 

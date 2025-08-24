@@ -27,9 +27,9 @@ export function useCompanySettings() {
         .from('company_settings')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
+      if (fetchError) {
         throw fetchError;
       }
 
@@ -40,6 +40,7 @@ export function useCompanySettings() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch company settings';
       setError(errorMessage);
+      console.error('Company settings fetch error:', err);
       toast({
         variant: 'destructive',
         title: 'Error',
