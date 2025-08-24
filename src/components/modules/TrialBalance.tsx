@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { Calendar, Download, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,14 @@ import { Label } from "@/components/ui/label";
 import { useAccounts } from "@/hooks/useAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function TrialBalance() {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const { accounts, loading, error } = useAccounts();
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
@@ -101,6 +105,37 @@ export default function TrialBalance() {
     'Expense': 'bg-warning/20 text-warning border-warning/30',
   };
 
+  const handleExport = async () => {
+    if (!exportRef.current) return;
+    setExporting(true);
+    try {
+      const exportButton = document.querySelector('[data-export-button]') as HTMLElement;
+      if (exportButton) exportButton.style.display = 'none';
+
+      const canvas = await html2canvas(exportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: exportRef.current.scrollWidth,
+        height: exportRef.current.scrollHeight,
+      });
+
+      if (exportButton) exportButton.style.display = '';
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`trial-balance-${reportDate}.pdf`);
+    } catch (error) {
+      console.error('Trial Balance export failed:', error);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -124,7 +159,7 @@ export default function TrialBalance() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={exportRef}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -147,9 +182,9 @@ export default function TrialBalance() {
             )}
           </Badge>
           
-          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow">
+          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting} data-export-button>
             <Download className="h-4 w-4" />
-            Export PDF
+            {exporting ? 'Exporting...' : 'Export PDF'}
           </Button>
         </div>
       </div>

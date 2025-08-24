@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { FileText, Download, Calendar, Building2, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 type StatementType = 'income' | 'balance' | 'cash';
 
@@ -19,6 +21,8 @@ export default function FinancialStatements() {
   const [selectedStatement, setSelectedStatement] = useState<StatementType>('income');
   const [dateFrom, setDateFrom] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   // Calculate statement data
   const statementData = useMemo(() => {
@@ -54,6 +58,39 @@ export default function FinancialStatements() {
       totalEquity
     };
   }, [accounts]);
+
+  const handleExport = async () => {
+    if (!exportRef.current) return;
+    setExporting(true);
+    try {
+      const exportButton = document.querySelector('[data-export-button]') as HTMLElement;
+      if (exportButton) exportButton.style.display = 'none';
+
+      const canvas = await html2canvas(exportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: exportRef.current.scrollWidth,
+        height: exportRef.current.scrollHeight,
+      });
+
+      if (exportButton) exportButton.style.display = '';
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const name = selectedStatement === 'income' ? 'income-statement'
+        : selectedStatement === 'balance' ? 'balance-sheet' : 'cash-flow';
+      pdf.save(`${name}-${dateFrom}-to-${dateTo}.pdf`);
+    } catch (error) {
+      console.error('Financial Statements export failed:', error);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const renderIncomeStatement = () => {
     if (!statementData) return null;
@@ -277,30 +314,32 @@ export default function FinancialStatements() {
       </Card>
 
       {/* Statement Content */}
-      <Card className="shadow-elevated border-0">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <FileText className="h-5 w-5 text-primary" />
-              {selectedStatement === 'income' ? 'Income Statement' : 
-               selectedStatement === 'balance' ? 'Balance Sheet' : 'Cash Flow Statement'}
-            </CardTitle>
-            <Button variant="outline" size="sm" className="gap-2 hover:shadow-md transition-shadow">
-              <Download className="h-4 w-4" />
-              Export PDF
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="bg-white rounded-lg p-8 border border-border/20">
-          {selectedStatement === 'income' && renderIncomeStatement()}
-          {selectedStatement === 'balance' && renderBalanceSheet()}
-          {selectedStatement === 'cash' && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Cash Flow Statement coming soon...</p>
+      <div ref={exportRef}>
+        <Card className="shadow-elevated border-0">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <FileText className="h-5 w-5 text-primary" />
+                {selectedStatement === 'income' ? 'Income Statement' : 
+                 selectedStatement === 'balance' ? 'Balance Sheet' : 'Cash Flow Statement'}
+              </CardTitle>
+              <Button variant="outline" size="sm" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting} data-export-button>
+                <Download className="h-4 w-4" />
+                {exporting ? 'Exporting...' : 'Export PDF'}
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="bg-white rounded-lg p-8 border border-border/20">
+            {selectedStatement === 'income' && renderIncomeStatement()}
+            {selectedStatement === 'balance' && renderBalanceSheet()}
+            {selectedStatement === 'cash' && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Cash Flow Statement coming soon...</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
