@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions, type TransactionLine } from "@/hooks/useTransactions";
 import { formatCurrency, formatNumber, parseNumber } from "@/lib/formatters";
@@ -29,6 +30,15 @@ export default function JournalEntry() {
   const MAX_AMOUNT = 100_000_000; // maximum allowed amount per line (100M)
   const { accounts, loading: accountsLoading } = useAccounts();
   const { createTransaction, loading: transactionLoading } = useTransactions();
+  
+  // Prepare autocomplete options from accounts
+  const accountOptions: AutocompleteOption[] = useMemo(() => 
+    accounts.map(account => ({
+      value: account.account_code,
+      label: account.account_name,
+      description: `${account.account_type} • Balance: ${formatCurrency(account.balance || 0)}`
+    })), [accounts]
+  );
   
   const [form, setForm] = useState<JournalEntryForm>({
     transactionDate: new Date().toISOString().split('T')[0],
@@ -249,7 +259,7 @@ export default function JournalEntry() {
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b-2 border-primary/20">
-                  <th className="text-left py-4 px-3 font-bold text-muted-foreground w-32">Account Code</th>
+                  <th className="text-left py-4 px-3 font-bold text-muted-foreground w-48">Account Code/Name</th>
                   <th className="text-left py-4 px-3 font-bold text-muted-foreground">Account Name</th>
                   <th className="text-right py-4 px-3 font-bold text-muted-foreground w-36">Debit (TZS)</th>
                   <th className="text-right py-4 px-3 font-bold text-muted-foreground w-36">Credit (TZS)</th>
@@ -260,18 +270,14 @@ export default function JournalEntry() {
                 {form.lines.map((line, index) => (
                   <tr key={index} className="border-b border-border/50 hover:bg-accent/30 transition-colors">
                     <td className="py-4 px-3">
-                      <select
+                      <Autocomplete
+                        options={accountOptions}
                         value={line.account_code}
-                        onChange={(e) => updateLine(index, 'account_code', e.target.value)}
-                        className="w-full h-11 px-3 border border-input bg-background rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      >
-                        <option value="">Select...</option>
-                        {accounts.map(account => (
-                          <option key={account.account_code} value={account.account_code}>
-                            {account.account_code}
-                          </option>
-                        ))}
-                      </select>
+                        onValueChange={(value) => updateLine(index, 'account_code', value)}
+                        placeholder="Type account code or name..."
+                        className="h-11 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        maxSuggestions={8}
+                      />
                     </td>
                     
                     <td className="py-4 px-3">
