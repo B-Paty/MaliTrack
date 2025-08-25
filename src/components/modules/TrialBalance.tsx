@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import { Calendar, Download, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,16 @@ import { Label } from "@/components/ui/label";
 import { useAccounts } from "@/hooks/useAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { PDFExporter } from "@/lib/pdfExporter";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TrialBalance() {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const { accounts, loading, error } = useAccounts();
+  const { settings } = useCompanySettings();
+  const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
@@ -106,31 +108,39 @@ export default function TrialBalance() {
   };
 
   const handleExport = async () => {
-    if (!exportRef.current) return;
+    if (!accounts.length) {
+      toast({
+        variant: 'destructive',
+        title: 'Export Error',
+        description: 'No accounts data to export',
+      });
+      return;
+    }
+    
     setExporting(true);
     try {
-      const exportButton = document.querySelector('[data-export-button]') as HTMLElement;
-      if (exportButton) exportButton.style.display = 'none';
-
-      const canvas = await html2canvas(exportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: exportRef.current.scrollWidth,
-        height: exportRef.current.scrollHeight,
+      const exporter = new PDFExporter({
+        title: 'Trial Balance',
+        subtitle: `As of ${new Date(reportDate).toLocaleDateString()}`,
+        companyName: settings?.company_name || 'QSA Solutions',
+        reportDate: reportDate,
+        pageSize: 'a4',
+        orientation: 'portrait'
       });
-
-      if (exportButton) exportButton.style.display = '';
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`trial-balance-${reportDate}.pdf`);
+      
+      exporter.exportTrialBalance(accounts, `trial-balance-${reportDate}.pdf`);
+      
+      toast({
+        title: 'Success',
+        description: 'Trial Balance exported successfully',
+      });
     } catch (error) {
       console.error('Trial Balance export failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Export Error',
+        description: error instanceof Error ? error.message : 'Failed to export PDF',
+      });
     } finally {
       setExporting(false);
     }
@@ -159,7 +169,7 @@ export default function TrialBalance() {
   }
 
   return (
-    <div className="space-y-6" ref={exportRef}>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -182,7 +192,7 @@ export default function TrialBalance() {
             )}
           </Badge>
           
-          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting} data-export-button>
+          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting}>
             <Download className="h-4 w-4" />
             {exporting ? 'Exporting...' : 'Export PDF'}
           </Button>
