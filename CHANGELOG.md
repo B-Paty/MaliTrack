@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### 🔒 CRITICAL SECURITY FIX
+- **Fixed public access to financial data**: All tables (`chart_of_accounts`, `transactions`, `transaction_lines`, `company_settings`) now require authentication. Previous public policies removed and replaced with authenticated-only RLS policies.
+
 ### ✨ Enhancements
 - Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.
 - Currency label updated to "Tsh" across UI via `formatCurrency` (whole numbers).
@@ -11,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Invoices: Payment options section added in creation dialog and export/preview (horizontal Bank + Vodacom cards with account details).
 - Dashboard live data: Quick Actions now navigate between modules; Recent Activities populated from latest transactions; Monthly Progress shows revenue this month and transaction count.
 - Documentation: README rewritten with simple, step‑by‑step guidance.
+- Code documentation: Added JSDoc comments to all hooks and file headers to modules and utilities.
 
 ### 📦 Tooling
 - Installed `jspdf-autotable` and added `src/lib/pdfExporter.ts` usage.
