@@ -13,6 +13,13 @@ import { PDFExporter } from "@/lib/pdfExporter";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * ChartOfAccounts
+ * Displays and manages the list of accounts.
+ * - Reads accounts via useAccounts
+ * - Allows create/update/delete
+ * - Shows balances in Tsh
+ */
 const categoryColors: { [key: string]: string } = {
   'Current Asset': 'bg-info/10 text-info border-info/20',
   'Fixed Asset': 'bg-info/20 text-info border-info/30',

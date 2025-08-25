@@ -1,3 +1,12 @@
+/**
+ * pdfExporter.ts
+ * Utility class to export tables and statements to PDF using jsPDF + autoTable.
+ * - PDFExporter(config) sets up page size, margins, and header/footer styles
+ * - exportTable(columns, data, filename)
+ * - exportTrialBalance(accounts)
+ * - exportChartOfAccounts(accounts)
+ * - exportFinancialStatement('income'|'balance', data, range)
+ */
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';

@@ -1,3 +1,7 @@
+/**
+ * Header
+ * Top bar with sidebar toggle, settings button, and company name.
+ */
 import { Menu, Settings, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsDialog } from "./SettingsDialog";

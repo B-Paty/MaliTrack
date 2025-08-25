@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### ✨ Enhancements
+- Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.
+- Currency label updated to "Tsh" across UI via `formatCurrency` (whole numbers).
+- Company Settings: Added Payment Settings (Bank and Vodacom Lipa Namba) stored locally and in DB; used by invoices.
+- Invoices: Payment options section added in creation dialog and export/preview (horizontal Bank + Vodacom cards with account details).
+- Dashboard live data: Quick Actions now navigate between modules; Recent Activities populated from latest transactions; Monthly Progress shows revenue this month and transaction count.
+- Documentation: README rewritten with simple, step‑by‑step guidance.
+
+### 📦 Tooling
+- Installed `jspdf-autotable` and added `src/lib/pdfExporter.ts` usage.
+
+### 📝 Notes
+- Active Clients and Pending Invoices placeholders until dedicated data sources exist.
+
+### 🎨 UI Polish
+- Navigation glow reduced and then removed for a cleaner, contained active state.
+- Color presets now apply immediately and update theme live.
+
 ## [1.0.0] - 2025-01-21
 
 ### 🎉 Initial Release
@@ -117,7 +137,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-**Last Updated:** January 21, 2025  
+**Last Updated:** August 21, 2025  
 **Version:** 1.0.0  
 **Developer:** Brian PK  
 **Client:** QSA Solutions Tanzania

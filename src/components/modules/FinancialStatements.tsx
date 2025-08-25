@@ -1,4 +1,10 @@
-import { useState, useMemo } from "react";
+/**
+ * FinancialStatements
+ * Builds Income Statement and Balance Sheet from account balances.
+ * - Uses account categories to compute totals and net income
+ * - Exports a styled PDF using html2canvas + jsPDF
+ */
+import { useState, useMemo, useRef } from "react";
 import { FileText, Download, Calendar, Building2, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

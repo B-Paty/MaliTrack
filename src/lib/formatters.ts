@@ -1,13 +1,20 @@
 /**
+ * formatters.ts
+ * Helpers for money and date formatting used across UI and exports.
+ * - Currency: Tsh whole numbers (no decimals)
+ * - parseNumber: sanitize user input for calculations
+ * - Date display + input helpers
+ */
+/**
  * Format currency in Tanzanian Shilling (TZS) - Whole numbers only
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('sw-TZ', {
-    style: 'currency',
-    currency: 'TZS',
+  const rounded = Math.round(amount);
+  const formatted = new Intl.NumberFormat('sw-TZ', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(Math.round(amount));
+  }).format(rounded);
+  return `Tsh ${formatted}`;
 };
 
 /**
