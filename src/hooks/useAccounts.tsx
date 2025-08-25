@@ -1,3 +1,18 @@
+/**
+ * useAccounts
+ * High-level hook to read and manage the Chart of Accounts from Supabase.
+ * - Fetches accounts on mount
+ * - Exposes CRUD helpers that update local state optimistically and show toasts
+ *
+ * Returns:
+ * - accounts: Account[] current list
+ * - loading: boolean loading flag
+ * - error: string | null last fetch error
+ * - fetchAccounts(): Promise<void> refetch all accounts
+ * - createAccount(account): Promise<Account> insert and append
+ * - updateAccount(code, updates): Promise<Account> update and merge
+ * - deleteAccount(code): Promise<void> remove by primary key
+ */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

@@ -53,6 +53,7 @@ export type Database = {
           logo_path: string | null
           primary_color: string
           updated_at: string
+          payment_settings: Json | null
         }
         Insert: {
           company_name?: string
@@ -62,6 +63,7 @@ export type Database = {
           logo_path?: string | null
           primary_color?: string
           updated_at?: string
+          payment_settings?: Json | null
         }
         Update: {
           company_name?: string
@@ -71,6 +73,7 @@ export type Database = {
           logo_path?: string | null
           primary_color?: string
           updated_at?: string
+          payment_settings?: Json | null
         }
         Relationships: []
       }

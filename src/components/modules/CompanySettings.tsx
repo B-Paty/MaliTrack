@@ -8,20 +8,79 @@ import { Badge } from "@/components/ui/badge";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { usePaymentSettings } from "@/hooks/usePaymentSettings";
+
+function hexToHslTriple(hex: string): string {
+  const normalized = hex.replace('#', '');
+  const bigint = parseInt(normalized.length === 3 ? normalized.split('').map(c => c + c).join('') : normalized, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  const rNorm = r / 255, gNorm = g / 255, bNorm = b / 255;
+  const max = Math.max(rNorm, gNorm, bNorm), min = Math.min(rNorm, gNorm, bNorm);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
+      case gNorm: h = (bNorm - rNorm) / d + 2; break;
+      case bNorm: h = (rNorm - gNorm) / d + 4; break;
+    }
+    h /= 6;
+  }
+  const H = Math.round(h * 360);
+  const S = Math.round(s * 100);
+  const L = Math.round(l * 100);
+  return `${H} ${S}% ${L}%`;
+}
+
+function applyBrandColor(hex: string) {
+  if (!hex) return;
+  const hsl = hexToHslTriple(hex);
+  const [hStr, sStr, lStr] = hsl.split(' ');
+  const h = Number(hStr);
+  const s = sStr;
+  const l = Number(lStr.replace('%',''));
+  const l2 = Math.max(0, Math.min(100, l - 5));
+  const l3 = Math.max(0, Math.min(100, l + 5));
+  const root = document.documentElement;
+  root.style.setProperty('--primary', hsl);
+  root.style.setProperty('--ring', hsl);
+  root.style.setProperty('--primary-hover', `${h} ${s} ${l2}%`);
+  root.style.setProperty('--primary-glow', `${h} ${s} ${l3}%`);
+  root.style.setProperty('--gradient-primary', `linear-gradient(135deg, hsl(${hsl}), hsl(${h} ${s} ${l2}%))`);
+  root.style.setProperty('--gradient-header', `linear-gradient(135deg, hsl(${hsl}), hsl(${h} ${s} ${l2}%))`);
+  root.style.setProperty('--gradient-accent', `linear-gradient(135deg, hsl(${h} ${s} ${l}% / 0.05), hsl(${h} ${s} ${l}% / 0.1))`);
+  root.style.setProperty('--shadow-glow', `0 0 0 1px hsl(${hsl} / 0.2), 0 0 20px hsl(${hsl} / 0.3)`);
+  root.style.setProperty('--shadow-glow-strong', `0 0 0 1px hsl(${hsl} / 0.3), 0 0 30px hsl(${hsl} / 0.4)`);
+}
 
 export default function CompanySettings() {
   const { toast } = useToast();
   const { settings, loading, updateSettings } = useCompanySettings();
+  const { paymentSettings, savePaymentSettings } = usePaymentSettings();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [localSettings, setLocalSettings] = useState(settings);
+  const [localPayments, setLocalPayments] = useState(paymentSettings);
 
   // Update local settings when database settings load
   React.useEffect(() => {
     if (settings) {
       setLocalSettings(settings);
+      if (settings.primary_color) applyBrandColor(settings.primary_color);
     }
   }, [settings]);
+
+  React.useEffect(() => {
+    setLocalPayments(paymentSettings);
+  }, [paymentSettings]);
+
+  // Apply theme immediately when user changes color
+  React.useEffect(() => {
+    if (localSettings?.primary_color) applyBrandColor(localSettings.primary_color);
+  }, [localSettings?.primary_color]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -126,6 +185,9 @@ export default function CompanySettings() {
       }
 
       await updateSettings(updatedSettings);
+      savePaymentSettings(localPayments);
+
+      toast({ title: "Settings Saved", description: "Company and payment settings updated" });
     } catch (error) {
       console.error('Settings save error:', error);
     }
@@ -229,6 +291,36 @@ export default function CompanySettings() {
               ))}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Settings */}
+      <Card className="shadow-card border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Image className="h-5 w-5 text-primary" />
+            Payment Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bank settings */}
+            <div className="space-y-3 p-4 rounded-lg border border-border/50">
+              <Label className="text-sm font-semibold text-foreground">Bank (Card/Account)</Label>
+              <Input placeholder="Bank Name" value={localPayments.bank.bankName} onChange={(e) => setLocalPayments(ps => ({ ...ps, bank: { ...ps.bank, bankName: e.target.value } }))} />
+              <Input placeholder="Account Name" value={localPayments.bank.accountName} onChange={(e) => setLocalPayments(ps => ({ ...ps, bank: { ...ps.bank, accountName: e.target.value } }))} />
+              <Input placeholder="Account Number" value={localPayments.bank.accountNumber} onChange={(e) => setLocalPayments(ps => ({ ...ps, bank: { ...ps.bank, accountNumber: e.target.value } }))} />
+              <Input placeholder="Card Image URL (optional)" value={localPayments.bank.cardImageUrl || ''} onChange={(e) => setLocalPayments(ps => ({ ...ps, bank: { ...ps.bank, cardImageUrl: e.target.value } }))} />
+            </div>
+            {/* Vodacom settings */}
+            <div className="space-y-3 p-4 rounded-lg border border-border/50">
+              <Label className="text-sm font-semibold text-foreground">Vodacom Lipa Namba</Label>
+              <Input placeholder="Business Name" value={localPayments.vodacom.businessName} onChange={(e) => setLocalPayments(ps => ({ ...ps, vodacom: { ...ps.vodacom, businessName: e.target.value } }))} />
+              <Input placeholder="Lipa Namba" value={localPayments.vodacom.lipaNamba} onChange={(e) => setLocalPayments(ps => ({ ...ps, vodacom: { ...ps.vodacom, lipaNamba: e.target.value } }))} />
+              <Input placeholder="Vodacom Banner Image URL (optional)" value={localPayments.vodacom.vodacomImageUrl || ''} onChange={(e) => setLocalPayments(ps => ({ ...ps, vodacom: { ...ps.vodacom, vodacomImageUrl: e.target.value } }))} />
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">These payment options will appear on exported invoices.</p>
         </CardContent>
       </Card>
 

@@ -1,3 +1,10 @@
+/**
+ * Invoices
+ * Create, preview, and export invoices.
+ * - Local component state stores in-progress invoices
+ * - Uses company + payment settings to render brand and payment options
+ * - Exports preview content to PDF via html2canvas + jsPDF
+ */
 import { useState, useRef } from "react";
 import { Plus, FileText, Download, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTaxSettings } from "@/hooks/useTaxSettings";
+import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -45,6 +53,7 @@ interface Invoice {
 export default function Invoices() {
   const { settings } = useCompanySettings();
   const { taxSettings } = useTaxSettings();
+  const { paymentSettings } = usePaymentSettings();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -182,8 +191,6 @@ export default function Invoices() {
         return;
       }
 
-      console.log('Generating PDF for invoice:', invoice.invoiceNumber);
-      
       const canvas = await html2canvas(element, {
         scale: 2,
         logging: true,
@@ -213,7 +220,6 @@ export default function Invoices() {
       }
       
       pdf.save(`${invoice.invoiceNumber}.pdf`);
-      console.log('PDF generated successfully');
       
       // Close preview after a short delay
       setTimeout(() => setIsPreviewOpen(false), 1000);
@@ -405,6 +411,42 @@ export default function Invoices() {
                     </div>
                   </Card>
                 ))}
+              </div>
+
+              {/* Payment Options Preview (read-only from settings) */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Payment Options</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="p-4">
+                    <div className="flex items-center gap-3">
+                      {paymentSettings.bank.cardImageUrl && (
+                        <img src={paymentSettings.bank.cardImageUrl} alt="Card" className="h-10 object-contain" />
+                      )}
+                      <div>
+                        <p className="font-semibold">Bank</p>
+                        <p className="text-sm text-muted-foreground">{paymentSettings.bank.bankName}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-sm">
+                      <p>Account Name: {paymentSettings.bank.accountName || '-'}</p>
+                      <p>Account Number: {paymentSettings.bank.accountNumber || '-'}</p>
+                    </div>
+                  </Card>
+                  <Card className="p-4">
+                    <div className="flex items-center gap-3">
+                      {paymentSettings.vodacom.vodacomImageUrl && (
+                        <img src={paymentSettings.vodacom.vodacomImageUrl} alt="Vodacom Lipa Namba" className="h-10 object-contain" />
+                      )}
+                      <div>
+                        <p className="font-semibold">Vodacom Lipa Namba</p>
+                        <p className="text-sm text-muted-foreground">{paymentSettings.vodacom.businessName}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-sm">
+                      <p>Lipa Namba: {paymentSettings.vodacom.lipaNamba || '-'}</p>
+                    </div>
+                  </Card>
+                </div>
               </div>
 
               {/* Terms and Personal Note */}
@@ -625,6 +667,44 @@ export default function Invoices() {
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount:</span>
                     <span>{formatCurrency(selectedInvoice.totalAmount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Options */}
+              <div className="border-t pt-6">
+                <h3 className="font-semibold mb-3">Payment Options</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Bank */}
+                  <div className="border rounded p-4">
+                    <div className="flex items-center gap-3">
+                      {paymentSettings.bank.cardImageUrl && (
+                        <img src={paymentSettings.bank.cardImageUrl} alt="Card" className="h-10 object-contain" />
+                      )}
+                      <div>
+                        <p className="font-semibold">Bank</p>
+                        <p className="text-sm text-gray-600">{paymentSettings.bank.bankName}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-sm">
+                      <p>Account Name: {paymentSettings.bank.accountName || '-'}</p>
+                      <p>Account Number: {paymentSettings.bank.accountNumber || '-'}</p>
+                    </div>
+                  </div>
+                  {/* Vodacom */}
+                  <div className="border rounded p-4">
+                    <div className="flex items-center gap-3">
+                      {paymentSettings.vodacom.vodacomImageUrl && (
+                        <img src={paymentSettings.vodacom.vodacomImageUrl} alt="Vodacom Lipa Namba" className="h-10 object-contain" />
+                      )}
+                      <div>
+                        <p className="font-semibold">Vodacom Lipa Namba</p>
+                        <p className="text-sm text-gray-600">{paymentSettings.vodacom.businessName}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-sm">
+                      <p>Lipa Namba: {paymentSettings.vodacom.lipaNamba || '-'}</p>
+                    </div>
                   </div>
                 </div>
               </div>

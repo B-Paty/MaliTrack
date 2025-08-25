@@ -23,6 +23,7 @@ This file tracks all requested features and their implementation status.
 | Color System (TZS Crimson) | 🟢 Done | #a1052d branding implemented | High |
 | Component Library | 🟢 Done | Shadcn components configured | High |
 | Responsive Design | 🟢 Done | Mobile-friendly layouts | High |
+| Currency Label | 🟢 Done | Switched to "Tsh" whole-number formatting | Medium |
 
 ### 3. Core Accounting Features
 | Task | Status | Notes | Priority |
@@ -30,26 +31,32 @@ This file tracks all requested features and their implementation status.
 | Chart of Accounts | 🟢 Done | Full CRUD with real-time updates | High |
 | Journal Entry System | 🟢 Done | Automated balance validation | High |
 | Trial Balance | 🟢 Done | Real-time calculations | High |
-| Company Settings | 🟢 Done | Logo upload, branding options | High |
+| Company Settings | 🟢 Done | Logo, branding, payment settings | High |
 
 ### 4. New Feature Requests (Current Sprint)
 | Task | Status | Notes | Priority |
 |------|--------|-------|----------|
 | 1. Task Tracker File | 🟢 Done | This file created and maintained | Medium |
-| 2. Journal Entry Improvements | 🟢 Done | Remove decimals, allow >4 digits | High |
+| 2. Journal Entry Improvements | 🟢 Done | Whole numbers, large amounts | High |
 | 3. Financial Statements | 🟢 Done | Income Statement, Balance Sheet | High |
-| 4. Clear Fake Data | 🟢 Done | Remove sample/demo data | Medium |
-| 5. Logo System Integration | 🟢 Done | Ensure logo shows everywhere | Medium |
-| 6. Account Transaction Details | 🟢 Done | Detailed transaction view per account | High |
+| 4. Clear Fake Data | 🟢 Done | Removed sample/demo data | Medium |
+| 5. Logo System Integration | 🟢 Done | Logo shows in settings and reports | Medium |
+| 6. Account Transaction Details | 🟢 Done | Detailed transaction view | High |
 | 7. Accounts Module Categories | 🟢 Done | Group accounts by categories | High |
-| 8. Tax Settings | 🟢 Done | Inclusive/exclusive tax options | High |
-| 9. Color Settings Fix | 🟢 Done | Ensure color system works properly | Low |
-| 10. Professional Documentation | 🟢 Done | Complete project documentation | Medium |
+| 8. Tax Settings | 🟢 Done | Inclusive/exclusive options | High |
+| 9. Color Settings Fix | 🟢 Done | Proper HSL tokens | Low |
+| 10. Professional Documentation | 🟢 Done | Comprehensive docs | Medium |
+| 11. Dashboard MoM Metrics | 🟢 Done | Revenue/Expenses MoM from transactions | High |
+| 12. Invoice Payment Options | 🟢 Done | Bank + Vodacom Lipa Namba on invoice | High |
+| 13. Payment Settings in Company | 🟢 Done | DB-backed with local fallback | High |
+| 14. Dashboard Live Sections | 🟢 Done | Quick Actions navigate; Recent + Progress from data | High |
+| 15. Color Presets Live Apply | 🟢 Done | Theme updates instantly on selection | Medium |
+| 16. Remove Nav Glow | 🟢 Done | Cleaner active state without crimson glow | Low |
 
 ### 5. Export & Reporting
 | Task | Status | Notes | Priority |
 |------|--------|-------|----------|
-| PDF Export | 🔴 Pending | Trial Balance, Financial Statements | Medium |
+| PDF Export | 🟢 Done | Statements and Invoices with branding | Medium |
 | Excel Export | 🔴 Pending | Chart of Accounts, Transaction data | Medium |
 | Report Branding | 🟢 Done | Logo and company info on reports | Medium |
 
@@ -68,56 +75,12 @@ This file tracks all requested features and their implementation status.
 | Performance Testing | 🔴 Pending | Load testing needed | Low |
 
 ## Current Sprint Focus
-**Priority**: All 10 new feature requests completed successfully!
+**Priority**: Dashboard sections now backed by live data and navigation.
 
 ## Implementation Summary
-✅ **Task 1**: Task Tracker File - Created comprehensive tracking system
-✅ **Task 2**: Journal Entry Improvements - Whole numbers only, supports large amounts (12+ digits)
-✅ **Task 3**: Financial Statements - Complete Income Statement and Balance Sheet components
-✅ **Task 4**: Clear Fake Data - Removed all sample/demo transactions and data
-✅ **Task 5**: Logo System Integration - Logo appears in company settings and reports
-✅ **Task 6**: Account Transaction Details - Full transaction history per account with filtering
-✅ **Task 7**: Accounts Module Categories - Beautiful category grouping with totals
-✅ **Task 8**: Tax Settings - Complete tax configuration with inclusive/exclusive options
-✅ **Task 9**: Color Settings Fix - Enhanced color system with proper HSL tokens
-✅ **Task 10**: Professional Documentation - Complete with comprehensive docs
-✅ **Task 11**: Mobile Responsive Design - Full mobile optimization
-✅ **Task 12**: PDF Export with Logo - Export functionality with branding
-✅ **Task 13-24**: Complete Invoice System - All 12 requirements implemented
-
-## Technical Improvements Made
-- **Formatters**: Updated to handle whole numbers only, removed decimals completely
-- **Number Inputs**: Support for amounts up to 999,999,999,999 TZS
-- **Category Grouping**: Visual organization of accounts by type with color coding
-- **Transaction Details**: Drill-down capability to view account-specific transactions
-- **Tax System**: Comprehensive tax rate management with calculation examples
-- **Financial Reporting**: Professional Income Statement and Balance Sheet generation
-- **Data Cleanup**: Removed all fake/sample data, using real database entries only
+- Quick Actions dispatch navigation to modules
+- Recent Activities lists latest transactions
+- Monthly Progress shows current-month revenue and transaction count
 
 ## Notes
-- All database operations are functional and validated
-- Real-time balance updates working correctly
-- Modern, professional UI with QSA branding
-- **🎉 Ready for production deployment - All requested features implemented!**
-
----
-**Last Updated**: January 23, 2025  
-**Total Tasks**: 33 | **Completed**: 30 | **In Progress**: 0 | **Remaining**: 3  
-**Sprint Status**: ✅ **CORE FEATURES FULLY IMPLEMENTED - INVOICE SYSTEM COMPLETE**
-
-## New Features Added
-- **📱 Mobile Responsive**: Complete mobile optimization across all modules
-- **📄 PDF Export**: Invoice and report export with company logo integration  
-- **🧾 Full Invoice System**: Complete invoicing with all 12 required components:
-  1. ✅ Prominent "INVOICE" header with logo
-  2. ✅ Unique invoice number generation
-  3. ✅ Date of service rendered tracking
-  4. ✅ Invoice sending date
-  5. ✅ Company/seller contact information
-  6. ✅ Client/buyer contact information  
-  7. ✅ Terms and conditions with penalties
-  8. ✅ Detailed product/service line items
-  9. ✅ Unit cost per product/service
-  10. ✅ Tax rate calculations
-  11. ✅ Total amount with currency display
-  12. ✅ Personalized thank-you notes
+- Replace Pending Invoices and Active Clients once data sources are introduced

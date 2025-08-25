@@ -11,6 +11,13 @@ import { formatCurrency, formatNumber, parseNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * JournalEntry
+ * Records balanced transactions.
+ * - Collects lines with debit/credit
+ * - Validates equality before save
+ * - Creates header + lines in DB and refreshes
+ */
 interface JournalEntryForm {
   transactionDate: string;
   description: string;

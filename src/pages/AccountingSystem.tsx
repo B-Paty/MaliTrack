@@ -1,20 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-import DashboardOverview from "@/components/modules/DashboardOverview";
 import ChartOfAccounts from "@/components/modules/ChartOfAccounts";
 import JournalEntry from "@/components/modules/JournalEntry";
 import TrialBalance from "@/components/modules/TrialBalance";
 import FinancialStatements from "@/components/modules/FinancialStatements";
 import TaxSettings from "@/components/modules/TaxSettings";
 import Invoices from "@/components/modules/Invoices";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { defaultCompanySettings } from "@/data/chartOfAccounts";
 import CompanySettings from "@/components/modules/CompanySettings";
+import DashboardOverview from "@/components/modules/DashboardOverview";
 
 export default function AccountingSystem() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeModule, setActiveModule] = useState('dashboard');
-  const { settings } = useCompanySettings();
+  const [activeModule, setActiveModule] = useState('chart-of-accounts');
+  const [companySettings] = useState(defaultCompanySettings);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<string>;
+      if (ce.detail) setActiveModule(ce.detail);
+    };
+    window.addEventListener('qsa:navigate-module', handler as EventListener);
+    return () => window.removeEventListener('qsa:navigate-module', handler as EventListener);
+  }, []);
 
   const renderActiveModule = () => {
     switch (activeModule) {
@@ -35,7 +44,7 @@ export default function AccountingSystem() {
       case 'company-settings':
         return <CompanySettings />;
       default:
-        return <DashboardOverview />;
+        return <ChartOfAccounts />;
     }
   };
 
@@ -43,7 +52,7 @@ export default function AccountingSystem() {
     <div className="min-h-screen bg-background">
       <Header
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        companyName={settings?.company_name || 'QSA Solutions'}
+        companyName={companySettings.companyName}
       />
       
       <div className="flex">
@@ -54,10 +63,8 @@ export default function AccountingSystem() {
           onModuleChange={setActiveModule}
         />
         
-        <main className="flex-1 p-6 lg:p-8 lg:ml-0 overflow-x-hidden bg-background">
-          <div className="max-w-7xl mx-auto">
-            {renderActiveModule()}
-          </div>
+        <main className="flex-1 p-4 lg:p-6 lg:ml-0 overflow-x-hidden">
+          {renderActiveModule()}
         </main>
       </div>
     </div>

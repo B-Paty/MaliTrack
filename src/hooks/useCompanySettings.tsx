@@ -1,3 +1,10 @@
+/**
+ * useCompanySettings
+ * Reads and updates the single `company_settings` row.
+ * - Fetches one row (or creates defaults on first save)
+ * - Provides updateSettings that either inserts or updates
+ * - Used by Company Settings page and exports/invoices for branding
+ */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

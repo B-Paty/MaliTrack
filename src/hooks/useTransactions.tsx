@@ -1,3 +1,17 @@
+/**
+ * useTransactions
+ * Reads and writes accounting transactions with lines from Supabase.
+ * - Fetches transactions with joined lines and account names
+ * - Validates that debits equal credits when creating
+ * - Generates reference numbers using DB RPC
+ *
+ * Returns:
+ * - transactions: Transaction[]
+ * - loading, error flags
+ * - fetchTransactions(): Promise<void>
+ * - createTransaction(tx): Promise<Transaction>
+ * - deleteTransaction(id): Promise<void>
+ */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

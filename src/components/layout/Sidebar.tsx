@@ -1,3 +1,9 @@
+/**
+ * Sidebar
+ * Left navigation grouped by module categories.
+ * - Collapsible on mobile
+ * - Highlights active module and calls onModuleChange
+ */
 import { useState } from "react";
 import { 
   Calculator, 

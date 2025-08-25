@@ -12,6 +12,12 @@ import { PDFExporter } from "@/lib/pdfExporter";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * TrialBalance
+ * Summarizes accounts into debit/credit columns and checks balance.
+ * - Reads accounts and places them in correct side
+ * - Shows totals and balance status
+ */
 export default function TrialBalance() {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const { accounts, loading, error } = useAccounts();
