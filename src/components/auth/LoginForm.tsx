@@ -92,8 +92,8 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md shadow-premium border-0 bg-gradient-secondary/50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-3 sm:p-4">
+      <Card className="w-full max-w-md shadow-premium border-0 bg-gradient-secondary/50 mx-2 sm:mx-0">
         <CardHeader className="text-center pb-6">
           <div className="flex items-center justify-center gap-3 mb-4">
             {/* Company Logo */}
@@ -102,7 +102,7 @@ export function LoginForm() {
                 <img
                   src={companyLogo}
                   alt={`${companyName} Logo`}
-                  className="h-12 w-auto max-w-[120px] object-contain"
+                  className="h-10 w-10 sm:h-12 sm:w-auto max-w-[120px] object-contain rounded-lg"
                   onError={(e) => {
                     // Fallback to icon if logo fails to load
                     const target = e.target as HTMLImageElement;
@@ -112,14 +112,14 @@ export function LoginForm() {
                   }}
                 />
                 {/* Fallback Icon (hidden by default) */}
-                <div className="hidden h-12 w-12 bg-primary rounded-xl items-center justify-center shadow-lg">
-                  <Building2 className="h-7 w-7 text-primary-foreground" />
+                <div className="hidden h-10 w-10 sm:h-12 sm:w-12 bg-primary rounded-xl items-center justify-center shadow-lg">
+                  <Building2 className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground" />
                 </div>
               </div>
             ) : (
               /* Default Icon when no logo */
-              <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                <Building2 className="h-7 w-7 text-primary-foreground" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                <Building2 className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground" />
               </div>
             )}
 

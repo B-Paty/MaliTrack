@@ -70,22 +70,44 @@ export default function ExportButtons({
 
   // Prepare export data
   const prepareExportData = (): ExportData => {
-    const filteredAccounts = exportOptions.includeZeroBalances 
-      ? accounts 
-      : accounts.filter(acc => acc.balance !== 0);
+    const filteredAccounts = exportOptions.includeZeroBalances
+      ? accounts
+      : accounts.filter(acc => acc.current_balance !== 0);
 
-    const totalDebits = filteredAccounts.reduce((sum, acc) => sum + (acc.debit_amount || 0), 0);
-    const totalCredits = filteredAccounts.reduce((sum, acc) => sum + (acc.credit_amount || 0), 0);
+    // Calculate proper debit/credit presentation based on account type and normal balance
+    const processedAccounts = filteredAccounts.map(acc => {
+      const balance = acc.current_balance;
+      let debit = 0;
+      let credit = 0;
 
-    return {
-      accounts: filteredAccounts.map(acc => ({
+      if (balance > 0) {
+        if (
+          acc.category === 'Current Asset' ||
+          acc.category === 'Fixed Asset' ||
+          acc.category === 'Expense' ||
+          (acc.category === 'Equity' && acc.normal_balance === 'debit')
+        ) {
+          debit = balance;
+        } else {
+          credit = balance;
+        }
+      }
+
+      return {
         code: acc.account_code,
         name: acc.account_name,
-        debit: acc.debit_amount || 0,
-        credit: acc.credit_amount || 0,
-        balance: acc.balance || 0,
-        category: acc.account_type
-      })),
+        debit,
+        credit,
+        balance: acc.current_balance,
+        category: acc.category
+      };
+    });
+
+    const totalDebits = processedAccounts.reduce((sum, acc) => sum + acc.debit, 0);
+    const totalCredits = processedAccounts.reduce((sum, acc) => sum + acc.credit, 0);
+
+    return {
+      accounts: processedAccounts,
       companySettings: {
         name: settings?.company_name || 'QSA Solutions',
         logo: settings?.logo_base64 || settings?.logo_path || '',
@@ -177,79 +199,59 @@ export default function ExportButtons({
           Export Options
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" />
-            Export Settings
+            Export Options
           </DialogTitle>
-          <DialogDescription>
-            Customize your export preferences and branding options
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Format Selection */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Export Format</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select
-                value={exportOptions.format}
-                onValueChange={(value: ExportOptions['format']) =>
-                  setExportOptions(prev => ({ ...prev, format: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pdf">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      PDF Report
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="excel-basic">
-                    <div className="flex items-center gap-2">
-                      <Table className="h-4 w-4" />
-                      Excel (Basic)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="excel-advanced">
-                    <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      Excel (Advanced)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="csv">
-                    <div className="flex items-center gap-2">
-                      <Table className="h-4 w-4" />
-                      CSV File
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Export Format</Label>
+            <Select
+              value={exportOptions.format}
+              onValueChange={(value: ExportOptions['format']) =>
+                setExportOptions(prev => ({ ...prev, format: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pdf">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    PDF Report
+                  </div>
+                </SelectItem>
+                <SelectItem value="excel-advanced">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Excel Report
+                  </div>
+                </SelectItem>
+                <SelectItem value="csv">
+                  <div className="flex items-center gap-2">
+                    <Table className="h-4 w-4" />
+                    CSV Data
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Branding Options */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                Branding
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Branding
+            </Label>
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Include Company Logo</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Add your company logo to the report header
-                  </p>
-                </div>
+                <span className="text-sm">Company Logo</span>
                 <Switch
                   checked={exportOptions.includeLogo}
                   onCheckedChange={(checked) =>
@@ -257,14 +259,8 @@ export default function ExportButtons({
                   }
                 />
               </div>
-
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Apply Brand Colors</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Use your company colors in headers and styling
-                  </p>
-                </div>
+                <span className="text-sm">Brand Colors</span>
                 <Switch
                   checked={exportOptions.colorTheme}
                   onCheckedChange={(checked) =>
@@ -272,131 +268,11 @@ export default function ExportButtons({
                   }
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Content Options */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Layout className="h-4 w-4" />
-                Content
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Include Summary</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Add summary statistics to the report
-                  </p>
-                </div>
-                <Switch
-                  checked={exportOptions.includeSummary}
-                  onCheckedChange={(checked) =>
-                    setExportOptions(prev => ({ ...prev, includeSummary: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Show Account Balances</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Display current account balances
-                  </p>
-                </div>
-                <Switch
-                  checked={exportOptions.showBalances}
-                  onCheckedChange={(checked) =>
-                    setExportOptions(prev => ({ ...prev, showBalances: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Include Zero Balances</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Show accounts with zero balance
-                  </p>
-                </div>
-                <Switch
-                  checked={exportOptions.includeZeroBalances}
-                  onCheckedChange={(checked) =>
-                    setExportOptions(prev => ({ ...prev, includeZeroBalances: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Group by Category</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Organize accounts by category (Excel only)
-                  </p>
-                </div>
-                <Switch
-                  checked={exportOptions.groupByCategory}
-                  onCheckedChange={(checked) =>
-                    setExportOptions(prev => ({ ...prev, groupByCategory: checked }))
-                  }
-                  disabled={exportOptions.format === 'pdf' || exportOptions.format === 'csv'}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Page Settings (PDF only) */}
-          {exportOptions.format === 'pdf' && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Page Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Page Size</Label>
-                    <Select
-                      value={exportOptions.pageSize}
-                      onValueChange={(value: 'A4' | 'Letter') =>
-                        setExportOptions(prev => ({ ...prev, pageSize: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A4">A4</SelectItem>
-                        <SelectItem value="Letter">Letter</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label>Orientation</Label>
-                    <Select
-                      value={exportOptions.orientation}
-                      onValueChange={(value: 'portrait' | 'landscape') =>
-                        setExportOptions(prev => ({ ...prev, orientation: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="portrait">Portrait</SelectItem>
-                        <SelectItem value="landscape">Landscape</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+            </div>
+          </div>
 
           {/* Export Button */}
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-4">
             <Button
               variant="outline"
               onClick={() => setShowExportDialog(false)}
@@ -416,7 +292,7 @@ export default function ExportButtons({
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              Export {exportOptions.format.toUpperCase()}
+              Export
             </Button>
           </div>
         </div>

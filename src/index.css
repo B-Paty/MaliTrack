@@ -280,13 +280,31 @@ All colors MUST be HSL.
   .dark .text-muted-foreground {
     color: hsl(var(--muted-foreground));
   }
-  
+
   .dark .bg-card {
     background-color: hsl(var(--card));
     color: hsl(var(--card-foreground));
   }
-  
+
   .dark .border {
     border-color: hsl(var(--border));
+  }
+
+  /* Mobile-friendly improvements */
+  @media (max-width: 640px) {
+    .mobile-optimized {
+      padding: 0.75rem;
+      margin: 0;
+    }
+
+    .mobile-text {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    .mobile-button {
+      min-height: 2.75rem;
+      padding: 0.5rem 1rem;
+    }
   }
 }

@@ -21,6 +21,24 @@ All notable changes to this project will be documented in this file.
 - **APPLIED: Removed Sample Account Buttons**: Eliminated manual "Add Sample Accounts" buttons - accounts are now created automatically on signup.
 - **APPLIED: Fixed Trial Balance useAuth Error**: Resolved "useAuth is not defined" error in Trial Balance component.
 - **APPLIED: Persistent Account Data**: All accounts now properly save to and load from the database with user-specific data.
+- **FIXED: Export Data Issues**: Corrected export functionality to use proper account properties (current_balance, normal_balance) instead of non-existent fields.
+- **FIXED: Export Options Dialog**: Simplified and compacted the export options menu for better user experience.
+- **FIXED: Debit/Credit Calculations**: Properly calculates debit and credit columns based on account type and normal balance rules.
+- **ADDED: Payment Settings Restored**: Added back payment settings with Bank and Vodacom Lipa Namba configuration in company settings.
+- **REMOVED: Settings Button from Header**: Removed the gear settings button from the application header for cleaner UI.
+- **ENHANCED: Logo Display**: Logo now appears in both header and login screen when uploaded, with proper fallback handling.
+- **FIXED: Mobile Sidebar Transparency**: Sidebar now uses solid background on mobile devices instead of transparent overlay.
+- **IMPROVED: Mobile Header Branding**: Header now shows only company logo on small screens (≤1023px) to prevent layout disruption.
+- **ENHANCED: Mobile Responsiveness**: Improved overall mobile experience with better spacing, touch targets, and layout adjustments.
+- **UPDATED: Layout Components**: Switched to enhanced header component with better mobile support throughout the app.
+- **FIXED: EnhancedHeader Settings Icon Error**: Resolved "Settings is not defined" error by adding missing Settings icon import to lucide-react imports.
+- **DOCUMENTED: Payment Settings Location**: Comprehensive payment settings feature with Bank and Vodacom Lipa Namba configuration located at:
+  - **Hook**: `src/hooks/usePaymentSettings.ts` - Core payment settings logic
+  - **UI Component**: `src/components/settings/EnhancedCompanySettings.tsx` - Payments tab in company settings
+  - **Database**: `company_settings.payment_settings` JSONB column stores configuration
+  - **Types**: `src/types/branding.ts` - PaymentSettings interface definition
+  - **Images**: `/public/images/contactless.png` (bank) and `/public/images/LIPA.png` (vodacom)
+  - **Features**: Bank details, account numbers, Vodacom M-Pesa integration, invoice integration
 - **APPLIED: Logo Integration in Header**: Company logo now displays in the main application header with fallback icon and responsive design.
 
 ### ✨ Enhancements

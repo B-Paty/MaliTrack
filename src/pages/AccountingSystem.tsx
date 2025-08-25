@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Header from "@/components/layout/Header";
+import EnhancedHeader from "@/components/layout/EnhancedHeader";
 import Sidebar from "@/components/layout/Sidebar";
 import ChartOfAccounts from "@/components/modules/ChartOfAccounts";
 import JournalEntry from "@/components/modules/JournalEntry";
@@ -51,7 +51,7 @@ export default function AccountingSystem() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
+      <EnhancedHeader
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
       
@@ -63,7 +63,7 @@ export default function AccountingSystem() {
           onModuleChange={setActiveModule}
         />
         
-        <main className="flex-1 p-4 lg:p-6 lg:ml-72 overflow-x-hidden">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 lg:ml-72 overflow-x-hidden min-h-[calc(100vh-4rem)]">
           {renderActiveModule()}
         </main>
       </div>

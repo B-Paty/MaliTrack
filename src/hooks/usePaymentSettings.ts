@@ -39,13 +39,13 @@ const defaultPaymentSettings: PaymentSettings = {
     bankName: '',
     accountName: '',
     accountNumber: '',
-    cardImageUrl: '/images/card(1).png'
+    cardImageUrl: '/images/contactless.png'
   },
   vodacom: {
     enabled: true,
     businessName: '',
     lipaNamba: '',
-    vodacomImageUrl: '/images/LIPA.png'
+    vodacomImageUrl: '/public/images/LIPA.png'
   }
 };
 

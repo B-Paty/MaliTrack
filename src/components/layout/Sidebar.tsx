@@ -85,8 +85,8 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
     <>
       {/* Overlay for mobile */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -94,7 +94,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-sidebar-background border-r border-sidebar-border z-50 transform transition-smooth duration-300 ease-in-out shadow-premium",
+          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-sidebar-background/95 backdrop-blur-sm border-r border-sidebar-border z-50 transform transition-smooth duration-300 ease-in-out shadow-premium lg:bg-sidebar-background lg:backdrop-blur-none",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >

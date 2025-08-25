@@ -4,9 +4,9 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
+import {
   Upload, Save, Building2, Palette, Image, Trash2, Eye, Download,
-  Phone, Mail, Globe, MapPin, Hash, Sparkles
+  Phone, Mail, Globe, MapPin, Hash, Sparkles, CreditCard, Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
+import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -50,8 +52,10 @@ export default function EnhancedCompanySettings() {
     removeLogo,
     getLogoForContext
   } = useEnhancedCompanySettings();
+  const { paymentSettings, savePaymentSettings } = usePaymentSettings();
 
   const [localSettings, setLocalSettings] = useState(settings);
+  const [localPayments, setLocalPayments] = useState(paymentSettings);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("company");
@@ -62,6 +66,10 @@ export default function EnhancedCompanySettings() {
       setLocalSettings(settings);
     }
   }, [settings]);
+
+  useEffect(() => {
+    setLocalPayments(paymentSettings);
+  }, [paymentSettings]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -102,6 +110,18 @@ export default function EnhancedCompanySettings() {
       await updateSettings(localSettings!, logoFile || undefined);
       setLogoFile(null);
       setLogoPreview(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleSavePaymentSettings = async () => {
+    try {
+      await savePaymentSettings(localPayments);
+      toast({
+        title: "Success",
+        description: "Payment settings saved successfully",
+      });
     } catch (error) {
       // Error handled in hook
     }
@@ -165,8 +185,9 @@ export default function EnhancedCompanySettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company">Company Info</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
           <TabsTrigger value="export">Export Settings</TabsTrigger>
@@ -541,6 +562,149 @@ export default function EnhancedCompanySettings() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Payment Settings Tab */}
+        <TabsContent value="payments" className="space-y-6">
+          <Card className="shadow-elevated border-0">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <CreditCard className="h-5 w-5 text-primary" />
+                Payment Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Bank Payment Settings */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      Bank Payment Details
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable bank payment option and configure account details
+                    </p>
+                  </div>
+                  <Switch
+                    checked={localPayments?.bank?.enabled || false}
+                    onCheckedChange={(checked) =>
+                      setLocalPayments(prev => prev ? {
+                        ...prev,
+                        bank: { ...prev.bank, enabled: checked }
+                      } : prev)
+                    }
+                  />
+                </div>
+
+                {localPayments?.bank?.enabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
+                    <div>
+                      <Label htmlFor="bankName" className="text-sm font-medium">Bank Name</Label>
+                      <Input
+                        id="bankName"
+                        value={localPayments.bank.bankName || ''}
+                        onChange={(e) => setLocalPayments(prev => prev ? {
+                          ...prev,
+                          bank: { ...prev.bank, bankName: e.target.value }
+                        } : prev)}
+                        placeholder="e.g., CRDB Bank"
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="accountName" className="text-sm font-medium">Account Name</Label>
+                      <Input
+                        id="accountName"
+                        value={localPayments.bank.accountName || ''}
+                        onChange={(e) => setLocalPayments(prev => prev ? {
+                          ...prev,
+                          bank: { ...prev.bank, accountName: e.target.value }
+                        } : prev)}
+                        placeholder="e.g., QSA Solutions Ltd"
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="accountNumber" className="text-sm font-medium">Account Number</Label>
+                      <Input
+                        id="accountNumber"
+                        value={localPayments.bank.accountNumber || ''}
+                        onChange={(e) => setLocalPayments(prev => prev ? {
+                          ...prev,
+                          bank: { ...prev.bank, accountNumber: e.target.value }
+                        } : prev)}
+                        placeholder="e.g., 201234567890"
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Vodacom Payment Settings */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <Smartphone className="h-4 w-4" />
+                      Vodacom Lipa Namba
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable Vodacom M-Pesa payment option
+                    </p>
+                  </div>
+                  <Switch
+                    checked={localPayments?.vodacom?.enabled || false}
+                    onCheckedChange={(checked) =>
+                      setLocalPayments(prev => prev ? {
+                        ...prev,
+                        vodacom: { ...prev.vodacom, enabled: checked }
+                      } : prev)
+                    }
+                  />
+                </div>
+
+                {localPayments?.vodacom?.enabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                    <div>
+                      <Label htmlFor="businessName" className="text-sm font-medium">Business Name</Label>
+                      <Input
+                        id="businessName"
+                        value={localPayments.vodacom.businessName || ''}
+                        onChange={(e) => setLocalPayments(prev => prev ? {
+                          ...prev,
+                          vodacom: { ...prev.vodacom, businessName: e.target.value }
+                        } : prev)}
+                        placeholder="e.g., QSA Solutions"
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lipaNamba" className="text-sm font-medium">Lipa Namba</Label>
+                      <Input
+                        id="lipaNamba"
+                        value={localPayments.vodacom.lipaNamba || ''}
+                        onChange={(e) => setLocalPayments(prev => prev ? {
+                          ...prev,
+                          vodacom: { ...prev.vodacom, lipaNamba: e.target.value }
+                        } : prev)}
+                        placeholder="e.g., 255712345678"
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSavePaymentSettings} className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Save Payment Settings
+                </Button>
               </div>
             </CardContent>
           </Card>

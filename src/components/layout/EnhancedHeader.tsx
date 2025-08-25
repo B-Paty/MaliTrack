@@ -4,9 +4,9 @@
  */
 
 import React from "react";
-import { 
-  Menu, Settings, TrendingUp, LogOut, User, Moon, Sun,
-  Building2, Sparkles
+import {
+  Menu, TrendingUp, LogOut, User, Moon, Sun,
+  Building2, Sparkles, Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SettingsDialog } from "./SettingsDialog";
+
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "./ThemeProvider";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
@@ -91,8 +91,8 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
             </div>
           )}
 
-          {/* Company Name */}
-          <div className="hidden sm:block">
+          {/* Company Name - Desktop Only */}
+          <div className="hidden lg:block">
             <h1 className="text-lg font-bold text-foreground">
               {companyName}
             </h1>
@@ -102,13 +102,6 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
                 Accounting System
               </Badge>
             </div>
-          </div>
-
-          {/* Mobile Company Name */}
-          <div className="sm:hidden">
-            <h1 className="text-base font-bold text-foreground">
-              {companyName}
-            </h1>
           </div>
         </div>
       </div>
@@ -134,16 +127,7 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
         
-        {/* Settings Dialog */}
-        <SettingsDialog>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-primary hover:bg-primary/5 transition-fast"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-        </SettingsDialog>
+
         
         {/* User Menu */}
         <DropdownMenu>
