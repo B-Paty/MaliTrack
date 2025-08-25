@@ -16,6 +16,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useLeakDetection } from '@/hooks/useLeakDetection';
 
 export interface Account {
   account_code: string;
@@ -32,6 +34,8 @@ export function useAccounts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { logDataAccess } = useLeakDetection();
 
   const fetchAccounts = async () => {
     try {
@@ -46,6 +50,9 @@ export function useAccounts() {
       if (fetchError) {
         throw fetchError;
       }
+
+      // Log data access for leak detection
+      await logDataAccess('chart_of_accounts', 'SELECT', undefined, data?.length || 0);
 
       setAccounts(data as Account[] || []);
     } catch (err) {
@@ -63,13 +70,20 @@ export function useAccounts() {
 
   const createAccount = async (accountData: Omit<Account, 'created_at' | 'updated_at'>) => {
     try {
+      if (!user) {
+        throw new Error('User must be authenticated to create accounts');
+      }
+
       const { data, error } = await supabase
         .from('chart_of_accounts')
-        .insert([accountData])
+        .insert([{ ...accountData, user_id: user.id }])
         .select()
         .single();
 
       if (error) throw error;
+
+      // Log data access for leak detection
+      await logDataAccess('chart_of_accounts', 'INSERT', data.account_code);
 
       setAccounts(prev => [...prev, data as Account]);
       toast({

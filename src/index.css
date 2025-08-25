@@ -94,44 +94,71 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark Mode with Red Accent (Optional - keeping light theme primary) */
-    --background: 220 15% 6%;
-    --foreground: 210 40% 98%;
+    /* Improved Dark Mode with Better Contrast */
+    --background: 220 15% 8%;
+    --foreground: 210 40% 95%;
 
-    --card: 220 15% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 15% 12%;
+    --card-foreground: 210 40% 95%;
 
-    --popover: 220 15% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 15% 12%;
+    --popover-foreground: 210 40% 95%;
 
-    --primary: 343 89% 37%;    /* Keep red primary in dark mode */
+    /* Brand Colors - Enhanced for Dark Mode */
+    --brand-red: 343 89% 45%;
+    --brand-white: 220 15% 12%;
+    
+    --primary: 343 89% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 343 89% 42%;
-    --primary-glow: 343 89% 50%;
+    --primary-hover: 343 89% 50%;
+    --primary-glow: 343 89% 55%;
+    --primary-light: 343 89% 15%;
+    --primary-muted: 343 89% 35%;
 
-    --secondary: 220 15% 12%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 40% 95%;
 
-    --muted: 220 15% 12%;
-    --muted-foreground: 220 15% 65%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 220 15% 70%;
 
-    --accent: 220 15% 14%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 220 15% 18%;
+    --accent-foreground: 210 40% 95%;
 
-    --destructive: 343 89% 45%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 343 89% 50%;
+    --destructive-foreground: 210 40% 95%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 343 89% 37%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --success: 142 76% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 96% 58%;
+    --warning-foreground: 220 15% 15%;
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 15% 24%;
+    --input: 220 15% 18%;
+    --ring: 343 89% 45%;
+
+    /* Dark Mode Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(343 89% 45%), hsl(343 89% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 15% 12%), hsl(220 15% 16%));
+    --gradient-header: linear-gradient(135deg, hsl(343 89% 45%), hsl(343 89% 40%));
+    --gradient-card: linear-gradient(145deg, hsl(220 15% 12%), hsl(220 15% 14%));
+    --gradient-accent: linear-gradient(135deg, hsl(343 89% 45% / 0.1), hsl(343 89% 45% / 0.2));
+    
+    /* Dark Mode Shadows */
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+    --shadow-premium: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
+
+    /* Sidebar Dark Mode */
+    --sidebar-background: 220 15% 10%;
+    --sidebar-foreground: 210 40% 90%;
+    --sidebar-primary: 343 89% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 210 40% 90%;
+    --sidebar-border: 220 15% 24%;
+    --sidebar-ring: 343 89% 45%;
   }
 }
 
@@ -142,5 +169,42 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Dark mode specific utility classes */
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .bg-gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  
+  .shadow-premium {
+    box-shadow: var(--shadow-premium);
+  }
+
+  /* Ensure proper contrast in dark mode */
+  .dark .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .dark .bg-card {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+  }
+  
+  .dark .border {
+    border-color: hsl(var(--border));
   }
 }

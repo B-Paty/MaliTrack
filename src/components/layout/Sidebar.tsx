@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   Building2,
   PlusCircle,
-  Sparkles
+  Sparkles,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,12 @@ const menuGroups: MenuGroup[] = [
       { id: 'tax-settings', label: 'Tax Settings', icon: Settings },
       { id: 'company-settings', label: 'Company Settings', icon: Building2 },
     ]
+  },
+  {
+    label: "Security & Monitoring",
+    items: [
+      { id: 'security', label: 'Security Dashboard', icon: Shield },
+    ]
   }
 ];
 
@@ -87,8 +94,8 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-brand-white border-r border-primary/10 z-50 transform transition-smooth duration-300 ease-in-out lg:relative lg:top-0 lg:h-[calc(100vh-4rem)] lg:translate-x-0 lg:z-auto shadow-premium",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-sidebar-background border-r border-sidebar-border z-50 transform transition-smooth duration-300 ease-in-out shadow-premium",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex flex-col h-full">

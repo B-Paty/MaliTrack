@@ -13,6 +13,7 @@
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export type PaymentSettings = {
   bank: {
@@ -50,6 +51,7 @@ const defaultPaymentSettings: PaymentSettings = {
 
 export function usePaymentSettings() {
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(defaultPaymentSettings);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

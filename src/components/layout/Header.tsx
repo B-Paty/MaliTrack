@@ -2,10 +2,11 @@
  * Header
  * Top bar with sidebar toggle, settings button, and company name.
  */
-import { Menu, Settings, TrendingUp, LogOut, User } from "lucide-react";
+import { Menu, Settings, TrendingUp, LogOut, User, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsDialog } from "./SettingsDialog";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useTheme } from "./ThemeProvider";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -22,13 +23,18 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
-    <header className="h-16 bg-brand-white border-b border-primary/10 flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50">
+    <header className="h-16 bg-background border-b border-border flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -51,6 +57,15 @@ export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="text-muted-foreground hover:text-primary hover:bg-primary/5 transition-fast"
+        >
+          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
+        
         <SettingsDialog>
           <Button 
             variant="ghost" 

@@ -15,6 +15,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export interface TransactionLine {
   id?: string;
@@ -39,6 +40,7 @@ export function useTransactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchTransactions = async () => {
     try {
@@ -86,6 +88,10 @@ export function useTransactions() {
 
   const createTransaction = async (transactionData: Transaction) => {
     try {
+      if (!user) {
+        throw new Error('User must be authenticated to create transactions');
+      }
+
       // Validate that debits equal credits
       const totalDebits = transactionData.lines.reduce((sum, line) => sum + line.debit_amount, 0);
       const totalCredits = transactionData.lines.reduce((sum, line) => sum + line.credit_amount, 0);
@@ -107,6 +113,7 @@ export function useTransactions() {
           reference_number: refNumber,
           transaction_date: transactionData.transaction_date,
           description: transactionData.description,
+          user_id: user.id,
         }])
         .select()
         .single();

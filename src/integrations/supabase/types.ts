@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          accessed_at: string | null
+          id: string
+          ip_address: unknown | null
+          operation: string
+          record_count: number | null
+          record_id: string | null
+          risk_score: number | null
+          session_id: string | null
+          suspicious_flags: Json | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accessed_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          operation: string
+          record_count?: number | null
+          record_id?: string | null
+          risk_score?: number | null
+          session_id?: string | null
+          suspicious_flags?: Json | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accessed_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          operation?: string
+          record_count?: number | null
+          record_id?: string | null
+          risk_score?: number | null
+          session_id?: string | null
+          suspicious_flags?: Json | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chart_of_accounts: {
         Row: {
           account_code: string
@@ -23,6 +68,7 @@ export type Database = {
           current_balance: number
           normal_balance: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           account_code: string
@@ -32,6 +78,7 @@ export type Database = {
           current_balance?: number
           normal_balance: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           account_code?: string
@@ -41,6 +88,7 @@ export type Database = {
           current_balance?: number
           normal_balance?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -53,6 +101,7 @@ export type Database = {
           logo_path: string | null
           primary_color: string
           updated_at: string
+          user_id: string
           payment_settings: Json | null
         }
         Insert: {
@@ -63,6 +112,7 @@ export type Database = {
           logo_path?: string | null
           primary_color?: string
           updated_at?: string
+          user_id: string
           payment_settings?: Json | null
         }
         Update: {
@@ -73,7 +123,83 @@ export type Database = {
           logo_path?: string | null
           primary_color?: string
           updated_at?: string
+          user_id?: string
           payment_settings?: Json | null
+        }
+        Relationships: []
+      }
+      leak_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_resolved: boolean | null
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      suspicious_patterns: {
+        Row: {
+          created_at: string | null
+          detection_query: string
+          id: string
+          is_active: boolean | null
+          pattern_description: string | null
+          pattern_name: string
+          risk_weight: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          detection_query: string
+          id?: string
+          is_active?: boolean | null
+          pattern_description?: string | null
+          pattern_name: string
+          risk_weight?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          detection_query?: string
+          id?: string
+          is_active?: boolean | null
+          pattern_description?: string | null
+          pattern_name?: string
+          risk_weight?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -127,6 +253,7 @@ export type Database = {
           reference_number: string
           transaction_date: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -135,6 +262,7 @@ export type Database = {
           reference_number: string
           transaction_date: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -143,6 +271,7 @@ export type Database = {
           reference_number?: string
           transaction_date?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -151,9 +280,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      detect_data_leaks: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          alert_id: string
+          description: string
+          detected_at: string
+          leak_type: string
+          severity: string
+          user_email: string
+        }[]
+      }
       generate_reference_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      log_data_access: {
+        Args: {
+          p_operation: string
+          p_record_count?: number
+          p_record_id?: string
+          p_table_name: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

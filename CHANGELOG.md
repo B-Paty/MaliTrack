@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+
 ### 🔒 CRITICAL SECURITY FIX
 - **APPLIED: Fixed public access to financial data**: All tables (`chart_of_accounts`, `transactions`, `transaction_lines`, `company_settings`) now require authentication. Dangerous public policies removed and replaced with authenticated-only RLS policies.
 - **APPLIED: Added authentication system**: Email/password login with Supabase Auth. App now requires authentication by default.
+- **APPLIED: Implemented user-company data isolation**: Added `user_id` columns and updated RLS policies to ensure users can only access their own financial data. Multi-tenant security enforced.
+- **APPLIED: Enabled leaked data detection system**: Comprehensive audit logging, suspicious activity detection, real-time security alerts, and monitoring dashboard to prevent data breaches.
+- **APPLIED: Fixed dark mode styling**: Improved contrast, proper theme variables, and added theme toggle button in header.
 
 ### ✨ Enhancements
 - Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.

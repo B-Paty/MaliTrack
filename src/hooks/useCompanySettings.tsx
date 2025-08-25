@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export interface CompanySettings {
   id?: string;
@@ -24,6 +25,7 @@ export function useCompanySettings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchSettings = async () => {
     try {
@@ -60,6 +62,10 @@ export function useCompanySettings() {
 
   const updateSettings = async (updates: Partial<CompanySettings>) => {
     try {
+      if (!user) {
+        throw new Error('User must be authenticated to update settings');
+      }
+
       if (!settings?.id) {
         // Create new settings
         const { data, error } = await supabase
@@ -67,6 +73,7 @@ export function useCompanySettings() {
           .insert([{
             company_name: 'QSA Solutions',
             primary_color: '#a1052d',
+            user_id: user.id,
             ...updates,
           }])
           .select()

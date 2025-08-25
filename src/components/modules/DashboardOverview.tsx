@@ -167,7 +167,7 @@ export default function DashboardOverview() {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <div className="bg-gradient-card rounded-2xl p-8 border border-primary/10 shadow-premium">
+      <div className="bg-gradient-secondary rounded-2xl p-8 border border-primary/10 shadow-premium">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">Welcome back, Administrator</h1>
@@ -192,7 +192,7 @@ export default function DashboardOverview() {
           const TrendIcon = stat.trend === "up" ? ArrowUpRight : ArrowDownRight;
           
           return (
-            <Card key={index} className="bg-brand-white border-primary/10 shadow-card hover:shadow-elevated transition-smooth rounded-xl">
+            <Card key={index} className="bg-card border-primary/10 shadow-card hover:shadow-elevated transition-smooth rounded-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                   {stat.title}
@@ -222,7 +222,7 @@ export default function DashboardOverview() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Quick Actions */}
-        <Card className="bg-brand-white border-primary/10 shadow-card rounded-xl">
+        <Card className="bg-card border-primary/10 shadow-card rounded-xl">
           <CardHeader>
             <CardTitle className="text-primary font-bold flex items-center gap-2">
               <Activity className="h-5 w-5" />
@@ -249,7 +249,7 @@ export default function DashboardOverview() {
         </Card>
 
         {/* Recent Activities */}
-        <Card className="bg-brand-white border-primary/10 shadow-card rounded-xl">
+        <Card className="bg-card border-primary/10 shadow-card rounded-xl">
           <CardHeader>
             <CardTitle className="text-primary font-bold flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />

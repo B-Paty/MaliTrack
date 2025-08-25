@@ -10,6 +10,7 @@ import Invoices from "@/components/modules/Invoices";
 import { defaultCompanySettings } from "@/data/chartOfAccounts";
 import CompanySettings from "@/components/modules/CompanySettings";
 import DashboardOverview from "@/components/modules/DashboardOverview";
+import SecurityDashboard from "@/components/modules/SecurityDashboard";
 
 export default function AccountingSystem() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,6 +44,8 @@ export default function AccountingSystem() {
         return <TaxSettings />;
       case 'company-settings':
         return <CompanySettings />;
+      case 'security':
+        return <SecurityDashboard />;
       default:
         return <ChartOfAccounts />;
     }
@@ -63,7 +66,7 @@ export default function AccountingSystem() {
           onModuleChange={setActiveModule}
         />
         
-        <main className="flex-1 p-4 lg:p-6 lg:ml-0 overflow-x-hidden">
+        <main className="flex-1 p-4 lg:p-6 lg:ml-72 overflow-x-hidden">
           {renderActiveModule()}
         </main>
       </div>
