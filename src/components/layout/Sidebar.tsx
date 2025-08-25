@@ -7,7 +7,8 @@ import {
   Settings,
   ChevronLeft,
   Building2,
-  PlusCircle
+  PlusCircle,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,12 @@ type MenuGroup = {
 };
 
 const menuGroups: MenuGroup[] = [
+  {
+    label: "Overview",
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+    ]
+  },
   {
     label: "Core Accounting",
     items: [
@@ -65,7 +72,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -73,23 +80,25 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:top-0 lg:h-[calc(100vh-4rem)] lg:translate-x-0 lg:z-auto shadow-elevated",
+          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-brand-white border-r border-primary/10 z-50 transform transition-smooth duration-300 ease-in-out lg:relative lg:top-0 lg:h-[calc(100vh-4rem)] lg:translate-x-0 lg:z-auto shadow-premium",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-primary/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">Modules</span>
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-brand-white" />
+                </div>
+                <span className="font-bold text-primary text-lg">Navigation</span>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="lg:hidden"
+                className="lg:hidden text-muted-foreground hover:text-primary hover:bg-primary/5"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -97,12 +106,12 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 py-2 px-3">
-            <div className="space-y-4">
+          <nav className="flex-1 py-4 px-3">
+            <div className="space-y-6">
               {menuGroups.map((group, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="px-2 mb-1">
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{group.label}</h3>
+                <div key={index} className="space-y-2">
+                  <div className="px-3 mb-3">
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-primary/20 pb-1">{group.label}</h3>
                   </div>
                   {group.items.map((item) => {
                     const Icon = item.icon;
@@ -113,10 +122,10 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                         key={item.id}
                         variant={isActive ? "default" : "ghost"}
                         className={cn(
-                          "w-full justify-start gap-2 h-9 px-2 text-sm transition-all duration-200",
+                          "w-full justify-start gap-3 h-11 px-3 text-sm font-medium transition-fast rounded-xl",
                           isActive 
-                            ? "bg-primary text-primary-foreground shadow-glow" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            ? "bg-gradient-primary text-brand-white shadow-glow-strong hover:bg-gradient-primary" 
+                            : "text-muted-foreground hover:text-primary hover:bg-primary/5 hover:shadow-card"
                         )}
                         onClick={() => {
                           onModuleChange(item.id);
@@ -126,8 +135,8 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                           }
                         }}
                       >
-                        <Icon className="h-4 w-4" />
-                        <span className="font-medium">{item.label}</span>
+                        <Icon className={cn("h-5 w-5", isActive ? "text-brand-white" : "text-primary")} />
+                        <span>{item.label}</span>
                       </Button>
                     );
                   })}
@@ -137,10 +146,15 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-border">
-            <div className="bg-gradient-secondary rounded-lg p-3">
-              <p className="text-sm font-medium text-foreground mb-1">QSA Solutions</p>
-              <p className="text-xs text-muted-foreground">Professional Accounting System</p>
+          <div className="p-4 border-t border-primary/10">
+            <div className="bg-gradient-accent rounded-xl p-4 border border-primary/10">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                  <Building2 className="h-3 w-3 text-brand-white" />
+                </div>
+                <p className="text-sm font-bold text-primary">QSA Solutions</p>
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">Premium Accounting Suite</p>
             </div>
           </div>
         </div>

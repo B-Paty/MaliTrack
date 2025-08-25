@@ -24,11 +24,15 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				'brand-red': 'hsl(var(--brand-red))',
+				'brand-white': 'hsl(var(--brand-white))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
 					hover: 'hsl(var(--primary-hover))',
-					glow: 'hsl(var(--primary-glow))'
+					glow: 'hsl(var(--primary-glow))',
+					light: 'hsl(var(--primary-light))',
+					muted: 'hsl(var(--primary-muted))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -80,15 +84,21 @@ export default {
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-secondary': 'var(--gradient-secondary)',
-				'gradient-header': 'var(--gradient-header)'
+				'gradient-header': 'var(--gradient-header)',
+				'gradient-card': 'var(--gradient-card)',
+				'gradient-accent': 'var(--gradient-accent)'
 			},
 			boxShadow: {
 				card: 'var(--shadow-card)',
 				elevated: 'var(--shadow-elevated)',
-				glow: 'var(--shadow-glow)'
+				premium: 'var(--shadow-premium)',
+				glow: 'var(--shadow-glow)',
+				'glow-strong': 'var(--shadow-glow-strong)'
 			},
 			transitionProperty: {
-				smooth: 'var(--transition-smooth)'
+				smooth: 'var(--transition-smooth)',
+				fast: 'var(--transition-fast)',
+				bounce: 'var(--transition-bounce)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
