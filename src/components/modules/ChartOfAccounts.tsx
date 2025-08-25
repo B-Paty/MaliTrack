@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef } from "react";
+
+import { useState, useMemo } from "react";
 import { Search, Download, Filter } from "lucide-react";
 import AccountDetails from "./AccountDetails";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { useAccounts, type Account } from "@/hooks/useAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { PDFExporter } from "@/lib/pdfExporter";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useToast } from "@/hooks/use-toast";
 
 const categoryColors: { [key: string]: string } = {
   'Current Asset': 'bg-info/10 text-info border-info/20',
@@ -28,7 +30,8 @@ export default function ChartOfAccounts() {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [exporting, setExporting] = useState(false);
   const { accounts, loading, error } = useAccounts();
-  const exportRef = useRef<HTMLDivElement>(null);
+  const { settings } = useCompanySettings();
+  const { toast } = useToast();
 
   const categories = Array.from(new Set(accounts.map(account => account.category)))
     .sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b));
@@ -65,34 +68,39 @@ export default function ChartOfAccounts() {
   }, [groupedAccounts]);
 
   const handleExport = async () => {
-    if (!exportRef.current) return;
+    if (!accounts.length) {
+      toast({
+        variant: 'destructive',
+        title: 'Export Error',
+        description: 'No accounts data to export',
+      });
+      return;
+    }
     
     setExporting(true);
     try {
-      // Hide export button during capture
-      const exportButton = document.querySelector('[data-export-button]') as HTMLElement;
-      if (exportButton) exportButton.style.display = 'none';
-      
-      const canvas = await html2canvas(exportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: exportRef.current.scrollWidth,
-        height: exportRef.current.scrollHeight
+      const exporter = new PDFExporter({
+        title: 'Chart of Accounts',
+        subtitle: 'Complete Account Listing',
+        companyName: settings?.company_name || 'QSA Solutions',
+        reportDate: new Date().toISOString().split('T')[0],
+        pageSize: 'a4',
+        orientation: 'portrait'
       });
       
-      // Restore export button
-      if (exportButton) exportButton.style.display = '';
+      exporter.exportChartOfAccounts(accounts);
       
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`chart-of-accounts-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast({
+        title: 'Success',
+        description: 'Chart of Accounts exported successfully',
+      });
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error('Chart of Accounts export failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Export Error',
+        description: error instanceof Error ? error.message : 'Failed to export PDF',
+      });
     } finally {
       setExporting(false);
     }
@@ -131,7 +139,7 @@ export default function ChartOfAccounts() {
   }
 
   return (
-    <div className="space-y-6" ref={exportRef}>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -145,10 +153,9 @@ export default function ChartOfAccounts() {
             className="gap-2" 
             onClick={handleExport}
             disabled={exporting}
-            data-export-button
           >
             <Download className="h-4 w-4" />
-            {exporting ? "Exporting..." : "Export"}
+            {exporting ? "Exporting..." : "Export PDF"}
           </Button>
         </div>
       </div>

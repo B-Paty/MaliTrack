@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { FileText, Download, Calendar, Building2, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,20 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { PDFExporter } from "@/lib/pdfExporter";
+import { useToast } from "@/hooks/use-toast";
 
 type StatementType = 'income' | 'balance' | 'cash';
 
 export default function FinancialStatements() {
   const { accounts, loading: accountsLoading } = useAccounts();
   const { settings } = useCompanySettings();
+  const { toast } = useToast();
   
   const [selectedStatement, setSelectedStatement] = useState<StatementType>('income');
   const [dateFrom, setDateFrom] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
   const [exporting, setExporting] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
 
   // Calculate statement data
   const statementData = useMemo(() => {
@@ -60,33 +60,41 @@ export default function FinancialStatements() {
   }, [accounts]);
 
   const handleExport = async () => {
-    if (!exportRef.current) return;
+    if (!statementData) {
+      toast({
+        variant: 'destructive',
+        title: 'Export Error',
+        description: 'No financial data to export',
+      });
+      return;
+    }
+    
     setExporting(true);
     try {
-      const exportButton = document.querySelector('[data-export-button]') as HTMLElement;
-      if (exportButton) exportButton.style.display = 'none';
-
-      const canvas = await html2canvas(exportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: exportRef.current.scrollWidth,
-        height: exportRef.current.scrollHeight,
+      const exporter = new PDFExporter({
+        title: selectedStatement === 'income' ? 'Income Statement' : 
+               selectedStatement === 'balance' ? 'Balance Sheet' : 'Cash Flow Statement',
+        companyName: settings?.company_name || 'QSA Solutions',
+        reportDate: selectedStatement === 'balance' ? dateTo : dateFrom,
+        pageSize: 'a4',
+        orientation: 'portrait'
       });
-
-      if (exportButton) exportButton.style.display = '';
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      const name = selectedStatement === 'income' ? 'income-statement'
-        : selectedStatement === 'balance' ? 'balance-sheet' : 'cash-flow';
-      pdf.save(`${name}-${dateFrom}-to-${dateTo}.pdf`);
+      
+      if (selectedStatement === 'income' || selectedStatement === 'balance') {
+        exporter.exportFinancialStatement(selectedStatement, statementData, { from: dateFrom, to: dateTo });
+        
+        toast({
+          title: 'Success',
+          description: `${selectedStatement === 'income' ? 'Income Statement' : 'Balance Sheet'} exported successfully`,
+        });
+      }
     } catch (error) {
       console.error('Financial Statements export failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Export Error',
+        description: error instanceof Error ? error.message : 'Failed to export PDF',
+      });
     } finally {
       setExporting(false);
     }
@@ -97,7 +105,6 @@ export default function FinancialStatements() {
 
     return (
       <div className="space-y-6">
-        {/* Company Header */}
         <div className="text-center border-b border-border pb-6">
           <h2 className="text-2xl font-bold text-foreground">{settings?.company_name || 'QSA Solutions'}</h2>
           <h3 className="text-xl font-semibold text-muted-foreground mt-2">Income Statement</h3>
@@ -106,7 +113,6 @@ export default function FinancialStatements() {
           </p>
         </div>
 
-        {/* Revenue Section */}
         <div className="space-y-4">
           <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">REVENUE</h4>
           {statementData.revenue.map(account => (
@@ -121,7 +127,6 @@ export default function FinancialStatements() {
           </div>
         </div>
 
-        {/* Expenses Section */}
         <div className="space-y-4">
           <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">EXPENSES</h4>
           {statementData.expenses.map(account => (
@@ -136,7 +141,6 @@ export default function FinancialStatements() {
           </div>
         </div>
 
-        {/* Net Income */}
         <div className="border-t-2 border-primary pt-4">
           <div className="flex justify-between py-3 text-xl font-bold">
             <span className="text-foreground">NET INCOME</span>
@@ -160,7 +164,6 @@ export default function FinancialStatements() {
 
     return (
       <div className="space-y-6">
-        {/* Company Header */}
         <div className="text-center border-b border-border pb-6">
           <h2 className="text-2xl font-bold text-foreground">{settings?.company_name || 'QSA Solutions'}</h2>
           <h3 className="text-xl font-semibold text-muted-foreground mt-2">Balance Sheet</h3>
@@ -168,7 +171,6 @@ export default function FinancialStatements() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Assets */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">ASSETS</h4>
             {statementData.assets.map(account => (
@@ -185,9 +187,7 @@ export default function FinancialStatements() {
             </div>
           </div>
 
-          {/* Liabilities & Equity */}
           <div className="space-y-6">
-            {/* Liabilities */}
             <div className="space-y-4">
               <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">LIABILITIES</h4>
               {statementData.liabilities.map(account => (
@@ -202,7 +202,6 @@ export default function FinancialStatements() {
               </div>
             </div>
 
-            {/* Equity */}
             <div className="space-y-4">
               <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">EQUITY</h4>
               {statementData.equity.map(account => (
@@ -221,7 +220,6 @@ export default function FinancialStatements() {
               </div>
             </div>
 
-            {/* Total Liabilities & Equity */}
             <div className="border-t-2 border-primary pt-4">
               <div className="flex justify-between py-2 font-semibold text-lg">
                 <span className="text-foreground">Total Liabilities & Equity</span>
@@ -314,32 +312,30 @@ export default function FinancialStatements() {
       </Card>
 
       {/* Statement Content */}
-      <div ref={exportRef}>
-        <Card className="shadow-elevated border-0">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <FileText className="h-5 w-5 text-primary" />
-                {selectedStatement === 'income' ? 'Income Statement' : 
-                 selectedStatement === 'balance' ? 'Balance Sheet' : 'Cash Flow Statement'}
-              </CardTitle>
-              <Button variant="outline" size="sm" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting} data-export-button>
-                <Download className="h-4 w-4" />
-                {exporting ? 'Exporting...' : 'Export PDF'}
-              </Button>
+      <Card className="shadow-elevated border-0">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <FileText className="h-5 w-5 text-primary" />
+              {selectedStatement === 'income' ? 'Income Statement' : 
+               selectedStatement === 'balance' ? 'Balance Sheet' : 'Cash Flow Statement'}
+            </CardTitle>
+            <Button variant="outline" size="sm" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting}>
+              <Download className="h-4 w-4" />
+              {exporting ? 'Exporting...' : 'Export PDF'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="bg-white rounded-lg p-8 border border-border/20">
+          {selectedStatement === 'income' && renderIncomeStatement()}
+          {selectedStatement === 'balance' && renderBalanceSheet()}
+          {selectedStatement === 'cash' && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Cash Flow Statement coming soon...</p>
             </div>
-          </CardHeader>
-          <CardContent className="bg-white rounded-lg p-8 border border-border/20">
-            {selectedStatement === 'income' && renderIncomeStatement()}
-            {selectedStatement === 'balance' && renderBalanceSheet()}
-            {selectedStatement === 'cash' && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Cash Flow Statement coming soon...</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
