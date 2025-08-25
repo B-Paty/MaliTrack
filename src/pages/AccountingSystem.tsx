@@ -8,13 +8,13 @@ import TrialBalance from "@/components/modules/TrialBalance";
 import FinancialStatements from "@/components/modules/FinancialStatements";
 import TaxSettings from "@/components/modules/TaxSettings";
 import Invoices from "@/components/modules/Invoices";
-import { defaultCompanySettings } from "@/data/chartOfAccounts";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import CompanySettings from "@/components/modules/CompanySettings";
 
 export default function AccountingSystem() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [companySettings] = useState(defaultCompanySettings);
+  const { settings } = useCompanySettings();
 
   const renderActiveModule = () => {
     switch (activeModule) {
@@ -43,7 +43,7 @@ export default function AccountingSystem() {
     <div className="min-h-screen bg-background">
       <Header
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        companyName={companySettings.companyName}
+        companyName={settings?.company_name || 'QSA Solutions'}
       />
       
       <div className="flex">

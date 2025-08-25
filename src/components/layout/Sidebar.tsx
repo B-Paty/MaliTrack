@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -106,8 +107,8 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 py-4 px-3">
-            <div className="space-y-6">
+          <ScrollArea className="flex-1 px-3 py-4">
+            <div className="space-y-6 pb-24">
               {menuGroups.map((group, index) => (
                 <div key={index} className="space-y-2">
                   <div className="px-3 mb-3">
@@ -143,7 +144,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                 </div>
               ))}
             </div>
-          </nav>
+          </ScrollArea>
 
           {/* Footer */}
           <div className="p-4 border-t border-primary/10">
