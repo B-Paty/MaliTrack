@@ -1,17 +1,14 @@
 
 import { useState, useMemo } from "react";
-import { Search, Download, Filter } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import AccountDetails from "./AccountDetails";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAccounts, type Account } from "@/hooks/useAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { PDFExporter } from "@/lib/pdfExporter";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { useToast } from "@/hooks/use-toast";
+import ExportButtons from "@/components/exports/ExportButtons";
 
 /**
  * ChartOfAccounts
@@ -35,10 +32,7 @@ export default function ChartOfAccounts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-  const [exporting, setExporting] = useState(false);
   const { accounts, loading, error } = useAccounts();
-  const { settings } = useCompanySettings();
-  const { toast } = useToast();
 
   const categories = Array.from(new Set(accounts.map(account => account.category)))
     .sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b));
@@ -74,44 +68,7 @@ export default function ChartOfAccounts() {
     return totals;
   }, [groupedAccounts]);
 
-  const handleExport = async () => {
-    if (!accounts.length) {
-      toast({
-        variant: 'destructive',
-        title: 'Export Error',
-        description: 'No accounts data to export',
-      });
-      return;
-    }
-    
-    setExporting(true);
-    try {
-      const exporter = new PDFExporter({
-        title: 'Chart of Accounts',
-        subtitle: 'Complete Account Listing',
-        companyName: settings?.company_name || 'QSA Solutions',
-        reportDate: new Date().toISOString().split('T')[0],
-        pageSize: 'a4',
-        orientation: 'portrait'
-      });
-      
-      exporter.exportChartOfAccounts(accounts);
-      
-      toast({
-        title: 'Success',
-        description: 'Chart of Accounts exported successfully',
-      });
-    } catch (error) {
-      console.error('Chart of Accounts export failed:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Export Error',
-        description: error instanceof Error ? error.message : 'Failed to export PDF',
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -123,6 +80,8 @@ export default function ChartOfAccounts() {
       </div>
     );
   }
+
+  console.log('ChartOfAccounts render - accounts:', accounts.length, 'error:', error);
 
   if (error) {
     return (
@@ -155,15 +114,7 @@ export default function ChartOfAccounts() {
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2" 
-            onClick={handleExport}
-            disabled={exporting}
-          >
-            <Download className="h-4 w-4" />
-            {exporting ? "Exporting..." : "Export PDF"}
-          </Button>
+          <ExportButtons reportTitle="Chart of Accounts" />
         </div>
       </div>
 
@@ -198,6 +149,8 @@ export default function ChartOfAccounts() {
           </div>
         </CardContent>
       </Card>
+
+
 
       {/* Accounts Table */}
       <div className="space-y-6">

@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Lock, Mail, User, Building2 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
+import { useEnhancedCompanySettings } from '@/hooks/useEnhancedCompanySettings';
 
 export function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -25,6 +26,11 @@ export function LoginForm() {
   const [message, setMessage] = useState<string | null>(null);
 
   const { signIn, signUp } = useAuth();
+  const { settings, getLogoForContext } = useEnhancedCompanySettings();
+
+  // Get company branding
+  const companyName = settings?.company_name || 'QSA Solutions';
+  const companyLogo = getLogoForContext('preview');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,12 +96,36 @@ export function LoginForm() {
       <Card className="w-full max-w-md shadow-premium border-0 bg-gradient-secondary/50">
         <CardHeader className="text-center pb-6">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-              <Building2 className="h-7 w-7 text-primary-foreground" />
-            </div>
+            {/* Company Logo */}
+            {companyLogo ? (
+              <div className="flex-shrink-0">
+                <img
+                  src={companyLogo}
+                  alt={`${companyName} Logo`}
+                  className="h-12 w-auto max-w-[120px] object-contain"
+                  onError={(e) => {
+                    // Fallback to icon if logo fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                {/* Fallback Icon (hidden by default) */}
+                <div className="hidden h-12 w-12 bg-primary rounded-xl items-center justify-center shadow-lg">
+                  <Building2 className="h-7 w-7 text-primary-foreground" />
+                </div>
+              </div>
+            ) : (
+              /* Default Icon when no logo */
+              <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                <Building2 className="h-7 w-7 text-primary-foreground" />
+              </div>
+            )}
+
             <div>
               <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                QSA Solutions
+                {companyName}
               </h1>
               <p className="text-sm text-muted-foreground">Accounting System</p>
             </div>

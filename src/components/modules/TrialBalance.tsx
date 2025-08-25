@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Calendar, Download, CheckCircle, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Calendar, CheckCircle, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { useAccounts } from "@/hooks/useAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { PDFExporter } from "@/lib/pdfExporter";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import ExportButtons from "@/components/exports/ExportButtons";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 
 /**
@@ -21,9 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 export default function TrialBalance() {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const { accounts, loading, error } = useAccounts();
-  const { settings } = useCompanySettings();
-  const { toast } = useToast();
-  const [exporting, setExporting] = useState(false);
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
@@ -113,44 +109,7 @@ export default function TrialBalance() {
     'Expense': 'bg-warning/20 text-warning border-warning/30',
   };
 
-  const handleExport = async () => {
-    if (!accounts.length) {
-      toast({
-        variant: 'destructive',
-        title: 'Export Error',
-        description: 'No accounts data to export',
-      });
-      return;
-    }
-    
-    setExporting(true);
-    try {
-      const exporter = new PDFExporter({
-        title: 'Trial Balance',
-        subtitle: `As of ${new Date(reportDate).toLocaleDateString()}`,
-        companyName: settings?.company_name || 'QSA Solutions',
-        reportDate: reportDate,
-        pageSize: 'a4',
-        orientation: 'portrait'
-      });
-      
-      exporter.exportTrialBalance(accounts, `trial-balance-${reportDate}.pdf`);
-      
-      toast({
-        title: 'Success',
-        description: 'Trial Balance exported successfully',
-      });
-    } catch (error) {
-      console.error('Trial Balance export failed:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Export Error',
-        description: error instanceof Error ? error.message : 'Failed to export PDF',
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -162,6 +121,8 @@ export default function TrialBalance() {
       </div>
     );
   }
+
+  console.log('TrialBalance render - accounts:', accounts.length, 'error:', error);
 
   if (error) {
     return (
@@ -198,10 +159,7 @@ export default function TrialBalance() {
             )}
           </Badge>
           
-          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting}>
-            <Download className="h-4 w-4" />
-            {exporting ? 'Exporting...' : 'Export PDF'}
-          </Button>
+          <ExportButtons reportTitle="Trial Balance" />
         </div>
       </div>
 
@@ -241,6 +199,8 @@ export default function TrialBalance() {
           </div>
         </CardContent>
       </Card>
+
+
 
       {/* Trial Balance Report */}
       <div className="space-y-4">

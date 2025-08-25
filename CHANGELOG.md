@@ -13,6 +13,15 @@ All notable changes to this project will be documented in this file.
 - **APPLIED: Fixed dark mode styling**: Improved contrast, proper theme variables, and added theme toggle button in header.
 - **APPLIED: Added Chart of Accounts Code Structure Guide**: Comprehensive account code numbering system documentation in Company Settings to help users understand account organization.
 - **APPLIED: Enhanced Journal Entry with Account Autocomplete**: Replaced dropdown with intelligent autocomplete that suggests accounts as users type, showing account codes, names, types, and balances.
+- **APPLIED: Comprehensive Company Branding System**: Complete branding infrastructure with logo management, color theming, branded exports, and professional UI components.
+- **APPLIED: Enhanced PDF & Excel Exports**: Professional branded exports with company logos, colors, advanced formatting, multiple export options, and comprehensive customization.
+- **APPLIED: Advanced Company Settings**: Multi-tab settings interface with company info, branding controls, logo management, and export preferences.
+- **APPLIED: Enhanced Header with Branding**: Professional header with company logo, name, theme controls, and user management.
+- **APPLIED: Automatic Default Accounts**: Chart of Accounts now automatically creates 33 default accounts when users sign up, matching VBA Excel structure.
+- **APPLIED: Removed Sample Account Buttons**: Eliminated manual "Add Sample Accounts" buttons - accounts are now created automatically on signup.
+- **APPLIED: Fixed Trial Balance useAuth Error**: Resolved "useAuth is not defined" error in Trial Balance component.
+- **APPLIED: Persistent Account Data**: All accounts now properly save to and load from the database with user-specific data.
+- **APPLIED: Logo Integration in Header**: Company logo now displays in the main application header with fallback icon and responsive design.
 
 ### ✨ Enhancements
 - Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.

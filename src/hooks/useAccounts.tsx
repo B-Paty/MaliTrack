@@ -42,14 +42,26 @@ export function useAccounts() {
       setLoading(true);
       setError(null);
 
+      if (!user) {
+        console.warn('No authenticated user found');
+        setAccounts([]);
+        return;
+      }
+
+      console.log('Fetching accounts for user:', user.id);
+
       const { data, error: fetchError } = await supabase
         .from('chart_of_accounts')
         .select('*')
+        .eq('user_id', user.id)
         .order('account_code');
 
       if (fetchError) {
+        console.error('Database error:', fetchError);
         throw fetchError;
       }
+
+      console.log('Fetched accounts:', data?.length || 0, 'accounts');
 
       // Log data access for leak detection
       await logDataAccess('chart_of_accounts', 'SELECT', undefined, data?.length || 0);
@@ -57,6 +69,7 @@ export function useAccounts() {
       setAccounts(data as Account[] || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch accounts';
+      console.error('fetchAccounts error:', err);
       setError(errorMessage);
       toast({
         variant: 'destructive',
@@ -74,13 +87,20 @@ export function useAccounts() {
         throw new Error('User must be authenticated to create accounts');
       }
 
+      console.log('Creating account for user:', user.id, accountData);
+
       const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert([{ ...accountData, user_id: user.id }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Create account error:', error);
+        throw error;
+      }
+
+      console.log('Account created:', data);
 
       // Log data access for leak detection
       await logDataAccess('chart_of_accounts', 'INSERT', data.account_code);
@@ -94,6 +114,7 @@ export function useAccounts() {
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create account';
+      console.error('createAccount error:', err);
       toast({
         variant: 'destructive',
         title: 'Error',

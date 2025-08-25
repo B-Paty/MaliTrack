@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Company Branding System */
+:root {
+  /* Default company branding colors */
+  --company-primary: 161 5 45; /* QSA Crimson */
+  --company-secondary: 248 249 250; /* Light gray */
+  --company-accent: 243 244 246; /* Accent gray */
+  
+  /* Branding utilities */
+  --brand-h: 351;
+  --brand-s: 94%;
+  --brand-l: 29%;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -192,6 +205,75 @@ All colors MUST be HSL.
   
   .shadow-premium {
     box-shadow: var(--shadow-premium);
+  }
+
+  /* Company Branding Utilities */
+  .brand-primary {
+    color: hsl(var(--company-primary));
+  }
+  
+  .brand-bg-primary {
+    background-color: hsl(var(--company-primary));
+  }
+  
+  .brand-border-primary {
+    border-color: hsl(var(--company-primary));
+  }
+  
+  .brand-secondary {
+    color: hsl(var(--company-secondary));
+  }
+  
+  .brand-bg-secondary {
+    background-color: hsl(var(--company-secondary));
+  }
+  
+  .brand-accent {
+    color: hsl(var(--company-accent));
+  }
+  
+  .brand-bg-accent {
+    background-color: hsl(var(--company-accent));
+  }
+  
+  .brand-gradient {
+    background: linear-gradient(135deg, 
+      hsl(var(--company-primary)), 
+      hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) - 5%))
+    );
+  }
+  
+  .brand-gradient-subtle {
+    background: linear-gradient(135deg, 
+      hsl(var(--company-primary) / 0.05), 
+      hsl(var(--company-primary) / 0.1)
+    );
+  }
+  
+  .brand-shadow {
+    box-shadow: 0 4px 20px hsl(var(--company-primary) / 0.15);
+  }
+  
+  .brand-shadow-strong {
+    box-shadow: 0 8px 30px hsl(var(--company-primary) / 0.25);
+  }
+  
+  /* Logo positioning utilities */
+  .logo-left { justify-content: flex-start; }
+  .logo-center { justify-content: center; }
+  .logo-right { justify-content: flex-end; }
+  
+  /* Export styling utilities */
+  .export-header {
+    @apply brand-bg-primary text-white font-bold;
+  }
+  
+  .export-border {
+    @apply brand-border-primary border;
+  }
+  
+  .export-accent {
+    @apply brand-bg-secondary;
   }
 
   /* Ensure proper contrast in dark mode */
