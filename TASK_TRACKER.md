@@ -15,7 +15,7 @@ This file tracks all requested features and their implementation status.
 |------|--------|-------|----------|
 | Database Schema Design | 🟢 Done | Complete with 4 tables | High |
 | Supabase Integration | 🟢 Done | All CRUD operations working | High |
-| Authentication System | 🔴 Pending | RLS policies in place, need auth UI | Medium |
+| Authentication System | 🟢 Done | Email/password auth + RLS policies secured | High |
 
 ### 2. Design System & UI
 | Task | Status | Notes | Priority |

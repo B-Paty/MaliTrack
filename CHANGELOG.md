@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### 🔒 CRITICAL SECURITY FIX
-- **Fixed public access to financial data**: All tables (`chart_of_accounts`, `transactions`, `transaction_lines`, `company_settings`) now require authentication. Previous public policies removed and replaced with authenticated-only RLS policies.
+- **APPLIED: Fixed public access to financial data**: All tables (`chart_of_accounts`, `transactions`, `transaction_lines`, `company_settings`) now require authentication. Dangerous public policies removed and replaced with authenticated-only RLS policies.
+- **APPLIED: Added authentication system**: Email/password login with Supabase Auth. App now requires authentication by default.
 
 ### ✨ Enhancements
 - Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.

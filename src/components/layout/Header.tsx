@@ -2,9 +2,18 @@
  * Header
  * Top bar with sidebar toggle, settings button, and company name.
  */
-import { Menu, Settings, TrendingUp } from "lucide-react";
+import { Menu, Settings, TrendingUp, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsDialog } from "./SettingsDialog";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -12,6 +21,12 @@ interface HeaderProps {
 }
 
 export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <header className="h-16 bg-brand-white border-b border-primary/10 flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50">
       <div className="flex items-center gap-4">
@@ -46,10 +61,22 @@ export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
           </Button>
         </SettingsDialog>
         
-        <div className="hidden md:flex items-center gap-3 text-muted-foreground text-sm">
-          <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-          <span className="font-medium text-foreground">Administrator</span>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
+              <User className="h-4 w-4" />
+              <span className="hidden md:inline font-medium">{user?.email}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
