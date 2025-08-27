@@ -15,7 +15,7 @@ import {
   calculateLogoDimensions 
 } from '@/lib/brandingUtils';
 
-export interface EnhancedCompanySettings extends Omit<CompanySettings, 'logo'> {
+export interface EnhancedCompanySettings {
   id?: string;
   company_name: string;
   logo_filename?: string;
@@ -92,7 +92,11 @@ export function useEnhancedCompanySettings() {
       
       // Apply branding theme
       if (data?.primary_color) {
-        applyBrandingTheme(data.primary_color, data.secondary_color, data.accent_color);
+        applyBrandingTheme(
+          data.primary_color, 
+          (data as any).secondary_color, 
+          (data as any).accent_color
+        );
       }
       
     } catch (err) {
