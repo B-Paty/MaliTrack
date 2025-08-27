@@ -65,9 +65,29 @@ export function useEnhancedCompanySettings() {
       setLoading(true);
       setError(null);
 
+      if (!user?.id) {
+        // User not available yet, set default settings
+        const defaultSettings: EnhancedCompanySettings = {
+          company_name: 'QSA Solutions',
+          primary_color: '#a1052d',
+          secondary_color: '#ffffff',
+          accent_color: '#f3f4f6',
+          logo_position: 'left',
+          address: '',
+          phone: '',
+          email: '',
+          website: '',
+          tax_id: '',
+        };
+        setSettings(defaultSettings);
+        setLoading(false);
+        return;
+      }
+
       const { data, error: fetchError } = await supabase
         .from('company_settings')
         .select('*')
+        .eq('user_id', user.id)
         .limit(1)
         .maybeSingle();
 
@@ -88,21 +108,32 @@ export function useEnhancedCompanySettings() {
         tax_id: '',
       };
 
-      setSettings(data ? { 
-        ...defaultSettings, 
+      const finalSettings = data ? {
+        ...defaultSettings,
         ...data,
         logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
-      } : defaultSettings);
-      
+      } : defaultSettings;
+
+      setSettings(finalSettings);
+
+      // Debug logging for logo troubleshooting
+      console.log('Company settings loaded:', {
+        hasLogoPath: !!finalSettings.logo_path,
+        hasLogoBase64: !!finalSettings.logo_base64,
+        logoPath: finalSettings.logo_path?.substring(0, 50) + '...',
+        logoBase64Length: finalSettings.logo_base64?.length || 0,
+        userId: user.id
+      });
+
       // Apply branding theme
       if (data?.primary_color) {
         applyBrandingTheme(
-          data.primary_color, 
-          data.secondary_color, 
+          data.primary_color,
+          data.secondary_color,
           data.accent_color
         );
       }
-      
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch company settings';
       setError(errorMessage);
@@ -115,7 +146,7 @@ export function useEnhancedCompanySettings() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   const uploadLogo = useCallback(async (file: File): Promise<string> => {
     const validation = validateImageFile(file);

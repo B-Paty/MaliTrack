@@ -32,6 +32,11 @@ All notable changes to this project will be documented in this file.
 - **ENHANCED: Mobile Responsiveness**: Improved overall mobile experience with better spacing, touch targets, and layout adjustments.
 - **UPDATED: Layout Components**: Switched to enhanced header component with better mobile support throughout the app.
 - **FIXED: EnhancedHeader Settings Icon Error**: Resolved "Settings is not defined" error by adding missing Settings icon import to lucide-react imports.
+- **FIXED: Logo Not Displaying in Header**: Resolved issue where uploaded logos weren't showing in the header by:
+  - Adding user_id filtering to company settings queries in useEnhancedCompanySettings hook
+  - Created migration to add user_id columns to financial tables for proper data isolation
+  - Added debug logging and refresh button to header for troubleshooting
+  - Updated RLS policies to enforce user-specific data access
 - **DOCUMENTED: Payment Settings Location**: Comprehensive payment settings feature with Bank and Vodacom Lipa Namba configuration located at:
   - **Hook**: `src/hooks/usePaymentSettings.ts` - Core payment settings logic
   - **UI Component**: `src/components/settings/EnhancedCompanySettings.tsx` - Payments tab in company settings

@@ -6,7 +6,7 @@
 import React from "react";
 import {
   Menu, TrendingUp, LogOut, User, Moon, Sun,
-  Building2, Sparkles, Settings
+  Building2, Sparkles, Settings, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ interface EnhancedHeaderProps {
 export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedHeaderProps) {
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { settings, getLogoForContext } = useEnhancedCompanySettings();
+  const { settings, getLogoForContext, fetchSettings, loading } = useEnhancedCompanySettings();
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,6 +44,21 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
 
   const companyLogo = getLogoForContext('header');
   const companyName = settings?.company_name || 'QSA Solutions';
+
+  // Debug logging for logo troubleshooting
+  React.useEffect(() => {
+    console.log('EnhancedHeader Logo Debug:', {
+      companyLogo,
+      hasSettings: !!settings,
+      logoPath: settings?.logo_path,
+      logoBase64: settings?.logo_base64 ? 'present' : 'missing',
+      loading
+    });
+  }, [companyLogo, settings, loading]);
+
+  const handleRefresh = () => {
+    fetchSettings();
+  };
 
   return (
     <header className={cn(
@@ -126,9 +141,19 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
         >
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
-        
 
-        
+        {/* Refresh Settings */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleRefresh}
+          disabled={loading}
+          className="text-muted-foreground hover:text-primary hover:bg-primary/5 transition-fast"
+          title="Refresh company settings"
+        >
+          <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
+
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
