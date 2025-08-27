@@ -88,14 +88,18 @@ export function useEnhancedCompanySettings() {
         tax_id: '',
       };
 
-      setSettings(data ? { ...defaultSettings, ...data } : defaultSettings);
+      setSettings(data ? { 
+        ...defaultSettings, 
+        ...data,
+        logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
+      } : defaultSettings);
       
       // Apply branding theme
       if (data?.primary_color) {
         applyBrandingTheme(
           data.primary_color, 
-          (data as any).secondary_color, 
-          (data as any).accent_color
+          data.secondary_color, 
+          data.accent_color
         );
       }
       
@@ -194,7 +198,11 @@ export function useEnhancedCompanySettings() {
           .single();
 
         if (error) throw error;
-        setSettings(prev => ({ ...prev, ...data }));
+        setSettings(prev => ({ 
+          ...prev, 
+          ...data,
+          logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
+        }));
       } else {
         // Update existing settings
         const { data, error } = await supabase
@@ -205,7 +213,11 @@ export function useEnhancedCompanySettings() {
           .single();
 
         if (error) throw error;
-        setSettings(prev => ({ ...prev, ...data }));
+        setSettings(prev => ({ 
+          ...prev, 
+          ...data,
+          logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
+        }));
       }
 
       // Apply new branding theme

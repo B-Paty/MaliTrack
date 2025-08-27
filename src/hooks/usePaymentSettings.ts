@@ -65,8 +65,8 @@ export function usePaymentSettings() {
 
         if (error) throw error;
 
-        if ((data as any)?.payment_settings) {
-          setPaymentSettings({ ...defaultPaymentSettings, ...((data as any).payment_settings as PaymentSettings) });
+        if (data?.payment_settings) {
+          setPaymentSettings({ ...defaultPaymentSettings, ...(data.payment_settings as PaymentSettings) });
         } else {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
@@ -104,7 +104,7 @@ export function usePaymentSettings() {
       if (existing?.id) {
         await supabase
           .from('company_settings')
-          .update({ payment_settings: updates } as any)
+          .update({ payment_settings: updates })
           .eq('id', existing.id);
       } else if (user) {
         await supabase
@@ -114,7 +114,7 @@ export function usePaymentSettings() {
             primary_color: '#a1052d', 
             payment_settings: updates,
             user_id: user.id 
-          } as any]);
+          }]);
       }
     } catch (e) {
       // Keep localStorage as fallback, surface console warning
