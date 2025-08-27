@@ -106,10 +106,15 @@ export function usePaymentSettings() {
           .from('company_settings')
           .update({ payment_settings: updates })
           .eq('id', existing.id);
-      } else {
+      } else if (user) {
         await supabase
           .from('company_settings')
-          .insert([{ company_name: 'QSA Solutions', primary_color: '#a1052d', payment_settings: updates }]);
+          .insert([{ 
+            company_name: 'QSA Solutions', 
+            primary_color: '#a1052d', 
+            payment_settings: updates,
+            user_id: user.id 
+          }]);
       }
     } catch (e) {
       // Keep localStorage as fallback, surface console warning

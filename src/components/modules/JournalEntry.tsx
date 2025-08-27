@@ -36,7 +36,7 @@ export default function JournalEntry() {
     accounts.map(account => ({
       value: account.account_code,
       label: account.account_name,
-      description: `${account.account_type} • Balance: ${formatCurrency(account.balance || 0)}`
+      description: `${account.category} • Balance: ${formatCurrency(account.current_balance || 0)}`
     })), [accounts]
   );
   

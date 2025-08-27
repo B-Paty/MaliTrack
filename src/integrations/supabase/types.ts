@@ -99,19 +99,9 @@ export type Database = {
           id: string
           logo_filename: string | null
           logo_path: string | null
-          logo_base64: string | null
           primary_color: string
-          secondary_color: string | null
-          accent_color: string | null
-          address: string | null
-          phone: string | null
-          email: string | null
-          website: string | null
-          tax_id: string | null
-          logo_position: string | null
           updated_at: string
           user_id: string
-          payment_settings: Json | null
         }
         Insert: {
           company_name?: string
@@ -119,19 +109,9 @@ export type Database = {
           id?: string
           logo_filename?: string | null
           logo_path?: string | null
-          logo_base64?: string | null
           primary_color?: string
-          secondary_color?: string | null
-          accent_color?: string | null
-          address?: string | null
-          phone?: string | null
-          email?: string | null
-          website?: string | null
-          tax_id?: string | null
-          logo_position?: string | null
           updated_at?: string
           user_id: string
-          payment_settings?: Json | null
         }
         Update: {
           company_name?: string
@@ -139,19 +119,9 @@ export type Database = {
           id?: string
           logo_filename?: string | null
           logo_path?: string | null
-          logo_base64?: string | null
           primary_color?: string
-          secondary_color?: string | null
-          accent_color?: string | null
-          address?: string | null
-          phone?: string | null
-          email?: string | null
-          website?: string | null
-          tax_id?: string | null
-          logo_position?: string | null
           updated_at?: string
           user_id?: string
-          payment_settings?: Json | null
         }
         Relationships: []
       }
@@ -321,6 +291,10 @@ export type Database = {
       generate_reference_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_security_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       log_data_access: {
         Args: {

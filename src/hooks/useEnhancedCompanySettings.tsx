@@ -88,7 +88,7 @@ export function useEnhancedCompanySettings() {
         tax_id: '',
       };
 
-      setSettings(data || defaultSettings);
+      setSettings(data ? { ...defaultSettings, ...data } : defaultSettings);
       
       // Apply branding theme
       if (data?.primary_color) {
@@ -190,7 +190,7 @@ export function useEnhancedCompanySettings() {
           .single();
 
         if (error) throw error;
-        setSettings(data);
+        setSettings(prev => ({ ...prev, ...data }));
       } else {
         // Update existing settings
         const { data, error } = await supabase
@@ -201,7 +201,7 @@ export function useEnhancedCompanySettings() {
           .single();
 
         if (error) throw error;
-        setSettings(data);
+        setSettings(prev => ({ ...prev, ...data }));
       }
 
       // Apply new branding theme

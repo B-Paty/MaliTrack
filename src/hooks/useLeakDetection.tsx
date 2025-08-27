@@ -18,7 +18,7 @@ export interface AuditLog {
   record_id?: string;
   record_count: number;
   risk_score: number;
-  suspicious_flags: Record<string, any>;
+  suspicious_flags: any;
   accessed_at: string;
 }
 
@@ -29,7 +29,7 @@ export interface LeakAlert {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   title: string;
   description?: string;
-  metadata: Record<string, any>;
+  metadata: any;
   is_resolved: boolean;
   created_at: string;
   resolved_at?: string;
@@ -89,7 +89,10 @@ export function useLeakDetection() {
         .limit(100);
 
       if (error) throw error;
-      setAuditLogs(data || []);
+      setAuditLogs((data || []).map(log => ({ 
+        ...log, 
+        suspicious_flags: log.suspicious_flags || {} 
+      })));
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
     }
@@ -107,7 +110,11 @@ export function useLeakDetection() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setLeakAlerts(data || []);
+      setLeakAlerts((data || []).map(alert => ({ 
+        ...alert,
+        severity: alert.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
+        metadata: alert.metadata || {}
+      })));
     } catch (error) {
       console.error('Failed to fetch leak alerts:', error);
     }
