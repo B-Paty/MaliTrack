@@ -117,7 +117,7 @@ export default function TrialBalance() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading trial balance...</p>
+          <p className="text-foreground/70">Loading trial balance...</p>
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ export default function TrialBalance() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Trial Balance</h1>
-          <p className="text-muted-foreground mt-2">Verify that total debits equal total credits across all accounts</p>
+          <p className="text-foreground/70 mt-2">Verify that total debits equal total credits across all accounts</p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -187,12 +187,12 @@ export default function TrialBalance() {
             </div>
             
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Total Accounts</p>
+              <p className="text-sm text-foreground/70 mb-2">Total Accounts</p>
               <p className="text-2xl font-bold text-foreground">{accounts.length}</p>
             </div>
             
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Balance Status</p>
+              <p className="text-sm text-foreground/70 mb-2">Balance Status</p>
               <Badge variant={trialBalanceData.isBalanced ? "default" : "destructive"} className="text-lg p-2">
                 {trialBalanceData.isBalanced ? "In Balance" : "Out of Balance"}
               </Badge>
@@ -220,11 +220,11 @@ export default function TrialBalance() {
                   </CardTitle>
                   <div className="flex gap-8 text-sm">
                     <div className="text-right">
-                      <p className="text-muted-foreground">Category Debits</p>
+                      <p className="text-foreground/80 dark:text-foreground">Category Debits</p>
                       <p className="font-bold text-foreground">{formatCurrency(categoryTotals.debit)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-muted-foreground">Category Credits</p>
+                      <p className="text-foreground/80 dark:text-foreground">Category Credits</p>
                       <p className="font-bold text-foreground">{formatCurrency(categoryTotals.credit)}</p>
                     </div>
                   </div>
@@ -236,10 +236,10 @@ export default function TrialBalance() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Account Code</th>
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Account Name</th>
-                        <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Debit Balance</th>
-                        <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Credit Balance</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Account Code</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Account Name</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground">Debit Balance</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground">Credit Balance</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -334,7 +334,7 @@ export default function TrialBalance() {
                   </td>
                 </tr>
                 <tr className="bg-primary/10">
-                  <td colSpan={2} className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                  <td colSpan={2} className="py-2 px-4 text-sm font-medium text-foreground">
                     Difference (should be zero)
                   </td>
                   <td colSpan={2} className="py-2 px-4 text-right">

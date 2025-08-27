@@ -46,6 +46,45 @@ All notable changes to this project will be documented in this file.
   - **Features**: Bank details, account numbers, Vodacom M-Pesa integration, invoice integration
 - **APPLIED: Logo Integration in Header**: Company logo now displays in the main application header with fallback icon and responsive design.
 
+### 🐛 Bug Fixes
+- **FIXED: LoginForm Import Error**: Resolved "does not provide an export named 'default'" error by correcting the import statement in ProtectedRoute.tsx to use named import instead of default import
+- **FIXED: uploadLogo Reference Error**: Resolved "uploadLogo is not defined" error by removing the unused uploadLogo export from useEnhancedCompanySettings hook after converting to static logo system
+- **FIXED: Mobile Sidebar Backdrop Blur**: Resolved white line boundary issue by containing backdrop blur within sidebar boundaries and removing overflow blur effects
+- **FIXED: Mobile Sidebar Scroll Containment**: Resolved scroll events affecting underlying content by adding proper scroll containment and touch event handling
+- **FIXED: Passive Event Listener Error**: Resolved "Unable to preventDefault inside passive event listener" error by removing preventDefault() call from wheel event handler in sidebar
+- **REMOVED: Mobile Sidebar Background Overlay**: Completely removed dark background overlay (`bg-black/30`) from mobile sidebar for unobstructed content visibility
+- **CHANGED: Mobile Sidebar Background**: Replaced transparent sidebar background with solid white/gray colors for better opacity and visibility
+- **ADDED: Mobile Sidebar Rounded Edges**: Added rounded corners (`rounded-r-2xl`) to mobile sidebar for modern, polished appearance
+- **ADDED: Mobile Header Rounded Edges**: Added rounded bottom corners (`rounded-b-2xl`) to mobile header for modern, floating appearance
+- **FIXED: Dark Mode Text Visibility**: Improved text contrast in dark mode by updating color classes for better readability
+  - Enhanced "Accounting System" badge in header with better dark mode colors
+  - Fixed TrialBalance table headers to use `text-foreground` instead of `text-muted-foreground`
+  - Improved category labels and status messages with `text-foreground/70` for better contrast
+- **REVERTED: Mobile Sidebar Text Colors**: Returned navigation text colors to original muted-foreground for consistent theming
+
+### ✨ Major Features
+- **IMPLEMENTED: Static Logo System**: Complete replacement of dynamic upload system with static file-based logo management
+  - Created `/public/images/logo/` directory structure
+  - Implemented centralized configuration in `src/config/logoConfig.ts`
+  - Replaced upload logic with static file loading in `useEnhancedCompanySettings`
+  - Updated company settings UI to show static logo display
+  - Added comprehensive fallback system with multiple logo options
+- **ENHANCED: Logo Configuration**: Centralized logo path management for easy customization
+  - Client-specific logo filename configuration
+  - Automatic fallback to default logos
+  - Environment-aware logo loading
+  - Development helpers and debugging tools
+- **DOCUMENTED: Migration System**: Comprehensive documentation for client deployments
+  - Detailed comments in all migration files
+  - Step-by-step deployment guide (`MIGRATION_DEPLOYMENT_GUIDE.md`)
+  - Client customization instructions
+  - Troubleshooting and maintenance guides
+- **CREATED: Static Logo Documentation**: Complete setup guide (`STATIC_LOGO_README.md`)
+  - Logo placement instructions
+  - Configuration examples
+  - API reference and troubleshooting
+  - Migration from dynamic uploads guide
+
 ### ✨ Enhancements
 - Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.
 - Currency label updated to "Tsh" across UI via `formatCurrency` (whole numbers).

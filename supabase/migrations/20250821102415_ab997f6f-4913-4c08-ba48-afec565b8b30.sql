@@ -1,44 +1,63 @@
+-- ============================================================================
+-- MIGRATION: Initial Database Schema Setup
+-- VERSION: 20250821102415
+-- PURPOSE: Create core tables for accounting system
+-- CLIENT COMPATIBILITY: Universal - modify defaults for specific clients
+-- ============================================================================
+
 -- Create company settings table
+-- PURPOSE: Store company branding, colors, and configuration
+-- CUSTOMIZATION: Update DEFAULT values for different clients
+-- STATIC LOGO SUPPORT: logo_path points to /public/images/logo/ files
 CREATE TABLE public.company_settings (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    company_name TEXT NOT NULL DEFAULT 'QSA Solutions',
-    logo_filename TEXT,
-    logo_path TEXT,
-    primary_color TEXT NOT NULL DEFAULT '#a1052d',
+    company_name TEXT NOT NULL DEFAULT 'QSA Solutions', -- CUSTOMIZE: Change to client name
+    logo_filename TEXT,                                 -- Original filename for reference
+    logo_path TEXT,                                    -- Path to static logo file (/images/logo/filename.png)
+    primary_color TEXT NOT NULL DEFAULT '#a1052d',     -- CUSTOMIZE: Client brand color
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- Create chart of accounts table
+-- PURPOSE: Store accounting chart of accounts with balances
+-- CUSTOMIZATION: Modify default accounts for different business types
+-- NOTE: This table will be populated with sample data below
 CREATE TABLE public.chart_of_accounts (
-    account_code TEXT NOT NULL PRIMARY KEY,
-    account_name TEXT NOT NULL,
-    category TEXT NOT NULL,
-    current_balance DECIMAL(15,2) NOT NULL DEFAULT 0.00,
-    normal_balance TEXT NOT NULL CHECK (normal_balance IN ('debit', 'credit')),
+    account_code TEXT NOT NULL PRIMARY KEY,             -- Unique account code (e.g., '1010', '2010')
+    account_name TEXT NOT NULL,                          -- Human-readable account name
+    category TEXT NOT NULL,                             -- Account category (Asset, Liability, Equity, Revenue, Expense)
+    current_balance DECIMAL(15,2) NOT NULL DEFAULT 0.00,-- Current account balance
+    normal_balance TEXT NOT NULL CHECK (normal_balance IN ('debit', 'credit')), -- Normal balance type
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- Create transactions table
+-- PURPOSE: Store financial transaction headers
+-- NOTE: Transaction lines are stored separately for detailed accounting
 CREATE TABLE public.transactions (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    reference_number TEXT NOT NULL UNIQUE,
-    transaction_date DATE NOT NULL,
-    description TEXT,
+    reference_number TEXT NOT NULL UNIQUE,         -- Auto-generated reference (e.g., 'REF-2024-0001')
+    transaction_date DATE NOT NULL,                 -- Date of transaction
+    description TEXT,                               -- Optional transaction description
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- Create transaction lines table
+-- PURPOSE: Store individual line items for each transaction (double-entry bookkeeping)
+-- NOTE: Each transaction affects at least two accounts (debit + credit)
 CREATE TABLE public.transaction_lines (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    transaction_id UUID NOT NULL REFERENCES public.transactions(id) ON DELETE CASCADE,
-    account_code TEXT NOT NULL REFERENCES public.chart_of_accounts(account_code),
-    debit_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,
-    credit_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    transaction_id UUID NOT NULL REFERENCES public.transactions(id) ON DELETE CASCADE, -- Links to transaction header
+    account_code TEXT NOT NULL REFERENCES public.chart_of_accounts(account_code),       -- Which account is affected
+    debit_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,   -- Debit amount (money flowing into account)
+    credit_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,  -- Credit amount (money flowing out of account)
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    -- Business rules: amounts must be non-negative
     CHECK (debit_amount >= 0 AND credit_amount >= 0),
+    -- Business rules: each line must have either debit OR credit, not both
     CHECK ((debit_amount > 0 AND credit_amount = 0) OR (debit_amount = 0 AND credit_amount > 0))
 );
 
@@ -61,11 +80,22 @@ ON public.transactions FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public access to transaction lines" 
 ON public.transaction_lines FOR ALL USING (true) WITH CHECK (true);
 
+-- ============================================================================
+-- SAMPLE DATA INSERTION
+-- PURPOSE: Populate tables with sample data for development/testing
+-- CUSTOMIZATION: Modify for different client requirements
+-- NOTE: Remove or modify sample data for production deployments
+-- ============================================================================
+
 -- Insert default company settings
-INSERT INTO public.company_settings (company_name, primary_color) 
-VALUES ('QSA Solutions', '#a1052d');
+-- CUSTOMIZATION: Update company name and colors for each client
+INSERT INTO public.company_settings (company_name, primary_color)
+VALUES ('QSA Solutions', '#a1052d');  -- CUSTOMIZE: Change to client name and brand color
 
 -- Insert chart of accounts data
+-- PURPOSE: Standard chart of accounts following accounting best practices
+-- CUSTOMIZATION: Add/modify accounts based on client's business type
+-- FORMAT: (account_code, account_name, category, current_balance, normal_balance)
 INSERT INTO public.chart_of_accounts (account_code, account_name, category, current_balance, normal_balance) VALUES
 ('1010', 'Cash in Hand', 'Current Asset', 15000.00, 'debit'),
 ('1020', 'Bank Account', 'Current Asset', 125000.00, 'debit'),

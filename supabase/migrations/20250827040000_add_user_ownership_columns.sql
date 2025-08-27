@@ -1,5 +1,14 @@
+-- ============================================================================
+-- MIGRATION: Add User Ownership for Data Isolation
+-- VERSION: 20250827040000
+-- PURPOSE: Implement multi-tenancy by adding user_id columns to financial tables
+-- DEPLOYMENT: Run after initial schema setup, before user authentication
+-- CLIENT IMPACT: Enables per-user data isolation for security and compliance
+-- ============================================================================
+
 -- Add user_id columns to financial tables for proper data isolation
 -- This migration ensures each user can only access their own financial data
+-- SECURITY: Prevents data leakage between different client users
 
 -- Add user_id to company_settings table
 ALTER TABLE public.company_settings
@@ -16,8 +25,16 @@ ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCAD
 -- Add user_id to transaction_lines table (through transactions relationship)
 -- Note: transaction_lines inherits user_id through transactions.user_id
 
+-- ============================================================================
+-- DATA MIGRATION: Assign Existing Data to Users
+-- CUSTOMIZATION: Modify based on your data migration strategy
+-- ============================================================================
+
 -- Update existing records to be owned by the first user (for migration)
--- This assumes you want to assign existing data to the first created user
+-- STRATEGY: Assign all existing data to the first created user
+-- CUSTOMIZATION: Modify this logic based on your client data requirements
+-- NOTE: For multi-client deployments, you may need different assignment logic
+
 UPDATE public.company_settings
 SET user_id = (SELECT id FROM auth.users LIMIT 1)
 WHERE user_id IS NULL;

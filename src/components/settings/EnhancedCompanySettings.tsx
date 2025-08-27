@@ -56,8 +56,7 @@ export default function EnhancedCompanySettings() {
 
   const [localSettings, setLocalSettings] = useState(settings);
   const [localPayments, setLocalPayments] = useState(paymentSettings);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState("company");
 
   // Update local settings when database settings change
@@ -71,45 +70,12 @@ export default function EnhancedCompanySettings() {
     setLocalPayments(paymentSettings);
   }, [paymentSettings]);
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
 
-    // Validate file
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a PNG, JPG, or SVG file",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select a file under 5MB",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLogoFile(file);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setLogoPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSaveSettings = async () => {
     try {
-      await updateSettings(localSettings!, logoFile || undefined);
-      setLogoFile(null);
-      setLogoPreview(null);
+      // Save settings (logo is handled by static file system)
+      await updateSettings(localSettings!, undefined);
     } catch (error) {
       // Error handled in hook
     }
@@ -141,9 +107,9 @@ export default function EnhancedCompanySettings() {
 
   const handleRemoveLogo = async () => {
     try {
+      // Remove logo reference from database settings
+      // Note: The actual logo file remains in /public/images/logo/ folder
       await removeLogo();
-      setLogoFile(null);
-      setLogoPreview(null);
     } catch (error) {
       // Error handled in hook
     }
@@ -160,7 +126,7 @@ export default function EnhancedCompanySettings() {
     );
   }
 
-  const currentLogo = logoPreview || getLogoForContext('preview');
+  const currentLogo = getLogoForContext('preview');
 
   return (
     <div className="space-y-6">
@@ -477,15 +443,15 @@ export default function EnhancedCompanySettings() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-foreground mb-3 text-lg">
-                      {logoFile ? 'New Logo Preview' : 'Current Logo'}
+                      Current Logo (Static)
                     </h3>
-                    {(logoFile || settings?.logo_filename) && (
+                    {settings?.logo_filename && (
                       <Badge variant="secondary" className="mb-3 text-sm px-3 py-1">
-                        {logoFile?.name || settings?.logo_filename}
+                        {settings.logo_filename}
                       </Badge>
                     )}
                     <p className="text-sm text-muted-foreground mb-4">
-                      This logo will appear on all exported reports and financial statements
+                      This logo is loaded from the static file system and will appear on all exported reports and financial statements
                     </p>
                     <Button
                       variant="destructive"
@@ -500,44 +466,80 @@ export default function EnhancedCompanySettings() {
                 </div>
               )}
 
-              {/* Upload New Logo */}
+              {/* Static Logo Display */}
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="logoUpload" className="text-sm font-semibold text-foreground">
-                    Upload New Logo
+                  <Label className="text-sm font-semibold text-foreground">
+                    Current Logo (Static File System)
                   </Label>
-                  <div className="mt-2 flex items-center gap-4">
-                    <Button
-                      variant="outline"
-                      className="gap-2 hover:shadow-md transition-shadow"
-                      onClick={() => document.getElementById('logoUpload')?.click()}
-                    >
-                      <Upload className="h-4 w-4" />
-                      Choose File
-                    </Button>
-                    <input
-                      id="logoUpload"
-                      type="file"
-                      accept="image/png,image/jpeg,image/svg+xml"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {logoFile ? logoFile.name : 'No file selected'}
-                    </span>
+                  <div className="mt-3 p-4 bg-muted/30 border-2 border-dashed border-muted-foreground/20 rounded-lg">
+                    <div className="flex items-center justify-center gap-4">
+                      {/* Logo Preview */}
+                      <div className="flex-shrink-0">
+                        {settings?.logo_path ? (
+                          <img
+                            src={settings.logo_path}
+                            alt="Company Logo"
+                            className="h-16 w-auto max-w-[200px] object-contain rounded-lg shadow-sm"
+                            onError={(e) => {
+                              // Fallback to icon if logo fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        {/* Fallback Icon */}
+                        <div className="hidden h-16 w-16 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                          <Building2 className="h-8 w-8 text-primary-foreground" />
+                        </div>
+                      </div>
+
+                      {/* Logo Info */}
+                      <div className="flex-1 text-center">
+                        <div className="text-sm text-muted-foreground mb-2">
+                          Logo Path: <code className="bg-muted px-2 py-1 rounded text-xs">{settings?.logo_path || 'Not configured'}</code>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          Static File System
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Logo Guidelines */}
+                {/* Static Logo Instructions */}
                 <div className="p-4 bg-info/10 border border-info/30 rounded-lg">
-                  <h4 className="font-semibold text-foreground mb-2">📋 Logo Guidelines</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Supported formats: PNG, JPG, SVG</li>
-                    <li>• Maximum file size: 5MB</li>
-                    <li>• Recommended dimensions: 200x80 pixels</li>
-                    <li>• Transparent background preferred for PNG files</li>
-                    <li>• High resolution for crisp exports</li>
-                  </ul>
+                  <h4 className="font-semibold text-foreground mb-2">📁 Static Logo Setup</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-1">To change the logo:</p>
+                      <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                        <li>Place your logo file in: <code className="bg-muted px-1 rounded text-xs">/public/images/logo/</code></li>
+                        <li>Update the filename in: <code className="bg-muted px-1 rounded text-xs">src/config/logoConfig.ts</code></li>
+                        <li>Restart the development server to see changes</li>
+                      </ol>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-1">Supported formats:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>PNG (recommended for transparency)</li>
+                        <li>JPG/JPEG (for photos)</li>
+                        <li>SVG (for vector graphics)</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-1">Recommended specs:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Dimensions: 200x80 pixels (max)</li>
+                        <li>Transparent background preferred</li>
+                        <li>High resolution for crisp display</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Logo Position */}

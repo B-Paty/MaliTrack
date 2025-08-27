@@ -62,7 +62,7 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
 
   return (
     <header className={cn(
-      "h-16 bg-background border-b border-border flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50",
+      "h-16 bg-background border-b border-border flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50 md:rounded-none rounded-b-2xl",
       className
     )}>
       {/* Left Section: Menu + Company Branding */}
@@ -112,22 +112,13 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
               {companyName}
             </h1>
             <div className="flex items-center gap-1">
-              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30">
                 <Sparkles className="h-3 w-3 mr-1" />
                 Accounting System
               </Badge>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Center Section: Status Indicators (optional) */}
-      <div className="hidden md:flex items-center gap-2">
-        {/* System Status */}
-        <Badge variant="outline" className="text-xs px-2 py-1 border-success/30 text-success">
-          <div className="w-1.5 h-1.5 bg-success rounded-full mr-1.5" />
-          System Online
-        </Badge>
       </div>
 
       {/* Right Section: Controls */}

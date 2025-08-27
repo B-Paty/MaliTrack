@@ -66,13 +66,41 @@ export function useEnhancedCompanySettings() {
       setError(null);
 
       if (!user?.id) {
-        // User not available yet, set default settings
+        // User not available yet, try to fetch any existing company settings for login screen
+        console.log('No authenticated user, trying to fetch public company settings for login');
+        try {
+          const { data: publicSettings, error: publicError } = await supabase
+            .from('company_settings')
+            .select('*')
+            .limit(1)
+            .order('created_at', { ascending: false })
+            .maybeSingle();
+
+          if (!publicError && publicSettings) {
+            console.log('Found public company settings for login:', publicSettings);
+            const finalSettings = {
+              ...publicSettings,
+              logo_position: (publicSettings.logo_position as 'left' | 'center' | 'right') || 'left'
+            };
+            setSettings(finalSettings);
+            setLoading(false);
+            return;
+          }
+        } catch (publicFetchError) {
+          console.warn('Failed to fetch public settings:', publicFetchError);
+        }
+
+        // If no public settings found, use default settings with static logo
+        console.log('Using default settings for login');
+        const staticLogoPath = getStaticLogo();
         const defaultSettings: EnhancedCompanySettings = {
           company_name: 'QSA Solutions',
           primary_color: '#a1052d',
           secondary_color: '#ffffff',
           accent_color: '#f3f4f6',
           logo_position: 'left',
+          logo_path: staticLogoPath, // Use static logo from configuration
+          logo_base64: null, // Not needed for static files
           address: '',
           phone: '',
           email: '',
@@ -148,72 +176,52 @@ export function useEnhancedCompanySettings() {
     }
   }, [toast, user]);
 
-  const uploadLogo = useCallback(async (file: File): Promise<string> => {
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      throw new Error(validation.error);
-    }
-
+  /**
+   * Get logo from static file system
+   * Logo files are placed manually in /public/images/logo/ folder
+   * This replaces the dynamic upload system with static file loading
+   */
+  const getStaticLogo = useCallback((): string => {
     try {
-      // Convert to base64 for storage
-      const base64 = await fileToBase64(file);
-      
-      // Also upload to Supabase storage for public access
-      const fileName = `logo-${Date.now()}-${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('company-assets')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      // Import the logo configuration
+      const { getLogoPath, getFallbackLogoPaths } = require('@/config/logoConfig');
 
-      if (uploadError) {
-        console.warn('Storage upload failed, using base64:', uploadError);
-        return base64;
-      }
+      // Get the configured logo path
+      const logoPath = getLogoPath();
+      console.log('🔧 Static Logo System: Using logo path:', logoPath);
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('company-assets')
-        .getPublicUrl(fileName);
+      return logoPath;
+    } catch (error) {
+      console.warn('⚠️ Static Logo System: Could not load logo config, using fallback:', error);
 
-      return urlData.publicUrl;
-    } catch (err) {
-      console.error('Logo upload error:', err);
-      throw new Error('Failed to upload logo');
+      // Fallback to default logo if config fails
+      const fallbackLogos = ['/images/contactless.png', '/images/card (1).png', '/images/LIPA.png'];
+      return fallbackLogos[0];
     }
   }, []);
 
+  /**
+   * Update company settings
+   * Note: Logo is now handled by static file system, not dynamic uploads
+   */
   const updateSettings = useCallback(async (updates: Partial<EnhancedCompanySettings>, logoFile?: File) => {
     try {
       if (!user) {
         throw new Error('User must be authenticated to update settings');
       }
 
-      let logoUrl = updates.logo_path;
-      let logoBase64 = updates.logo_base64;
-
-      // Handle logo upload if provided
-      if (logoFile) {
-        try {
-          logoUrl = await uploadLogo(logoFile);
-          logoBase64 = await fileToBase64(logoFile);
-        } catch (logoError) {
-          console.error('Logo upload failed:', logoError);
-          toast({
-            variant: 'destructive',
-            title: 'Logo Upload Failed',
-            description: 'Settings saved without logo update',
-          });
-        }
-      }
+      // Get the static logo path (ignore any uploaded files)
+      const staticLogoPath = getStaticLogo();
 
       const settingsUpdate = {
         ...updates,
-        logo_path: logoUrl,
-        logo_base64: logoBase64,
-        logo_filename: logoFile?.name,
+        // Use static logo path instead of uploaded file
+        logo_path: staticLogoPath,
+        logo_base64: null, // Not needed for static files
+        logo_filename: null, // Not needed for static files
       };
+
+      console.log('🔧 Static Logo System: Updating settings with logo path:', staticLogoPath);
 
       if (!settings?.id) {
         // Create new settings
@@ -229,8 +237,8 @@ export function useEnhancedCompanySettings() {
           .single();
 
         if (error) throw error;
-        setSettings(prev => ({ 
-          ...prev, 
+        setSettings(prev => ({
+          ...prev,
           ...data,
           logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
         }));
@@ -244,8 +252,8 @@ export function useEnhancedCompanySettings() {
           .single();
 
         if (error) throw error;
-        setSettings(prev => ({ 
-          ...prev, 
+        setSettings(prev => ({
+          ...prev,
           ...data,
           logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
         }));
@@ -254,8 +262,8 @@ export function useEnhancedCompanySettings() {
       // Apply new branding theme
       if (settingsUpdate.primary_color) {
         applyBrandingTheme(
-          settingsUpdate.primary_color, 
-          settingsUpdate.secondary_color, 
+          settingsUpdate.primary_color,
+          settingsUpdate.secondary_color,
           settingsUpdate.accent_color
         );
       }
@@ -274,7 +282,7 @@ export function useEnhancedCompanySettings() {
       });
       throw err;
     }
-  }, [settings, user, toast, uploadLogo]);
+  }, [settings, user, toast, getStaticLogo]);
 
   const applyPreset = useCallback(async (preset: BrandingPreset) => {
     try {
@@ -300,19 +308,34 @@ export function useEnhancedCompanySettings() {
     }
   }, [updateSettings]);
 
+  /**
+   * Get logo for specific context (header, export, preview)
+   * Uses static logo system instead of dynamic uploads
+   */
   const getLogoForContext = useCallback((context: 'header' | 'export' | 'preview') => {
-    if (!settings?.logo_path && !settings?.logo_base64) return null;
-    
-    const logoUrl = settings.logo_path || settings.logo_base64;
-    if (!logoUrl) return null;
+    try {
+      // Get static logo path from configuration
+      const staticLogoPath = getStaticLogo();
 
-    // For exports, prefer base64 for embedding
-    if (context === 'export' && settings.logo_base64) {
-      return settings.logo_base64;
+      if (!staticLogoPath) {
+        console.warn('⚠️ Static Logo System: No logo path available');
+        return null;
+      }
+
+      console.log(`🔧 Static Logo System: Providing logo for ${context} context:`, staticLogoPath);
+
+      // For exports, we can still use base64 if needed, but static files work fine
+      if (context === 'export') {
+        // For exports, return the static path (can be converted to base64 if needed)
+        return staticLogoPath;
+      }
+
+      return staticLogoPath;
+    } catch (error) {
+      console.error('⚠️ Static Logo System: Error getting logo for context:', error);
+      return null;
     }
-
-    return logoUrl;
-  }, [settings]);
+  }, [getStaticLogo]);
 
   useEffect(() => {
     fetchSettings();
@@ -326,7 +349,6 @@ export function useEnhancedCompanySettings() {
     brandingPresets,
     fetchSettings,
     updateSettings,
-    uploadLogo,
     applyPreset,
     removeLogo,
     getLogoForContext,

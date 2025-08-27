@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -94,7 +94,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-sidebar-background/95 backdrop-blur-sm border-r border-sidebar-border z-50 transform transition-smooth duration-300 ease-in-out shadow-premium lg:bg-sidebar-background lg:backdrop-blur-none",
+          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-smooth duration-300 ease-in-out shadow-premium overflow-hidden md:rounded-none rounded-r-2xl",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -120,8 +120,20 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-3 py-4">
-            <div className="space-y-6 pb-24">
+          <ScrollArea className="flex-1 px-3 py-4 overscroll-contain touch-pan-y">
+            <div
+              className="space-y-6 pb-24"
+              onTouchMove={(e) => {
+                // Prevent scroll events from bubbling to parent elements on mobile
+                e.stopPropagation();
+              }}
+              onWheel={(e) => {
+                // Prevent wheel events from affecting parent scroll on mobile
+                // Note: Removed preventDefault() to avoid passive event listener issues
+                // The overscroll-contain CSS property handles most containment
+                e.stopPropagation();
+              }}
+            >
               {menuGroups.map((group, index) => (
                 <div key={index} className="space-y-2">
                   <div className="px-3 mb-3">
@@ -130,15 +142,15 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeModule === item.id;
-                    
+
                     return (
                       <Button
                         key={item.id}
                         variant={isActive ? "default" : "ghost"}
-                        className={cn(
+                                                className={cn(
                           "w-full justify-start gap-3 h-11 px-3 text-sm font-medium transition-fast rounded-xl",
-                          isActive 
-                            ? "bg-gradient-primary text-brand-white shadow-glow-strong hover:bg-gradient-primary" 
+                          isActive
+                            ? "bg-gradient-primary text-brand-white shadow-glow-strong hover:bg-gradient-primary"
                             : "text-muted-foreground hover:text-primary hover:bg-primary/5 hover:shadow-card"
                         )}
                         onClick={() => {
