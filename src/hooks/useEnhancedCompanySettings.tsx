@@ -14,6 +14,7 @@ import {
   applyBrandingTheme,
   calculateLogoDimensions 
 } from '@/lib/brandingUtils';
+import { getLogoPath, getFallbackLogoPaths } from '@/config/logoConfig';
 
 export interface EnhancedCompanySettings {
   id?: string;
@@ -183,9 +184,6 @@ export function useEnhancedCompanySettings() {
    */
   const getStaticLogo = useCallback((): string => {
     try {
-      // Import the logo configuration
-      const { getLogoPath, getFallbackLogoPaths } = require('@/config/logoConfig');
-
       // Get the configured logo path
       const logoPath = getLogoPath();
       console.log('🔧 Static Logo System: Using logo path:', logoPath);
