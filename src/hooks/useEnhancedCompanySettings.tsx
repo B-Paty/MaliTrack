@@ -184,12 +184,15 @@ export function useEnhancedCompanySettings() {
    */
   const getStaticLogo = useCallback((): string => {
     try {
+      console.log('🔧 Static Logo System: Attempting to get logo path...');
+      
       // Get the configured logo path
       const logoPath = getLogoPath();
-      console.log('🔧 Static Logo System: Using logo path:', logoPath);
+      console.log('✅ Static Logo System: Successfully got logo path:', logoPath);
 
       return logoPath;
     } catch (error) {
+      console.error('❌ Static Logo System: Error getting logo config:', error);
       console.warn('⚠️ Static Logo System: Could not load logo config, using fallback:', error);
 
       // Fallback to default logo if config fails
