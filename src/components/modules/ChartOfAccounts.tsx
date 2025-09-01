@@ -10,6 +10,7 @@ import { useAccounts, type Account } from "@/hooks/useAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import ExportButtons from "@/components/exports/ExportButtons";
+import { TransactionExportButton } from "@/components/exports/TransactionExportButton";
 
 /**
  * ChartOfAccounts
@@ -116,6 +117,7 @@ export default function ChartOfAccounts() {
         
         <div className="flex gap-2">
           <ExportButtons reportTitle="Chart of Accounts" />
+          <TransactionExportButton />
         </div>
       </div>
 

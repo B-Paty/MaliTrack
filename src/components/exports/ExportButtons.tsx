@@ -4,20 +4,9 @@
  */
 
 import React, { useState } from "react";
-import {
-  Download, FileText, Table, FileSpreadsheet, Eye,
-  Settings, Palette, Image, Layout
-} from "lucide-react";
+import { Download, FileText, Table, FileSpreadsheet, Palette, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,10 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
@@ -41,13 +26,11 @@ import { formatCurrency } from "@/lib/formatters";
 interface ExportButtonsProps {
   className?: string;
   reportTitle?: string;
-  showPreview?: boolean;
 }
 
 export default function ExportButtons({ 
   className, 
-  reportTitle = "Chart of Accounts",
-  showPreview = true 
+  reportTitle = "Chart of Accounts"
 }: ExportButtonsProps) {
   const { toast } = useToast();
   const { accounts, loading: accountsLoading } = useAccounts();
@@ -66,7 +49,6 @@ export default function ExportButtons({
   });
   
   const [isExporting, setIsExporting] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
 
   // Prepare export data
   const prepareExportData = (): ExportData => {
@@ -191,114 +173,7 @@ export default function ExportButtons({
     }
   };
 
-  const ExportOptionsDialog = () => (
-    <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings className="h-4 w-4" />
-          Export Options
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            Export Options
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Format Selection */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Export Format</Label>
-            <Select
-              value={exportOptions.format}
-              onValueChange={(value: ExportOptions['format']) =>
-                setExportOptions(prev => ({ ...prev, format: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pdf">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    PDF Report
-                  </div>
-                </SelectItem>
-                <SelectItem value="excel-advanced">
-                  <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Excel Report
-                  </div>
-                </SelectItem>
-                <SelectItem value="csv">
-                  <div className="flex items-center gap-2">
-                    <Table className="h-4 w-4" />
-                    CSV Data
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Branding Options */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Branding
-            </Label>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Company Logo</span>
-                <Switch
-                  checked={exportOptions.includeLogo}
-                  onCheckedChange={(checked) =>
-                    setExportOptions(prev => ({ ...prev, includeLogo: checked }))
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Brand Colors</span>
-                <Switch
-                  checked={exportOptions.colorTheme}
-                  onCheckedChange={(checked) =>
-                    setExportOptions(prev => ({ ...prev, colorTheme: checked }))
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Export Button */}
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowExportDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                handleExport(exportOptions.format);
-                setShowExportDialog(false);
-              }}
-              disabled={isExporting}
-              className="gap-2"
-            >
-              {isExporting ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              Export
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  // Export options dialog removed per UI update — quick export items remain in dropdown
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -351,24 +226,10 @@ export default function ExportButtons({
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />
-          
-          <DropdownMenuItem onClick={() => setShowExportDialog(true)}>
-            <Settings className="mr-2 h-4 w-4" />
-            Export Options...
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Export Options Dialog */}
-      <ExportOptionsDialog />
-
-      {/* Preview Button (if enabled) */}
-      {showPreview && (
-        <Button variant="outline" size="sm" className="gap-2">
-          <Eye className="h-4 w-4" />
-          Preview
-        </Button>
-      )}
+  {/* Note: 'Export Options' and 'Preview' controls removed — header should render only Export + Export All Transactions */}
     </div>
   );
 }
