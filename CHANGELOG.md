@@ -61,6 +61,7 @@ All notable changes to this project will be documented in this file.
   - Fixed TrialBalance table headers to use `text-foreground` instead of `text-muted-foreground`
   - Improved category labels and status messages with `text-foreground/70` for better contrast
 - **REVERTED: Mobile Sidebar Text Colors**: Returned navigation text colors to original muted-foreground for consistent theming
+- **ENHANCED: Financial Statement Labels**: Updated Income Statement and Balance Sheet to show "NET INCOME" for positive values and "NET LOSS" for negative values, with corresponding "Retained Earnings (Current Period)" vs "Accumulated Loss" labels
 
 ### ✨ Major Features
 - **IMPLEMENTED: Static Logo System**: Complete replacement of dynamic upload system with static file-based logo management

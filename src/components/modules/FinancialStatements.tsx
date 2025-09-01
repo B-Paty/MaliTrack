@@ -149,7 +149,9 @@ export default function FinancialStatements() {
 
         <div className="border-t-2 border-primary pt-4">
           <div className="flex justify-between py-3 text-xl font-bold">
-            <span className="text-foreground">NET INCOME</span>
+            <span className="text-foreground">
+              {statementData.netIncome >= 0 ? 'NET INCOME' : 'NET LOSS'}
+            </span>
             <span className={`font-mono flex items-center gap-2 ${
               statementData.netIncome >= 0 ? 'text-success' : 'text-destructive'
             }`}>
@@ -217,8 +219,14 @@ export default function FinancialStatements() {
                 </div>
               ))}
               <div className="flex justify-between py-2">
-                <span className="text-foreground">Retained Earnings (Current Period)</span>
-                <span className="font-mono text-foreground">{formatCurrency(statementData.netIncome)}</span>
+                <span className="text-foreground">
+                  {statementData.netIncome >= 0 ? 'Retained Earnings (Current Period)' : 'Accumulated Loss'}
+                </span>
+                <span className={`font-mono ${
+                  statementData.netIncome >= 0 ? 'text-foreground' : 'text-destructive'
+                }`}>
+                  {formatCurrency(statementData.netIncome)}
+                </span>
               </div>
               <div className="flex justify-between py-2 border-t border-border font-semibold">
                 <span className="text-foreground">Total Equity</span>

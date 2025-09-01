@@ -314,12 +314,12 @@ export class PDFExporter {
     this.doc.text(formatCurrency(data.totalExpenses), pageWidth - margins.right - 5, yPosition, { align: 'right' });
     yPosition += 15;
 
-    // Net Income
+    // Net Income/Loss
     this.doc.setFontSize(14);
     this.doc.line(margins.left, yPosition, pageWidth - margins.right, yPosition);
     this.doc.line(margins.left, yPosition + 2, pageWidth - margins.right, yPosition + 2);
     yPosition += 10;
-    this.doc.text('NET INCOME', margins.left + 5, yPosition);
+    this.doc.text(data.netIncome >= 0 ? 'NET INCOME' : 'NET LOSS', margins.left + 5, yPosition);
     this.doc.text(formatCurrency(Math.abs(data.netIncome)), pageWidth - margins.right - 5, yPosition, { align: 'right' });
 
     this.addFooter();
@@ -404,8 +404,8 @@ export class PDFExporter {
       yPosition += 8;
     });
 
-    // Net Income
-    this.doc.text('Retained Earnings (Current Period)', rightColumnStart + 5, yPosition);
+    // Net Income/Loss
+    this.doc.text(data.netIncome >= 0 ? 'Retained Earnings (Current Period)' : 'Accumulated Loss', rightColumnStart + 5, yPosition);
     this.doc.text(formatCurrency(data.netIncome), pageWidth - margins.right - 5, yPosition, { align: 'right' });
     yPosition += 8;
 
