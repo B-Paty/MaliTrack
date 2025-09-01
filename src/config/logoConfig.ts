@@ -78,7 +78,7 @@ export function getLogoPath(): string {
  * @returns Array of fallback logo paths
  */
 export function getFallbackLogoPaths(): string[] {
-  return LOGO_PATHS.FALLBACK_LOGOS;
+  return [...LOGO_PATHS.FALLBACK_LOGOS];
 }
 
 /**

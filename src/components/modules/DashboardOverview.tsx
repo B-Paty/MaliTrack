@@ -143,13 +143,17 @@ export default function DashboardOverview() {
       .slice()
       .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
       .slice(0, 5)
-      .map(tx => ({
-        type: 'journal',
-        description: `Transaction ${tx.reference_number}`,
-        amount: formatCurrency(tx.lines.reduce((s, l) => s + (l.debit_amount || 0) + (l.credit_amount || 0), 0)),
-        time: new Date(tx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        status: 'completed' as const,
-      }));
+      .map(tx => {
+        // Calculate total transaction amount (total debits should equal total credits)
+        const totalDebits = tx.lines.reduce((s, l) => s + (l.debit_amount || 0), 0);
+        return {
+          type: 'journal',
+          description: tx.description || `Transaction ${tx.reference_number}`,
+          amount: formatCurrency(totalDebits),
+          time: new Date(tx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          status: 'completed' as const,
+        };
+      });
     return items;
   }, [transactions]);
 
