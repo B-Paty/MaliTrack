@@ -20,7 +20,7 @@
  */
 export const LOGO_CONFIG = {
   // Logo file name (place this file in /public/images/logo/)
-  LOGO_FILENAME: 'client-logo.png',
+  LOGO_FILENAME: 'qsalogo.png',
 
   // Logo alt text for accessibility
   LOGO_ALT_TEXT: 'Company Logo',

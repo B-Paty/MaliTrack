@@ -71,12 +71,12 @@ export class EnhancedPDFExporter {
     try {
       const logoData = this.data.companySettings.logo;
       const logoWidth = 40;
-      const logoHeight = 15;
+      const logoHeight = 35;
       
       // Position based on logo alignment
       let xPos = this.margins.left;
-      if (this.data.companySettings.logoPosition === 'center') {
-        xPos = (this.pageWidth - logoWidth) / 2;
+      if (this.data.companySettings.logoPosition === 'left') {
+        xPos = (this.pageWidth - logoWidth) / 1.11;
       } else if (this.data.companySettings.logoPosition === 'right') {
         xPos = this.pageWidth - this.margins.right - logoWidth;
       }
