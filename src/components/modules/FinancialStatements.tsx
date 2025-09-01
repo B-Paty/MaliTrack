@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useAccounts } from "@/hooks/useAccounts";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PDFExporter } from "@/lib/pdfExporter";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +22,7 @@ type StatementType = 'income' | 'balance' | 'cash';
 
 export default function FinancialStatements() {
   const { accounts, loading: accountsLoading } = useAccounts();
-  const { settings } = useCompanySettings();
+  const { settings, getLogoForContext } = useEnhancedCompanySettings();
   const { toast } = useToast();
   
   const [selectedStatement, setSelectedStatement] = useState<StatementType>('income');
@@ -87,7 +87,7 @@ export default function FinancialStatements() {
       });
       
       if (selectedStatement === 'income' || selectedStatement === 'balance') {
-        exporter.exportFinancialStatement(selectedStatement, statementData, { from: dateFrom, to: dateTo });
+        await exporter.exportFinancialStatement(selectedStatement, statementData, { from: dateFrom, to: dateTo }, undefined, settings);
         
         toast({
           title: 'Success',
@@ -109,10 +109,34 @@ export default function FinancialStatements() {
   const renderIncomeStatement = () => {
     if (!statementData) return null;
 
+    const companyLogo = getLogoForContext('preview');
+    const companyName = settings?.company_name || 'QSA Solutions';
+
     return (
       <div className="space-y-6">
         <div className="text-center border-b border-border pb-6">
-          <h2 className="text-2xl font-bold text-foreground">{settings?.company_name || 'QSA Solutions'}</h2>
+          {/* Company Logo */}
+          {companyLogo && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={companyLogo} 
+                alt={`${companyName} Logo`}
+                className="h-16 w-auto object-contain"
+                onError={(e) => {
+                  console.warn('Failed to load company logo:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          {/* Company Name with Branding */}
+          <h2 className="text-2xl font-bold" style={{ 
+            color: settings?.primary_color || '#a1052d' 
+          }}>
+            {companyName}
+          </h2>
+          
           <h3 className="text-xl font-semibold text-muted-foreground mt-2">Income Statement</h3>
           <p className="text-muted-foreground mt-1">
             For the period from {formatDate(dateFrom)} to {formatDate(dateTo)}
@@ -120,7 +144,12 @@ export default function FinancialStatements() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">REVENUE</h4>
+          <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+            color: settings?.primary_color || '#a1052d',
+            borderColor: settings?.primary_color || '#a1052d'
+          }}>
+            REVENUE
+          </h4>
           {statementData.revenue.map(account => (
             <div key={account.account_code} className="flex justify-between py-2">
               <span className="text-foreground">{account.account_name}</span>
@@ -134,7 +163,12 @@ export default function FinancialStatements() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">EXPENSES</h4>
+          <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+            color: settings?.primary_color || '#a1052d',
+            borderColor: settings?.primary_color || '#a1052d'
+          }}>
+            EXPENSES
+          </h4>
           {statementData.expenses.map(account => (
             <div key={account.account_code} className="flex justify-between py-2">
               <span className="text-foreground">{account.account_name}</span>
@@ -147,7 +181,9 @@ export default function FinancialStatements() {
           </div>
         </div>
 
-        <div className="border-t-2 border-primary pt-4">
+        <div className="border-t-2 pt-4" style={{ 
+          borderColor: settings?.primary_color || '#a1052d' 
+        }}>
           <div className="flex justify-between py-3 text-xl font-bold">
             <span className="text-foreground">
               {statementData.netIncome >= 0 ? 'NET INCOME' : 'NET LOSS'}
@@ -170,17 +206,46 @@ export default function FinancialStatements() {
   const renderBalanceSheet = () => {
     if (!statementData) return null;
 
+    const companyLogo = getLogoForContext('preview');
+    const companyName = settings?.company_name || 'QSA Solutions';
+
     return (
       <div className="space-y-6">
         <div className="text-center border-b border-border pb-6">
-          <h2 className="text-2xl font-bold text-foreground">{settings?.company_name || 'QSA Solutions'}</h2>
+          {/* Company Logo */}
+          {companyLogo && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={companyLogo} 
+                alt={`${companyName} Logo`}
+                className="h-16 w-auto object-contain"
+                onError={(e) => {
+                  console.warn('Failed to load company logo:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          {/* Company Name with Branding */}
+          <h2 className="text-2xl font-bold" style={{ 
+            color: settings?.primary_color || '#a1052d' 
+          }}>
+            {companyName}
+          </h2>
+          
           <h3 className="text-xl font-semibold text-muted-foreground mt-2">Balance Sheet</h3>
           <p className="text-muted-foreground mt-1">As of {formatDate(dateTo)}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">ASSETS</h4>
+            <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+              color: settings?.primary_color || '#a1052d',
+              borderColor: settings?.primary_color || '#a1052d'
+            }}>
+              ASSETS
+            </h4>
             {statementData.assets.map(account => (
               <div key={account.account_code} className="flex justify-between py-2">
                 <span className="text-foreground">{account.account_name}</span>
@@ -197,7 +262,12 @@ export default function FinancialStatements() {
 
           <div className="space-y-6">
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">LIABILITIES</h4>
+              <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+                color: settings?.primary_color || '#a1052d',
+                borderColor: settings?.primary_color || '#a1052d'
+              }}>
+                LIABILITIES
+              </h4>
               {statementData.liabilities.map(account => (
                 <div key={account.account_code} className="flex justify-between py-2">
                   <span className="text-foreground">{account.account_name}</span>
@@ -211,7 +281,12 @@ export default function FinancialStatements() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">EQUITY</h4>
+              <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+                color: settings?.primary_color || '#a1052d',
+                borderColor: settings?.primary_color || '#a1052d'
+              }}>
+                EQUITY
+              </h4>
               {statementData.equity.map(account => (
                 <div key={account.account_code} className="flex justify-between py-2">
                   <span className="text-foreground">{account.account_name}</span>
@@ -234,7 +309,9 @@ export default function FinancialStatements() {
               </div>
             </div>
 
-            <div className="border-t-2 border-primary pt-4">
+            <div className="border-t-2 pt-4" style={{ 
+              borderColor: settings?.primary_color || '#a1052d' 
+            }}>
               <div className="flex justify-between py-2 font-semibold text-lg">
                 <span className="text-foreground">Total Liabilities & Equity</span>
                 <span className="font-mono text-foreground">{formatCurrency(statementData.totalLiabilities + statementData.totalEquity)}</span>

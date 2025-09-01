@@ -60,33 +60,111 @@ export class PDFExporter {
     });
   }
 
-  private addHeader() {
+  private async addHeader(companySettings?: any) {
     const { margins, companyName, title, subtitle, reportDate } = this.config;
     const pageWidth = this.doc.internal.pageSize.width;
     
-    // Company name
-    this.doc.setFontSize(18);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text(companyName, pageWidth / 2, margins.top - 10, { align: 'center' });
+    // Company logo if available
+    let logoAdded = false;
+    if (companySettings?.logo_base64) {
+      try {
+        const logoWidth = 40;
+        const logoHeight = 35;
+        const logoX = (pageWidth - logoWidth) / 2;
+        
+        this.doc.addImage(companySettings.logo_base64, 'PNG', logoX, margins.top - 15, logoWidth, logoHeight);
+        logoAdded = true;
+        
+        // Adjust text position for logo
+        this.doc.setFontSize(18);
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.text(companyName, pageWidth / 2, margins.top + 25, { align: 'center' });
+      } catch (error) {
+        console.warn('Failed to add logo to PDF:', error);
+        logoAdded = false;
+      }
+    } else if (companySettings?.logo_path) {
+      // Try to convert URL to base64 for PDF
+      try {
+        const logoBase64 = await this.urlToBase64(companySettings.logo_path);
+        if (logoBase64) {
+          const logoWidth = 40;
+          const logoHeight = 35;
+          const logoX = (pageWidth - logoWidth) / 2;
+          
+          this.doc.addImage(logoBase64, 'PNG', logoX, margins.top - 15, logoWidth, logoHeight);
+          logoAdded = true;
+          
+          // Adjust text position for logo
+          this.doc.setFontSize(18);
+          this.doc.setFont('helvetica', 'bold');
+          this.doc.text(companyName, pageWidth / 2, margins.top + 25, { align: 'center' });
+        }
+      } catch (error) {
+        console.warn('Failed to convert logo URL to base64:', error);
+        logoAdded = false;
+      }
+    }
+    
+    if (!logoAdded) {
+      // Company name without logo
+      this.doc.setFontSize(18);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(companyName, pageWidth / 2, margins.top - 10, { align: 'center' });
+    }
     
     // Report title
     this.doc.setFontSize(14);
-    this.doc.text(title, pageWidth / 2, margins.top + 5, { align: 'center' });
+    this.doc.text(title, pageWidth / 2, margins.top + 35, { align: 'center' });
     
     // Subtitle if provided
     if (subtitle) {
       this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(subtitle, pageWidth / 2, margins.top + 15, { align: 'center' });
+      this.doc.text(subtitle, pageWidth / 2, margins.top + 45, { align: 'center' });
     }
     
     // Report date
     this.doc.setFontSize(10);
-    this.doc.text(`Report Date: ${formatDate(reportDate)}`, margins.left, margins.top + 25);
+    this.doc.text(`Report Date: ${formatDate(reportDate)}`, margins.left, margins.top + 55);
     
-    // Line separator
-    this.doc.setDrawColor(200, 200, 200);
-    this.doc.line(margins.left, margins.top + 30, pageWidth - margins.right, margins.top + 30);
+    // Line separator with company color
+    const primaryColor = companySettings?.primary_color || '#a1052d';
+    const rgbColor = this.hexToRgb(primaryColor);
+    if (rgbColor) {
+      this.doc.setDrawColor(rgbColor.r, rgbColor.g, rgbColor.b);
+    } else {
+      this.doc.setDrawColor(200, 200, 200);
+    }
+    this.doc.line(margins.left, margins.top + 60, pageWidth - margins.right, margins.top + 60);
+  }
+
+  private hexToRgb(hex: string) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+
+  private async urlToBase64(url: string): Promise<string | null> {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          resolve(base64);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Failed to convert URL to base64:', error);
+      return null;
+    }
   }
 
   private addFooter() {
@@ -237,22 +315,23 @@ export class PDFExporter {
     this.exportTable(columns, tableData, filename);
   }
 
-  public exportFinancialStatement(
+  public async exportFinancialStatement(
     statementType: 'income' | 'balance',
     statementData: any,
     dateRange: { from: string; to: string },
-    filename?: string
-  ): void {
+    filename?: string,
+    companySettings?: any
+  ): Promise<void> {
     if (statementType === 'income') {
-      this.exportIncomeStatement(statementData, dateRange, filename);
+      await this.exportIncomeStatement(statementData, dateRange, filename, companySettings);
     } else {
-      this.exportBalanceSheet(statementData, dateRange.to, filename);
+      await this.exportBalanceSheet(statementData, dateRange.to, filename, companySettings);
     }
   }
 
-  private exportIncomeStatement(data: any, dateRange: { from: string; to: string }, filename?: string): void {
+  private async exportIncomeStatement(data: any, dateRange: { from: string; to: string }, filename?: string, companySettings?: any): Promise<void> {
     // Add header
-    this.addHeader();
+    await this.addHeader(companySettings);
     
     let yPosition = this.config.margins.top + 50;
     const { margins } = this.config;
@@ -272,11 +351,22 @@ export class PDFExporter {
     // Revenue section
     this.doc.setFontSize(12);
     this.doc.setFont('helvetica', 'bold');
+    
+    // Set company primary color for section headers
+    const primaryColor = companySettings?.primary_color || '#a1052d';
+    const rgbColor = this.hexToRgb(primaryColor);
+    if (rgbColor) {
+      this.doc.setTextColor(rgbColor.r, rgbColor.g, rgbColor.b);
+    }
+    
     this.doc.text('REVENUE', margins.left, yPosition);
     yPosition += 10;
 
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
+    
+    // Reset text color to black for regular content
+    this.doc.setTextColor(0, 0, 0);
     
     data.revenue.forEach((account: any) => {
       this.doc.text(account.account_name, margins.left + 5, yPosition);
@@ -294,11 +384,21 @@ export class PDFExporter {
 
     // Expenses section
     this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    
+    // Set company primary color for section headers
+    if (rgbColor) {
+      this.doc.setTextColor(rgbColor.r, rgbColor.g, rgbColor.b);
+    }
+    
     this.doc.text('EXPENSES', margins.left, yPosition);
     yPosition += 10;
 
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
+    
+    // Reset text color to black for regular content
+    this.doc.setTextColor(0, 0, 0);
     
     data.expenses.forEach((account: any) => {
       this.doc.text(account.account_name, margins.left + 5, yPosition);
@@ -328,9 +428,9 @@ export class PDFExporter {
     this.doc.save(finalFilename);
   }
 
-  private exportBalanceSheet(data: any, asOfDate: string, filename?: string): void {
+  private async exportBalanceSheet(data: any, asOfDate: string, filename?: string, companySettings?: any): Promise<void> {
     // Add header
-    this.addHeader();
+    await this.addHeader(companySettings);
     
     let yPosition = this.config.margins.top + 50;
     const { margins } = this.config;
@@ -344,11 +444,23 @@ export class PDFExporter {
 
     // Assets section
     this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    
+    // Set company primary color for section headers
+    const primaryColor = companySettings?.primary_color || '#a1052d';
+    const rgbColor = this.hexToRgb(primaryColor);
+    if (rgbColor) {
+      this.doc.setTextColor(rgbColor.r, rgbColor.g, rgbColor.b);
+    }
+    
     this.doc.text('ASSETS', margins.left, yPosition);
     yPosition += 10;
 
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
+    
+    // Reset text color to black for regular content
+    this.doc.setTextColor(0, 0, 0);
     
     data.assets.forEach((account: any) => {
       const balance = account.normal_balance === 'debit' ? account.current_balance : -account.current_balance;
@@ -370,11 +482,21 @@ export class PDFExporter {
 
     // Liabilities section
     this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    
+    // Set company primary color for section headers
+    if (rgbColor) {
+      this.doc.setTextColor(rgbColor.r, rgbColor.g, rgbColor.b);
+    }
+    
     this.doc.text('LIABILITIES', rightColumnStart, yPosition);
     yPosition += 10;
 
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
+    
+    // Reset text color to black for regular content
+    this.doc.setTextColor(0, 0, 0);
     
     data.liabilities.forEach((account: any) => {
       this.doc.text(account.account_name, rightColumnStart + 5, yPosition);
@@ -392,11 +514,21 @@ export class PDFExporter {
 
     // Equity section
     this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    
+    // Set company primary color for section headers
+    if (rgbColor) {
+      this.doc.setTextColor(rgbColor.r, rgbColor.g, rgbColor.b);
+    }
+    
     this.doc.text('EQUITY', rightColumnStart, yPosition);
     yPosition += 10;
 
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
+    
+    // Reset text color to black for regular content
+    this.doc.setTextColor(0, 0, 0);
     
     data.equity.forEach((account: any) => {
       this.doc.text(account.account_name, rightColumnStart + 5, yPosition);

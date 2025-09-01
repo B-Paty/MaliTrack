@@ -271,7 +271,7 @@ export class EnhancedExcelExporter {
       ['Report Date', this.data.reportDate]
     ];
 
-    let startRow = 7;
+    const startRow = 7;
     summaryData.forEach((rowData, index) => {
       rowData.forEach((value, colIndex) => {
         const cell = worksheet.getCell(startRow + index, colIndex + 1);

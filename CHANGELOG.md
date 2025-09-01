@@ -62,6 +62,8 @@ All notable changes to this project will be documented in this file.
   - Improved category labels and status messages with `text-foreground/70` for better contrast
 - **REVERTED: Mobile Sidebar Text Colors**: Returned navigation text colors to original muted-foreground for consistent theming
 - **ENHANCED: Financial Statement Labels**: Updated Income Statement and Balance Sheet to show "NET INCOME" for positive values and "NET LOSS" for negative values, with corresponding "Retained Earnings (Current Period)" vs "Accumulated Loss" labels
+- **IMPLEMENTED: Financial Statement Branding**: Added comprehensive branding to financial statements including company logo, primary colors, and styled headers for both UI display and PDF exports
+- **FIXED: PDF Export Branding**: Updated PDF exporter to properly display company logos and brand colors in exported financial statements by converting URL-based logos to base64 and applying primary colors to section headers
 
 ### ✨ Major Features
 - **IMPLEMENTED: Static Logo System**: Complete replacement of dynamic upload system with static file-based logo management
