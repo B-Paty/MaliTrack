@@ -160,7 +160,7 @@ export default function TrialBalance() {
             )}
           </Badge>
           
-          <ExportButtons reportTitle="Trial Balance" />
+          <ExportButtons />
         </div>
       </div>
 
