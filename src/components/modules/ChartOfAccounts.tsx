@@ -115,7 +115,7 @@ export default function ChartOfAccounts() {
         </div>
         
         <div className="flex gap-2">
-          <ExportButtons />
+          <ExportButtons reportTitle="Chart of Accounts" />
         </div>
       </div>
 
