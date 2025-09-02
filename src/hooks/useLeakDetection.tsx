@@ -91,8 +91,10 @@ export function useLeakDetection() {
       if (error) throw error;
       setAuditLogs((data || []).map(log => ({ 
         ...log, 
-        suspicious_flags: log.suspicious_flags || {} 
-      })));
+        suspicious_flags: (typeof log.suspicious_flags === 'object' && log.suspicious_flags !== null) 
+          ? log.suspicious_flags as Record<string, unknown>
+          : {} 
+      })) as any);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
     }
@@ -113,8 +115,10 @@ export function useLeakDetection() {
       setLeakAlerts((data || []).map(alert => ({ 
         ...alert,
         severity: alert.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
-        metadata: alert.metadata || {}
-      })));
+        metadata: (typeof alert.metadata === 'object' && alert.metadata !== null) 
+          ? alert.metadata as Record<string, unknown>
+          : {}
+      })) as any);
     } catch (error) {
       console.error('Failed to fetch leak alerts:', error);
     }

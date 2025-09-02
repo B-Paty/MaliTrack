@@ -66,13 +66,16 @@ export function useTransactions() {
 
       const formattedTransactions = transactionsData?.map(transaction => ({
         ...transaction,
-        lines: transaction.transaction_lines.map((line: { chart_of_accounts?: { account_name: string } }) => ({
-          ...line,
+        lines: transaction.transaction_lines.map((line: any) => ({
+          id: line.id,
+          account_code: line.account_code,
           account_name: line.chart_of_accounts?.account_name || 'Unknown Account',
+          debit_amount: line.debit_amount,
+          credit_amount: line.credit_amount,
         })),
       })) || [];
 
-      setTransactions(formattedTransactions);
+      setTransactions(formattedTransactions as any);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch transactions';
       setError(errorMessage);

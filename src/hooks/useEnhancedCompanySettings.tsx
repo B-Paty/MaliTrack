@@ -31,7 +31,7 @@ export interface EnhancedCompanySettings {
   website?: string;
   tax_id?: string;
   logo_position?: 'left' | 'center' | 'right';
-  payment_settings?: Record<string, unknown>;
+  payment_settings?: any;
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -104,9 +104,10 @@ export function useEnhancedCompanySettings() {
 
             const finalSettings = {
               ...publicSettings,
-              logo_position: (publicSettings.logo_position as 'left' | 'center' | 'right') || 'left'
+              logo_position: (publicSettings.logo_position as 'left' | 'center' | 'right') || 'left',
+              payment_settings: publicSettings.payment_settings || {}
             };
-            setSettings(finalSettings);
+            setSettings(finalSettings as EnhancedCompanySettings);
             setLoading(false);
             return;
           }
@@ -163,10 +164,11 @@ export function useEnhancedCompanySettings() {
       const finalSettings = data ? {
         ...defaultSettings,
         ...data,
-        logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
+        logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left',
+        payment_settings: data.payment_settings || {}
       } : defaultSettings;
 
-      setSettings(finalSettings);
+      setSettings(finalSettings as EnhancedCompanySettings);
 
       // Company settings loaded successfully
 
@@ -218,14 +220,17 @@ export function useEnhancedCompanySettings() {
 
       if (!settings?.id) {
         // Create new settings
+        const insertData = {
+          company_name: 'QSA Solutions',
+          primary_color: '#a1052d',
+          user_id: user.id,
+          ...settingsUpdate,
+          payment_settings: settingsUpdate.payment_settings || {}
+        };
+
         const { data, error } = await supabase
           .from('company_settings')
-          .insert([{
-            company_name: 'QSA Solutions',
-            primary_color: '#a1052d',
-            user_id: user.id,
-            ...settingsUpdate,
-          }])
+          .insert([insertData])
           .select()
           .single();
 
@@ -233,13 +238,19 @@ export function useEnhancedCompanySettings() {
         setSettings(prev => ({
           ...prev,
           ...data,
-          logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
-        }));
+          logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left',
+          payment_settings: data.payment_settings || {}
+        } as EnhancedCompanySettings));
       } else {
         // Update existing settings
+        const updateData = {
+          ...settingsUpdate,
+          payment_settings: settingsUpdate.payment_settings || {}
+        };
+
         const { data, error } = await supabase
           .from('company_settings')
-          .update(settingsUpdate)
+          .update(updateData)
           .eq('id', settings.id)
           .select()
           .single();
@@ -248,8 +259,9 @@ export function useEnhancedCompanySettings() {
         setSettings(prev => ({
           ...prev,
           ...data,
-          logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left'
-        }));
+          logo_position: (data.logo_position as 'left' | 'center' | 'right') || 'left',
+          payment_settings: data.payment_settings || {}
+        } as EnhancedCompanySettings));
       }
 
       // Apply new branding theme

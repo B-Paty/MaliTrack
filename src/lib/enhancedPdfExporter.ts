@@ -166,19 +166,7 @@ export class EnhancedPDFExporter {
       formatCurrency(this.data.totalDebits - this.data.totalCredits)
     ]);
 
-    const tableOptions: {
-      startY: number;
-      head: string[][];
-      body: string[][];
-      theme: string;
-      styles: Record<string, unknown>;
-      headStyles: Record<string, unknown>;
-      columnStyles: Record<string, unknown>;
-      alternateRowStyles: Record<string, unknown>;
-      margin: { left: number; right: number };
-      didDrawPage: (data: { pageNumber: number }) => void;
-      didParseCell?: (data: { row: { index: number }; cell: { styles: Record<string, unknown> } }) => void;
-    } = {
+    const tableOptions: any = {
       startY,
       head: [['Code', 'Account Name', 'Category', 'Debit', 'Credit', 'Balance']],
       body: tableData,
@@ -212,7 +200,7 @@ export class EnhancedPDFExporter {
     };
 
     // Highlight totals row
-    tableOptions.didParseCell = (data: { row: { index: number }; cell: { styles: Record<string, unknown> } }) => {
+    tableOptions.didParseCell = (data: any) => {
       if (data.row.index === tableData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fillColor = this.options.colorTheme ? this.brandColors.secondary : '#e5e7eb';
@@ -228,7 +216,7 @@ export class EnhancedPDFExporter {
   private addSummarySection(): void {
     if (!this.data.exportOptions.includeSummary) return;
 
-    const finalY = (this.doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+    const finalY = (this.doc as any).lastAutoTable.finalY + 10;
     
     // Summary title
     this.doc.setFontSize(14);
