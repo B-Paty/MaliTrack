@@ -330,6 +330,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_active_pattern_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       is_security_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
