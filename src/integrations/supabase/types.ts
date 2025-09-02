@@ -307,6 +307,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_audit_logs: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      can_access_company_settings: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       detect_data_leaks: {
         Args: Record<PropertyKey, never>
         Returns: {
