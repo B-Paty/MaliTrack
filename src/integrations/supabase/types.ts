@@ -334,6 +334,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_security_manager: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       log_data_access: {
         Args: {
           p_operation: string
