@@ -180,9 +180,13 @@ export default function ExportButtons({
       {/* Quick Export Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="gap-2 bg-gradient-primary hover:shadow-glow transition-all">
+          <Button 
+            className="gap-2 bg-gradient-primary hover:shadow-glow transition-all w-full sm:w-auto"
+            size="sm"
+          >
             <Download className="h-4 w-4" />
-            Export
+            <span className="sm:hidden">Export</span>
+            <span className="hidden sm:inline">Export</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

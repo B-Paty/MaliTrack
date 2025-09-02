@@ -63,9 +63,16 @@ export function TransactionExportButton({ className }: { className?: string }) {
   };
 
   return (
-    <Button variant="outline" size="sm" className={`gap-2 ${className || ''}`} onClick={handleExport} disabled={loading}>
+    <Button 
+      variant="outline" 
+      size="sm" 
+      className={`gap-2 w-full sm:w-auto ${className || ''}`} 
+      onClick={handleExport} 
+      disabled={loading}
+    >
       <Download className="h-4 w-4" />
-      Export All Transactions
+      <span className="sm:hidden">All Transactions</span>
+      <span className="hidden sm:inline">Export All Transactions</span>
     </Button>
   );
 }

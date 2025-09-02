@@ -1,7 +1,8 @@
 
 import { useState, useMemo } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Plus } from "lucide-react";
 import AccountDetails from "./AccountDetails";
+import CreateAccountModal from "./CreateAccountModal";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,8 @@ export default function ChartOfAccounts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-  const { accounts, loading, error } = useAccounts();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { accounts, loading, error, fetchAccounts } = useAccounts();
 
   const categories = Array.from(new Set(accounts.map(account => account.category)))
     .sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b));
@@ -109,15 +111,34 @@ export default function ChartOfAccounts() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Chart of Accounts</h1>
-          <p className="text-muted-foreground">Manage your company's account structure and balances</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Chart of Accounts</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Manage your company's account structure and balances</p>
         </div>
         
-        <div className="flex gap-2">
-          <ExportButtons reportTitle="Chart of Accounts" />
-          <TransactionExportButton />
+        {/* Action Buttons - Responsive Layout */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          {/* Primary Action - Add Account */}
+          <Button 
+            onClick={() => setShowCreateModal(true)}
+            className="gap-2 bg-gradient-primary hover:shadow-glow transition-all w-full sm:w-auto order-1"
+            size="sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="sm:hidden">Add Account</span>
+            <span className="hidden sm:inline">Add Account</span>
+          </Button>
+          
+          {/* Secondary Actions - Export Buttons */}
+          <div className="flex gap-2 order-2">
+            <div className="flex-1 sm:flex-none">
+              <ExportButtons reportTitle="Chart of Accounts" />
+            </div>
+            <div className="flex-1 sm:flex-none">
+              <TransactionExportButton />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -155,11 +176,37 @@ export default function ChartOfAccounts() {
 
 
 
+      {/* Empty State */}
+      {accounts.length === 0 && (
+        <Card className="shadow-card">
+          <CardContent className="p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="h-16 w-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">No accounts yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Create your first account to get started with your Chart of Accounts
+              </p>
+              <Button 
+                onClick={() => setShowCreateModal(true)}
+                className="gap-2 bg-gradient-primary hover:shadow-glow transition-all w-full sm:w-auto"
+                size="sm"
+              >
+                <Plus className="h-4 w-4" />
+                Create First Account
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Accounts Table */}
-      <div className="space-y-6">
-        {categories
-          .filter(category => groupedAccounts[category])
-          .map(category => (
+      {accounts.length > 0 && (
+        <div className="space-y-6">
+          {categories
+            .filter(category => groupedAccounts[category])
+            .map(category => (
             <Card key={category} className="shadow-card">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
@@ -232,7 +279,18 @@ export default function ChartOfAccounts() {
               </CardContent>
             </Card>
           ))}
-      </div>
+        </div>
+      )}
+
+      {/* Create Account Modal */}
+      <CreateAccountModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          // Refresh accounts list after successful creation
+          fetchAccounts();
+        }}
+      />
     </div>
   );
 }
