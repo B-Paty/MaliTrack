@@ -22,7 +22,19 @@ import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const ColorPresetCard = ({ preset, isSelected, onSelect }: any) => (
+interface ColorPresetCardProps {
+  preset: {
+    name: string;
+    primaryColor: string;
+    secondaryColor?: string;
+    accentColor?: string;
+    description: string;
+  };
+  isSelected: boolean;
+  onSelect: (preset: ColorPresetCardProps['preset']) => void;
+}
+
+const ColorPresetCard = ({ preset, isSelected, onSelect }: ColorPresetCardProps) => (
   <div
     className={cn(
       "p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md",
@@ -93,7 +105,7 @@ export default function EnhancedCompanySettings() {
     }
   };
 
-  const handlePresetSelect = async (preset: any) => {
+  const handlePresetSelect = async (preset: ColorPresetCardProps['preset']) => {
     setLocalSettings(prev => prev ? {
       ...prev,
       primary_color: preset.primaryColor,

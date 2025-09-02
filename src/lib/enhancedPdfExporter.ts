@@ -166,7 +166,19 @@ export class EnhancedPDFExporter {
       formatCurrency(this.data.totalDebits - this.data.totalCredits)
     ]);
 
-    const tableOptions: any = {
+    const tableOptions: {
+      startY: number;
+      head: string[][];
+      body: string[][];
+      theme: string;
+      styles: Record<string, unknown>;
+      headStyles: Record<string, unknown>;
+      columnStyles: Record<string, unknown>;
+      alternateRowStyles: Record<string, unknown>;
+      margin: { left: number; right: number };
+      didDrawPage: (data: { pageNumber: number }) => void;
+      didParseCell?: (data: { row: { index: number }; cell: { styles: Record<string, unknown> } }) => void;
+    } = {
       startY,
       head: [['Code', 'Account Name', 'Category', 'Debit', 'Credit', 'Balance']],
       body: tableData,
@@ -194,13 +206,13 @@ export class EnhancedPDFExporter {
         fillColor: '#f9fafb'
       },
       margin: { left: this.margins.left, right: this.margins.right },
-      didDrawPage: (data: any) => {
+      didDrawPage: (data: { pageNumber: number }) => {
         this.addFooter(data.pageNumber);
       }
     };
 
     // Highlight totals row
-    tableOptions.didParseCell = (data: any) => {
+    tableOptions.didParseCell = (data: { row: { index: number }; cell: { styles: Record<string, unknown> } }) => {
       if (data.row.index === tableData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fillColor = this.options.colorTheme ? this.brandColors.secondary : '#e5e7eb';
@@ -216,7 +228,7 @@ export class EnhancedPDFExporter {
   private addSummarySection(): void {
     if (!this.data.exportOptions.includeSummary) return;
 
-    const finalY = (this.doc as any).lastAutoTable.finalY + 10;
+    const finalY = (this.doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
     
     // Summary title
     this.doc.setFontSize(14);

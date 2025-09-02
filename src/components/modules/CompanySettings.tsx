@@ -18,7 +18,7 @@ function hexToHslTriple(hex: string): string {
   const b = bigint & 255;
   const rNorm = r / 255, gNorm = g / 255, bNorm = b / 255;
   const max = Math.max(rNorm, gNorm, bNorm), min = Math.min(rNorm, gNorm, bNorm);
-  let h = 0, s = 0, l = (max + min) / 2;
+  const h = 0, s = 0, l = (max + min) / 2;
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);

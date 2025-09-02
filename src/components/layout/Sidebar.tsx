@@ -34,7 +34,7 @@ type MenuGroup = {
   items: Array<{
     id: string;
     label: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
   }>;
 };
 

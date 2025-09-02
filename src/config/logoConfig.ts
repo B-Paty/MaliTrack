@@ -124,7 +124,4 @@ export function logLogoConfig() {
   console.groupEnd();
 }
 
-// Auto-log configuration in development
-if (process.env.NODE_ENV === 'development') {
-  logLogoConfig();
-}
+// Logo configuration is ready for use

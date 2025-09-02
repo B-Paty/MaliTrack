@@ -84,7 +84,7 @@ export default function JournalEntry() {
     }));
   };
 
-  const updateLine = (index: number, field: keyof TransactionLine, value: any) => {
+  const updateLine = (index: number, field: keyof TransactionLine, value: string | number) => {
     setForm(prev => ({
       ...prev,
       lines: prev.lines.map((line, i) => {

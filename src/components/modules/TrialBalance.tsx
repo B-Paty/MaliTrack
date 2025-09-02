@@ -123,7 +123,7 @@ export default function TrialBalance() {
     );
   }
 
-  console.log('TrialBalance render - accounts:', accounts.length, 'error:', error);
+
 
   if (error) {
     return (

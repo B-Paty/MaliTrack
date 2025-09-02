@@ -5,7 +5,7 @@
  * - Provides updateSettings that either inserts or updates
  * - Used by Company Settings page and exports/invoices for branding
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -27,7 +27,7 @@ export function useCompanySettings() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -58,7 +58,7 @@ export function useCompanySettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const updateSettings = async (updates: Partial<CompanySettings>) => {
     try {
@@ -111,7 +111,7 @@ export function useCompanySettings() {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [fetchSettings]);
 
   return {
     settings,

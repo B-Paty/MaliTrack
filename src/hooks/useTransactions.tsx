@@ -12,7 +12,7 @@
  * - createTransaction(tx): Promise<Transaction>
  * - deleteTransaction(id): Promise<void>
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -42,7 +42,7 @@ export function useTransactions() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -66,7 +66,7 @@ export function useTransactions() {
 
       const formattedTransactions = transactionsData?.map(transaction => ({
         ...transaction,
-        lines: transaction.transaction_lines.map((line: any) => ({
+        lines: transaction.transaction_lines.map((line: { chart_of_accounts?: { account_name: string } }) => ({
           ...line,
           account_name: line.chart_of_accounts?.account_name || 'Unknown Account',
         })),
@@ -84,7 +84,7 @@ export function useTransactions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const createTransaction = async (transactionData: Transaction) => {
     try {
@@ -179,7 +179,7 @@ export function useTransactions() {
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [fetchTransactions]);
 
   return {
     transactions,

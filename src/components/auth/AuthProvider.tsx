@@ -13,9 +13,9 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<{ error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         console.error('Error creating default accounts:', error);
       } else {
-        console.log('Default accounts created successfully');
+
       }
     } catch (error) {
       console.error('Error creating default accounts:', error);

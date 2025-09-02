@@ -35,13 +35,13 @@ export default function DashboardOverview() {
   const accountByCode = useMemo(() => {
     const map: Record<string, { category: string; normal_balance: 'debit' | 'credit' }> = {};
     accounts.forEach(acc => {
-      map[acc.account_code] = { category: acc.category, normal_balance: acc.normal_balance } as any;
+      map[acc.account_code] = { category: acc.category, normal_balance: acc.normal_balance };
     });
     return map;
   }, [accounts]);
 
-  const now = new Date();
-  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const now = useMemo(() => new Date(), []);
+  const startOfThisMonth = useMemo(() => new Date(now.getFullYear(), now.getMonth(), 1), [now]);
 
   const isInRange = (dateStr: string, start: Date, end: Date) => {
     const d = new Date(dateStr);
@@ -99,7 +99,7 @@ export default function DashboardOverview() {
       revenueThisMonth,
       invoicesCountThisMonth
     };
-  }, [accounts, transactions, accountByCode, now]);
+  }, [accounts, transactions, accountByCode, now, startOfThisMonth]);
 
   const fmtPct = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
 

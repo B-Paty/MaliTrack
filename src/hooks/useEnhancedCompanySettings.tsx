@@ -31,7 +31,7 @@ export interface EnhancedCompanySettings {
   website?: string;
   tax_id?: string;
   logo_position?: 'left' | 'center' | 'right';
-  payment_settings?: any;
+  payment_settings?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -61,6 +61,29 @@ export function useEnhancedCompanySettings() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  /**
+   * Get logo from static file system
+   * Logo files are placed manually in /public/images/logo/ folder
+   * This replaces the dynamic upload system with static file loading
+   */
+  const getStaticLogo = useCallback((): string => {
+    try {
+
+      
+      // Get the configured logo path
+      const logoPath = getLogoPath();
+
+
+      return logoPath;
+    } catch (error) {
+
+
+      // Fallback to default logo if config fails
+      const fallbackLogos = ['/images/contactless.png', '/images/card (1).png', '/images/LIPA.png'];
+      return fallbackLogos[0];
+    }
+  }, []);
+
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -68,7 +91,7 @@ export function useEnhancedCompanySettings() {
 
       if (!user?.id) {
         // User not available yet, try to fetch any existing company settings for login screen
-        console.log('No authenticated user, trying to fetch public company settings for login');
+
         try {
           const { data: publicSettings, error: publicError } = await supabase
             .from('company_settings')
@@ -78,7 +101,7 @@ export function useEnhancedCompanySettings() {
             .maybeSingle();
 
           if (!publicError && publicSettings) {
-            console.log('Found public company settings for login:', publicSettings);
+
             const finalSettings = {
               ...publicSettings,
               logo_position: (publicSettings.logo_position as 'left' | 'center' | 'right') || 'left'
@@ -88,11 +111,11 @@ export function useEnhancedCompanySettings() {
             return;
           }
         } catch (publicFetchError) {
-          console.warn('Failed to fetch public settings:', publicFetchError);
+          // Silently handle public settings fetch error
         }
 
         // If no public settings found, use default settings with static logo
-        console.log('Using default settings for login');
+
         const staticLogoPath = getStaticLogo();
         const defaultSettings: EnhancedCompanySettings = {
           company_name: 'QSA Solutions',
@@ -145,14 +168,7 @@ export function useEnhancedCompanySettings() {
 
       setSettings(finalSettings);
 
-      // Debug logging for logo troubleshooting
-      console.log('Company settings loaded:', {
-        hasLogoPath: !!finalSettings.logo_path,
-        hasLogoBase64: !!finalSettings.logo_base64,
-        logoPath: finalSettings.logo_path?.substring(0, 50) + '...',
-        logoBase64Length: finalSettings.logo_base64?.length || 0,
-        userId: user.id
-      });
+      // Company settings loaded successfully
 
       // Apply branding theme
       if (data?.primary_color) {
@@ -175,31 +191,7 @@ export function useEnhancedCompanySettings() {
     } finally {
       setLoading(false);
     }
-  }, [toast, user]);
-
-  /**
-   * Get logo from static file system
-   * Logo files are placed manually in /public/images/logo/ folder
-   * This replaces the dynamic upload system with static file loading
-   */
-  const getStaticLogo = useCallback((): string => {
-    try {
-      console.log('🔧 Static Logo System: Attempting to get logo path...');
-      
-      // Get the configured logo path
-      const logoPath = getLogoPath();
-      console.log('✅ Static Logo System: Successfully got logo path:', logoPath);
-
-      return logoPath;
-    } catch (error) {
-      console.error('❌ Static Logo System: Error getting logo config:', error);
-      console.warn('⚠️ Static Logo System: Could not load logo config, using fallback:', error);
-
-      // Fallback to default logo if config fails
-      const fallbackLogos = ['/images/contactless.png', '/images/card (1).png', '/images/LIPA.png'];
-      return fallbackLogos[0];
-    }
-  }, []);
+  }, [toast, user, getStaticLogo]);
 
   /**
    * Update company settings
@@ -222,7 +214,7 @@ export function useEnhancedCompanySettings() {
         logo_filename: null, // Not needed for static files
       };
 
-      console.log('🔧 Static Logo System: Updating settings with logo path:', staticLogoPath);
+      // Update settings with static logo path
 
       if (!settings?.id) {
         // Create new settings
@@ -319,11 +311,8 @@ export function useEnhancedCompanySettings() {
       const staticLogoPath = getStaticLogo();
 
       if (!staticLogoPath) {
-        console.warn('⚠️ Static Logo System: No logo path available');
         return null;
       }
-
-      console.log(`🔧 Static Logo System: Providing logo for ${context} context:`, staticLogoPath);
 
       // For exports, we can still use base64 if needed, but static files work fine
       if (context === 'export') {
@@ -333,7 +322,6 @@ export function useEnhancedCompanySettings() {
 
       return staticLogoPath;
     } catch (error) {
-      console.error('⚠️ Static Logo System: Error getting logo for context:', error);
       return null;
     }
   }, [getStaticLogo]);

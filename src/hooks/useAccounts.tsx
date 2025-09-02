@@ -13,7 +13,7 @@
  * - updateAccount(code, updates): Promise<Account> update and merge
  * - deleteAccount(code): Promise<void> remove by primary key
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -37,7 +37,7 @@ export function useAccounts() {
   const { user } = useAuth();
   const { logDataAccess } = useLeakDetection();
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -48,7 +48,7 @@ export function useAccounts() {
         return;
       }
 
-      console.log('Fetching accounts for user:', user.id);
+
 
       const { data, error: fetchError } = await supabase
         .from('chart_of_accounts')
@@ -61,7 +61,7 @@ export function useAccounts() {
         throw fetchError;
       }
 
-      console.log('Fetched accounts:', data?.length || 0, 'accounts');
+
 
       // Log data access for leak detection
       await logDataAccess('chart_of_accounts', 'SELECT', undefined, data?.length || 0);
@@ -79,7 +79,7 @@ export function useAccounts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, logDataAccess, toast]);
 
   const createAccount = async (accountData: Omit<Account, 'created_at' | 'updated_at'>) => {
     try {
@@ -87,7 +87,7 @@ export function useAccounts() {
         throw new Error('User must be authenticated to create accounts');
       }
 
-      console.log('Creating account for user:', user.id, accountData);
+
 
       const { data, error } = await supabase
         .from('chart_of_accounts')
@@ -100,7 +100,7 @@ export function useAccounts() {
         throw error;
       }
 
-      console.log('Account created:', data);
+
 
       // Log data access for leak detection
       await logDataAccess('chart_of_accounts', 'INSERT', data.account_code);
@@ -183,7 +183,7 @@ export function useAccounts() {
 
   useEffect(() => {
     fetchAccounts();
-  }, []);
+  }, [fetchAccounts]);
 
   return {
     accounts,

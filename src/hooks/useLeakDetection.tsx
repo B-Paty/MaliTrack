@@ -18,7 +18,7 @@ export interface AuditLog {
   record_id?: string;
   record_count: number;
   risk_score: number;
-  suspicious_flags: any;
+  suspicious_flags: Record<string, unknown>;
   accessed_at: string;
 }
 
@@ -29,7 +29,7 @@ export interface LeakAlert {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   title: string;
   description?: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   is_resolved: boolean;
   created_at: string;
   resolved_at?: string;
@@ -77,7 +77,7 @@ export function useLeakDetection() {
   }, [user]);
 
   // Fetch audit logs for current user
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -96,10 +96,10 @@ export function useLeakDetection() {
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
     }
-  };
+  }, [user]);
 
   // Fetch leak alerts for current user
-  const fetchLeakAlerts = async () => {
+  const fetchLeakAlerts = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -118,7 +118,7 @@ export function useLeakDetection() {
     } catch (error) {
       console.error('Failed to fetch leak alerts:', error);
     }
-  };
+  }, [user]);
 
   // Calculate detection statistics
   const calculateStats = useCallback(() => {
@@ -151,7 +151,7 @@ export function useLeakDetection() {
       if (error) throw error;
 
       // Show toast for any new critical alerts
-      const criticalLeaks = data?.filter((leak: any) => leak.severity === 'CRITICAL') || [];
+      const criticalLeaks = data?.filter((leak: { severity: string }) => leak.severity === 'CRITICAL') || [];
       if (criticalLeaks.length > 0) {
         toast({
           variant: 'destructive',
@@ -218,7 +218,7 @@ export function useLeakDetection() {
     };
 
     initialize();
-  }, [user]);
+  }, [user, fetchAuditLogs, fetchLeakAlerts]);
 
   // Recalculate stats when data changes
   useEffect(() => {

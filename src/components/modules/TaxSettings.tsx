@@ -55,7 +55,7 @@ export default function TaxSettings() {
     setTaxType(checked ? 'inclusive' : 'exclusive');
   };
 
-  const handleUpdateTaxRate = (id: string, field: keyof TaxRate, value: any) => {
+  const handleUpdateTaxRate = (id: string, field: keyof TaxRate, value: string | number | boolean) => {
     setTaxRates(prev => prev.map(rate => 
       rate.id === id ? { ...rate, [field]: value } : rate
     ));

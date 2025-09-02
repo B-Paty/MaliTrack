@@ -83,7 +83,7 @@ export default function ChartOfAccounts() {
     );
   }
 
-  console.log('ChartOfAccounts render - accounts:', accounts.length, 'error:', error);
+
 
   if (error) {
     return (

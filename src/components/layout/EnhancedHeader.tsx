@@ -45,16 +45,7 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
   const companyLogo = getLogoForContext('header');
   const companyName = settings?.company_name || 'QSA Solutions';
 
-  // Debug logging for logo troubleshooting
-  React.useEffect(() => {
-    console.log('EnhancedHeader Logo Debug:', {
-      companyLogo,
-      hasSettings: !!settings,
-      logoPath: settings?.logo_path,
-      logoBase64: settings?.logo_base64 ? 'present' : 'missing',
-      loading
-    });
-  }, [companyLogo, settings, loading]);
+
 
   const handleRefresh = () => {
     fetchSettings();

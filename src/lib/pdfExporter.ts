@@ -37,6 +37,68 @@ export interface TableRow {
   [key: string]: string | number;
 }
 
+export interface CompanySettings {
+  id?: string;
+  company_name: string;
+  logo_filename?: string;
+  logo_path?: string;
+  logo_base64?: string;
+  primary_color: string;
+  secondary_color?: string;
+  accent_color?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  tax_id?: string;
+  logo_position?: 'left' | 'center' | 'right';
+  payment_settings?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+}
+
+export interface Account {
+  account_code: string;
+  account_name: string;
+  category: string;
+  current_balance: number;
+  normal_balance: 'debit' | 'credit';
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Transaction {
+  id: string;
+  reference_number: string;
+  date: string;
+  description: string;
+  total_amount: number;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FinancialStatementData {
+  revenue: Account[];
+  expenses: Account[];
+  assets: Account[];
+  liabilities: Account[];
+  equity: Account[];
+  totalRevenue: number;
+  totalExpenses: number;
+  netIncome: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  totalEquity: number;
+}
+
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
 export class PDFExporter {
   private doc: jsPDF;
   private config: Required<PDFExportConfig>;
@@ -60,7 +122,7 @@ export class PDFExporter {
     });
   }
 
-  private async addHeader(companySettings?: any) {
+  private async addHeader(companySettings?: CompanySettings) {
     const { margins, companyName, title, subtitle, reportDate } = this.config;
     const pageWidth = this.doc.internal.pageSize.width;
     
@@ -266,7 +328,7 @@ export class PDFExporter {
     }
   }
 
-  public exportTrialBalance(accounts: any[], filename?: string): void {
+  public exportTrialBalance(accounts: Account[], filename?: string): void {
     const columns: TableColumn[] = [
       { header: 'Account Code', dataKey: 'account_code' },
       { header: 'Account Name', dataKey: 'account_name' },
@@ -295,7 +357,7 @@ export class PDFExporter {
     this.exportTable(columns, tableData, filename);
   }
 
-  public exportChartOfAccounts(accounts: any[], filename?: string): void {
+  public exportChartOfAccounts(accounts: Account[], filename?: string): void {
     const columns: TableColumn[] = [
       { header: 'Code', dataKey: 'account_code' },
       { header: 'Account Name', dataKey: 'account_name' },
@@ -317,10 +379,10 @@ export class PDFExporter {
 
   public async exportFinancialStatement(
     statementType: 'income' | 'balance',
-    statementData: any,
-    dateRange: { from: string; to: string },
+    statementData: FinancialStatementData,
+    dateRange: DateRange,
     filename?: string,
-    companySettings?: any
+    companySettings?: CompanySettings
   ): Promise<void> {
     if (statementType === 'income') {
       await this.exportIncomeStatement(statementData, dateRange, filename, companySettings);
@@ -329,7 +391,7 @@ export class PDFExporter {
     }
   }
 
-  private async exportIncomeStatement(data: any, dateRange: { from: string; to: string }, filename?: string, companySettings?: any): Promise<void> {
+  private async exportIncomeStatement(data: FinancialStatementData, dateRange: DateRange, filename?: string, companySettings?: CompanySettings): Promise<void> {
     // Add header
     await this.addHeader(companySettings);
     
@@ -368,7 +430,7 @@ export class PDFExporter {
     // Reset text color to black for regular content
     this.doc.setTextColor(0, 0, 0);
     
-    data.revenue.forEach((account: any) => {
+    data.revenue.forEach((account: Account) => {
       this.doc.text(account.account_name, margins.left + 5, yPosition);
       this.doc.text(formatCurrency(account.current_balance), pageWidth - margins.right - 5, yPosition, { align: 'right' });
       yPosition += 8;
@@ -400,7 +462,7 @@ export class PDFExporter {
     // Reset text color to black for regular content
     this.doc.setTextColor(0, 0, 0);
     
-    data.expenses.forEach((account: any) => {
+    data.expenses.forEach((account: Account) => {
       this.doc.text(account.account_name, margins.left + 5, yPosition);
       this.doc.text(formatCurrency(account.current_balance), pageWidth - margins.right - 5, yPosition, { align: 'right' });
       yPosition += 8;
@@ -428,7 +490,7 @@ export class PDFExporter {
     this.doc.save(finalFilename);
   }
 
-  private async exportBalanceSheet(data: any, asOfDate: string, filename?: string, companySettings?: any): Promise<void> {
+  private async exportBalanceSheet(data: FinancialStatementData, asOfDate: string, filename?: string, companySettings?: CompanySettings): Promise<void> {
     // Add header
     await this.addHeader(companySettings);
     
@@ -462,7 +524,7 @@ export class PDFExporter {
     // Reset text color to black for regular content
     this.doc.setTextColor(0, 0, 0);
     
-    data.assets.forEach((account: any) => {
+    data.assets.forEach((account: Account) => {
       const balance = account.normal_balance === 'debit' ? account.current_balance : -account.current_balance;
       this.doc.text(account.account_name, margins.left + 5, yPosition);
       this.doc.text(formatCurrency(balance), pageWidth / 2 - 10, yPosition, { align: 'right' });
@@ -498,7 +560,7 @@ export class PDFExporter {
     // Reset text color to black for regular content
     this.doc.setTextColor(0, 0, 0);
     
-    data.liabilities.forEach((account: any) => {
+    data.liabilities.forEach((account: Account) => {
       this.doc.text(account.account_name, rightColumnStart + 5, yPosition);
       this.doc.text(formatCurrency(account.current_balance), pageWidth - margins.right - 5, yPosition, { align: 'right' });
       yPosition += 8;
@@ -530,7 +592,7 @@ export class PDFExporter {
     // Reset text color to black for regular content
     this.doc.setTextColor(0, 0, 0);
     
-    data.equity.forEach((account: any) => {
+    data.equity.forEach((account: Account) => {
       this.doc.text(account.account_name, rightColumnStart + 5, yPosition);
       this.doc.text(formatCurrency(account.current_balance), pageWidth - margins.right - 5, yPosition, { align: 'right' });
       yPosition += 8;
