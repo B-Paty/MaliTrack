@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
-import { saveExcelReport } from "@/lib/enhancedExcelExporter";
+import { exportTransactionsToExcel } from "@/lib/transactionExporter";
 
 export function TransactionExportButton({ className }: { className?: string }) {
   const { toast } = useToast();
@@ -24,12 +24,12 @@ export function TransactionExportButton({ className }: { className?: string }) {
     try {
       const exportData = {
         transactions: transactions.map((tx) => ({
-          reference: tx.reference_number,
+          reference: tx.reference_number || "",
           date: tx.transaction_date,
           description: tx.description,
           lines: tx.lines.map((line) => ({
             accountCode: line.account_code,
-            accountName: line.account_name,
+            accountName: line.account_name || "Unknown Account",
             debit: line.debit_amount,
             credit: line.credit_amount,
           })),
@@ -38,6 +38,10 @@ export function TransactionExportButton({ className }: { className?: string }) {
           name: settings?.company_name || "QSA Solutions",
           logo: settings?.logo_base64 || settings?.logo_path || "",
           primaryColor: settings?.primary_color || "#a1052d",
+          address: settings?.address,
+          phone: settings?.phone,
+          email: settings?.email,
+          website: settings?.website,
         },
         reportTitle: "All Transactions",
         reportDate: new Date().toLocaleDateString("en-US", {
@@ -47,14 +51,9 @@ export function TransactionExportButton({ className }: { className?: string }) {
         }),
       };
 
-      const filename = `Transactions_${new Date().toISOString().split("T")[0]}`;
+      const filename = `Transactions_${new Date().toISOString().split("T")[0]}.xlsx`;
 
-      await saveExcelReport(exportData, `${filename}.xlsx`, {
-        format: "excel-advanced",
-        includeLogo: true,
-        colorTheme: true,
-        multipleSheetsBy: "none",
-      });
+      await exportTransactionsToExcel(exportData, filename);
 
       toast({ title: "Export Successful", description: "All transactions exported as Excel file" });
     } catch (err) {
