@@ -151,7 +151,7 @@ export default function CreateAccountModal({
         description: `Account ${formData.account_code} created successfully`,
       });
 
-      onSuccess?.(newAccount);
+      onSuccess?.(newAccount as Account);
       onClose();
     } catch (error) {
       toast({
