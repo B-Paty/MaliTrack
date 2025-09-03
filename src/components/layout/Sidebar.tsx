@@ -15,7 +15,8 @@ import {
   Building2,
   PlusCircle,
   Sparkles,
-  Shield
+  Shield,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Business Operations",
     items: [
+      { id: 'major-client', label: 'Major Client', icon: UserCheck },
       { id: 'invoices', label: 'Invoices', icon: FileText },
     ]
   },

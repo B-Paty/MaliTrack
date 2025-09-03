@@ -10,6 +10,7 @@ import Invoices from "@/components/modules/Invoices";
 import CompanySettings from "@/components/settings/EnhancedCompanySettings";
 import DashboardOverview from "@/components/modules/DashboardOverview";
 import SecurityDashboard from "@/components/modules/SecurityDashboard";
+import MajorClient from "@/components/modules/MajorClient";
 
 export default function AccountingSystem() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +33,8 @@ export default function AccountingSystem() {
         return <ChartOfAccounts />;
       case 'journal-entry':
         return <JournalEntry />;
+      case 'major-client':
+        return <MajorClient />;
       case 'invoices':
         return <Invoices />;
       case 'trial-balance':

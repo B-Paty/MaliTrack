@@ -92,6 +92,65 @@ export type Database = {
         }
         Relationships: []
       }
+      client_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          payment_method: string | null
+          reference_number: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          reference_number: string
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          reference_number?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_transactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "major_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           accent_color: string | null
@@ -194,6 +253,60 @@ export type Database = {
           severity?: string
           title?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      major_clients: {
+        Row: {
+          client_address: string | null
+          client_contact_person: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          client_tax_id: string | null
+          created_at: string
+          credit_limit: number | null
+          current_balance: number | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          payment_terms: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_address?: string | null
+          client_contact_person?: string | null
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          client_tax_id?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          current_balance?: number | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          payment_terms?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_address?: string | null
+          client_contact_person?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          client_tax_id?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          current_balance?: number | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          payment_terms?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
