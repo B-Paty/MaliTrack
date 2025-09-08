@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useAccounts } from "@/hooks/useAccounts";
+import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import ExportButtons from "@/components/exports/ExportButtons";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useDateRange } from "@/contexts/DateRangeContext";
 
 /**
  * TrialBalance
@@ -19,8 +21,8 @@ import { useToast } from "@/hooks/use-toast";
  * - Shows totals and balance status
  */
 export default function TrialBalance() {
-  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
-  const { accounts, loading, error } = useAccounts();
+  const { accounts, loading, error } = useFilteredAccounts();
+  const { dateRange } = useDateRange();
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
@@ -35,7 +37,7 @@ export default function TrialBalance() {
       categories[account.category].push(account);
 
       // Calculate debit/credit presentation based on account type and normal balance
-      const balance = account.current_balance;
+      const balance = Math.abs(account.current_balance);
       
       if (balance > 0) {
         if (
@@ -67,7 +69,7 @@ export default function TrialBalance() {
   }, [accounts]);
 
   const getBalancePresentation = (account: typeof accounts[0]) => {
-    const balance = account.current_balance;
+    const balance = Math.abs(account.current_balance);
     
     if (balance === 0) {
       return { debit: 0, credit: 0 };
@@ -138,6 +140,9 @@ export default function TrialBalance() {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <DateRangePicker title="Trial Balance Period" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -169,26 +174,21 @@ export default function TrialBalance() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Report Parameters
+            Report Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <Label htmlFor="reportDate">As of Date</Label>
-              <Input
-                id="reportDate"
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-                min="2025-01-01"
-                max="2026-12-31"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="text-center">
+              <p className="text-sm text-foreground/70 mb-2">Report Period</p>
+              <p className="text-sm font-semibold text-foreground">
+                {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
+              </p>
             </div>
             
             <div className="text-center">
-              <p className="text-sm text-foreground/70 mb-2">Total Accounts</p>
-              <p className="text-2xl font-bold text-foreground">{accounts.length}</p>
+              <p className="text-sm text-foreground/70 mb-2">Active Accounts</p>
+              <p className="text-2xl font-bold text-foreground">{accounts.filter(acc => Math.abs(acc.current_balance) > 0).length}</p>
             </div>
             
             <div className="text-center">
@@ -244,7 +244,7 @@ export default function TrialBalance() {
                     </thead>
                     <tbody>
                       {accountList
-                        .filter(account => account.current_balance > 0)
+                        .filter(account => Math.abs(account.current_balance) > 0)
                         .map((account, index) => {
                           const presentation = getBalancePresentation(account);
                           
@@ -318,7 +318,7 @@ export default function TrialBalance() {
                         <AlertTriangle className="h-5 w-5 text-destructive" />
                       )}
                       <span className="font-semibold">
-                        As of {new Date(reportDate).toLocaleDateString()}
+                        Period: {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
                       </span>
                     </div>
                   </td>

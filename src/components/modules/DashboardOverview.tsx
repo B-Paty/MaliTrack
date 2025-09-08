@@ -24,13 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useMemo } from "react";
-import { useAccounts } from "@/hooks/useAccounts";
-import { useTransactions } from "@/hooks/useTransactions";
+import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
+import { useFilteredTransactions } from "@/hooks/useFilteredTransactions";
 import { formatCurrency } from "@/lib/formatters";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
 
 export default function DashboardOverview() {
-  const { accounts, loading: accountsLoading } = useAccounts();
-  const { transactions, loading: transactionsLoading } = useTransactions();
+  const { accounts, loading: accountsLoading } = useFilteredAccounts();
+  const { transactions, loading: transactionsLoading } = useFilteredTransactions();
 
   const accountByCode = useMemo(() => {
     const map: Record<string, { category: string; normal_balance: 'debit' | 'credit' }> = {};
@@ -49,12 +50,12 @@ export default function DashboardOverview() {
   };
 
   const { totalRevenue, totalExpenses, revenueMoM, expensesMoM, revenueThisMonth, invoicesCountThisMonth } = useMemo(() => {
-    // Totals
+    // Totals from filtered period
     const revenueAccounts = accounts.filter(acc => acc.category === 'Revenue');
     const expenseAccounts = accounts.filter(acc => acc.category === 'Expense');
 
-    const totalRevenue = revenueAccounts.reduce((sum, acc) => sum + acc.current_balance, 0);
-    const totalExpenses = expenseAccounts.reduce((sum, acc) => sum + acc.current_balance, 0);
+    const totalRevenue = revenueAccounts.reduce((sum, acc) => sum + Math.abs(acc.current_balance), 0);
+    const totalExpenses = expenseAccounts.reduce((sum, acc) => sum + Math.abs(acc.current_balance), 0);
 
     // MoM calculations
     const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -88,15 +89,15 @@ export default function DashboardOverview() {
       return ((current - prev) / prev) * 100;
     };
 
-    // Invoices are local-only; approximate using count of transactions this month as activity
-    const invoicesCountThisMonth = transactions.filter(tx => isInRange(tx.transaction_date, startOfThisMonth, now)).length;
+    // Use filtered transactions count for activity
+    const invoicesCountThisMonth = transactions.length;
 
     return {
       totalRevenue,
       totalExpenses,
       revenueMoM: pct(revenueThis, revenuePrev),
       expensesMoM: pct(expensesThis, expensesPrev),
-      revenueThisMonth,
+      revenueThisMonth: totalRevenue, // For the selected period
       invoicesCountThisMonth
     };
   }, [accounts, transactions, accountByCode, now, startOfThisMonth]);
@@ -170,6 +171,9 @@ export default function DashboardOverview() {
 
   return (
     <div className="space-y-8">
+      {/* Date Range Filter */}
+      <DateRangePicker title="Dashboard Period Filter" />
+
       {/* Welcome Header */}
       <div className="bg-gradient-secondary rounded-2xl p-8 border border-primary/10 shadow-premium">
         <div className="flex items-center justify-between">
