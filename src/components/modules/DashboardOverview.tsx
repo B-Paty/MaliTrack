@@ -27,7 +27,6 @@ import { useMemo } from "react";
 import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
 import { useFilteredTransactions } from "@/hooks/useFilteredTransactions";
 import { formatCurrency } from "@/lib/formatters";
-import { DateRangePicker } from "@/components/ui/DateRangePicker";
 
 export default function DashboardOverview() {
   const { accounts, loading: accountsLoading } = useFilteredAccounts();
@@ -171,9 +170,6 @@ export default function DashboardOverview() {
 
   return (
     <div className="space-y-8">
-      {/* Date Range Filter */}
-      <DateRangePicker title="Dashboard Period Filter" />
-
       {/* Welcome Header */}
       <div className="bg-gradient-secondary rounded-2xl p-8 border border-primary/10 shadow-premium">
         <div className="flex items-center justify-between">

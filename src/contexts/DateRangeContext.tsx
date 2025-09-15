@@ -13,10 +13,15 @@ interface DateRangeContextType {
 
 const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
 
-const getDefaultDateRange = (): DateRange => ({
-  startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // Start of current year
-  endDate: new Date().toISOString().split('T')[0] // Today
-});
+const getDefaultDateRange = (): DateRange => {
+  const today = new Date();
+  const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+  
+  return {
+    startDate: oneMonthAgo.toISOString().split('T')[0], // 1 month ago
+    endDate: today.toISOString().split('T')[0] // Today
+  };
+};
 
 export function DateRangeProvider({ children }: { children: ReactNode }) {
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange());

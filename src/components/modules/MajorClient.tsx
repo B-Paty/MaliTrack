@@ -49,6 +49,8 @@ export default function MajorClient() {
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("clients");
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<any>(null);
 
   const [newClient, setNewClient] = useState({
     client_name: '',
@@ -96,6 +98,31 @@ export default function MajorClient() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDeleteClient = async () => {
+    if (!clientToDelete) return;
+    
+    try {
+      await deleteClient(clientToDelete.id);
+      setShowDeleteDialog(false);
+      setClientToDelete(null);
+      toast({
+        title: "Success",
+        description: `Client "${clientToDelete.client_name}" deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete client",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDeleteClient = (client: any) => {
+    setClientToDelete(client);
+    setShowDeleteDialog(true);
   };
 
   const generateInvoiceNumber = (): string => {
@@ -195,13 +222,28 @@ export default function MajorClient() {
         <TabsContent value="clients" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {clients.map((client) => (
-              <Card key={client.id} className="cursor-pointer hover:shadow-card transition-shadow" onClick={() => setSelectedClient(client)}>
+              <Card key={client.id} className="hover:shadow-card transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{client.client_name}</CardTitle>
-                    <Badge variant={client.is_active ? "default" : "secondary"}>
-                      {client.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                    <CardTitle className="text-lg cursor-pointer" onClick={() => setSelectedClient(client)}>
+                      {client.client_name}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={client.is_active ? "default" : "secondary"}>
+                        {client.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmDeleteClient(client);
+                        }}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -524,6 +566,35 @@ export default function MajorClient() {
             <Button onClick={handleCreateInvoice}>
               Create Invoice
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Client</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete <strong>{clientToDelete?.client_name}</strong>? 
+              This action cannot be undone and will also delete all associated transactions and invoices.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteClient}
+              >
+                Delete Client
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

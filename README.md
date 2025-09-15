@@ -49,6 +49,12 @@ npm run dev
 - Tables: `chart_of_accounts`, `transactions`, `transaction_lines`, `company_settings`.  
 - `company_settings.payment_settings` keeps your pay details as JSON.  
 
+### 📚 Documentation
+- **[Journal Entry UX Documentation](./JOURNAL_ENTRY_UX_DOCUMENTATION.md)** - Complete technical guide to all journal entry improvements
+- **[Keyboard Shortcuts Guide](./JOURNAL_ENTRY_KEYBOARD_SHORTCUTS.md)** - Comprehensive keyboard shortcuts reference
+- **[Changelog](./CHANGELOG.md)** - Detailed history of all features and improvements
+- **[Migration Guide](./MIGRATION_DEPLOYMENT_GUIDE.md)** - Step-by-step deployment instructions
+
 ### Tech
 - React + TypeScript + Vite  
 - Tailwind + shadcn/ui  
