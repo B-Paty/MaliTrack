@@ -163,15 +163,15 @@ All colors MUST be HSL.
     --shadow-elevated: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
     --shadow-premium: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
 
-    /* Sidebar Dark Mode */
-    --sidebar-background: 220 15% 10%;
-    --sidebar-foreground: 210 40% 90%;
-    --sidebar-primary: 343 89% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 210 40% 90%;
-    --sidebar-border: 220 15% 24%;
-    --sidebar-ring: 343 89% 45%;
+    /* Sidebar Dark Mode - Match app theme */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 }
 

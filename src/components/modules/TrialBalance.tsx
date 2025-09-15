@@ -232,11 +232,11 @@ export default function TrialBalance() {
                   </CardTitle>
                   <div className="flex gap-8 text-sm">
                     <div className="text-right">
-                      <p className="text-foreground/80 dark:text-foreground">Category Debits</p>
+                      <p className="text-foreground font-medium">Category Debits</p>
                       <p className="font-bold text-foreground">{formatCurrency(categoryTotals.debit)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-foreground/80 dark:text-foreground">Category Credits</p>
+                      <p className="text-foreground font-medium">Category Credits</p>
                       <p className="font-bold text-foreground">{formatCurrency(categoryTotals.credit)}</p>
                     </div>
                   </div>

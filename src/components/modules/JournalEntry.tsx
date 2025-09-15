@@ -11,6 +11,7 @@ import { useTransactions, type TransactionLine } from "@/hooks/useTransactions";
 import { formatCurrency, formatNumber, parseNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import AddSalesEntry from "@/components/modules/AddSalesEntry";
 
 /**
  * JournalEntry
@@ -355,6 +356,9 @@ export default function JournalEntry() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Quick Entry - Rice Sale */}
+      <AddSalesEntry />
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-4 sm:justify-end">
