@@ -230,16 +230,16 @@ export default function TrialBalance() {
                       {category}
                     </Badge>
                   </CardTitle>
-                  <div className="flex gap-8 text-sm">
-                    <div className="text-right">
-                      <p className="text-foreground font-medium">Category Debits</p>
-                      <p className="font-bold text-foreground">{formatCurrency(categoryTotals.debit)}</p>
+                    <div className="flex gap-8 text-sm">
+                      <div className="text-right">
+                        <p className="text-foreground dark:text-foreground font-medium">Category Debits</p>
+                        <p className="font-bold text-foreground dark:text-foreground">{formatCurrency(categoryTotals.debit)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-foreground dark:text-foreground font-medium">Category Credits</p>
+                        <p className="font-bold text-foreground dark:text-foreground">{formatCurrency(categoryTotals.credit)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-foreground font-medium">Category Credits</p>
-                      <p className="font-bold text-foreground">{formatCurrency(categoryTotals.credit)}</p>
-                    </div>
-                  </div>
                 </div>
               </CardHeader>
               
@@ -250,8 +250,8 @@ export default function TrialBalance() {
                       <tr className="border-b border-border">
                         <th className="text-left py-3 px-4 font-semibold text-foreground">Account Code</th>
                         <th className="text-left py-3 px-4 font-semibold text-foreground">Account Name</th>
-                        <th className="text-right py-3 px-4 font-semibold text-foreground">Debit Balance</th>
-                        <th className="text-right py-3 px-4 font-semibold text-foreground">Credit Balance</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground dark:text-foreground">Debit Balance</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground dark:text-foreground">Credit Balance</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -313,11 +313,11 @@ export default function TrialBalance() {
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-primary/20">
-                  <th className="text-left py-4 px-4 text-lg font-bold text-foreground" colSpan={2}>
+                  <th className="text-left py-4 px-4 text-lg font-bold text-foreground dark:text-foreground" colSpan={2}>
                     TRIAL BALANCE TOTALS
                   </th>
-                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground">TOTAL DEBITS</th>
-                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground">TOTAL CREDITS</th>
+                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground dark:text-foreground">TOTAL DEBITS</th>
+                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground dark:text-foreground">TOTAL CREDITS</th>
                 </tr>
               </thead>
               <tbody>
