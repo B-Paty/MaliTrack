@@ -96,7 +96,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-smooth duration-300 ease-in-out shadow-premium overflow-hidden md:rounded-none rounded-r-2xl",
+          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-background border-r border-border z-50 transform transition-smooth duration-300 ease-in-out shadow-premium overflow-hidden md:rounded-none rounded-r-2xl",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
