@@ -21,6 +21,8 @@ import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
 import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import InventorySettings from "@/components/modules/InventorySettings";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 interface ColorPresetCardProps {
   preset: {
@@ -55,6 +57,7 @@ const ColorPresetCard = ({ preset, isSelected, onSelect }: ColorPresetCardProps)
 
 export default function EnhancedCompanySettings() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const {
     settings,
     loading,
@@ -163,11 +166,12 @@ export default function EnhancedCompanySettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 gap-2 mb-4 md:mb-6">
           <TabsTrigger value="company">Company Info</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
+          <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="export">Export Settings</TabsTrigger>
         </TabsList>
 
@@ -722,6 +726,11 @@ export default function EnhancedCompanySettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Inventory Settings Tab */}
+        <TabsContent value="inventory" className="space-y-6">
+          {user && <InventorySettings userId={user.id} />}
         </TabsContent>
 
         {/* Export Settings Tab */}

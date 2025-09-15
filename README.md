@@ -7,7 +7,9 @@ A simple accounting app for Tanzania. Think of it like a tidy notebook that help
 - Add journal entries (money in, money out) that must balance.  
 - See a Trial Balance and Financial Statements.  
 - Make Invoices and export them to PDF.  
-- Change company name, logo, brand color, and payment settings (Bank and Vodacom Lipa Namba).  
+- Change company name, logo, brand color, and payment settings (Bank and Vodacom Lipa Namba).
+- **NEW**: Choose between Single Inventory (one product) or Multiple Inventory (many products) during setup.
+- **NEW**: Switch inventory modes in Settings and manage your products.  
 
 ### How to run (3 steps)
 1) Install tools
@@ -21,13 +23,15 @@ npm run dev
 3) Open the link it shows (usually http://localhost:5173)
 
 ### How to use (like a 6‑year‑old)
-- The big left menu is your “rooms”. Tap a room to go there.  
-- “Chart of Accounts” is your list of money boxes.  
-- “Journal Entry” is where you write a new note about money moving. The left must equal the right.  
-- “Trial Balance” checks your math.  
-- “Financial Statements” shows totals and lets you save a PDF.  
-- “Invoices” lets you make a bill and save it as a PDF.  
-- “Company Settings” lets you pick your name, color, logo, and how people pay you.
+- The big left menu is your "rooms". Tap a room to go there.  
+- "Chart of Accounts" is your list of money boxes.  
+- "Journal Entry" is where you write a new note about money moving. The left must equal the right.  
+- "Trial Balance" checks your math.  
+- "Financial Statements" shows totals and lets you save a PDF.  
+- "Invoices" lets you make a bill and save it as a PDF.  
+- "Company Settings" lets you pick your name, color, logo, and how people pay you.
+- **NEW**: When you sign up, choose if you sell one thing (like rice) or many things (rice, beans, maize).
+- **NEW**: In Settings → Inventory, you can change from one product to many products later.
 
 ### Payment settings
 - Go to Company Settings → Payment Settings.  
@@ -50,6 +54,7 @@ npm run dev
 - `company_settings.payment_settings` keeps your pay details as JSON.  
 
 ### 📚 Documentation
+- **[Inventory Management System](./INVENTORY_MANAGEMENT_SYSTEM.md)** - Complete guide to single/multiple inventory management
 - **[Journal Entry UX Documentation](./JOURNAL_ENTRY_UX_DOCUMENTATION.md)** - Complete technical guide to all journal entry improvements
 - **[Keyboard Shortcuts Guide](./JOURNAL_ENTRY_KEYBOARD_SHORTCUTS.md)** - Comprehensive keyboard shortcuts reference
 - **[Changelog](./CHANGELOG.md)** - Detailed history of all features and improvements

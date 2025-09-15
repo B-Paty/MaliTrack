@@ -15,17 +15,17 @@ import { Separator } from '@/components/ui/separator';
 import { Lock, Mail, User, Building2 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { useEnhancedCompanySettings } from '@/hooks/useEnhancedCompanySettings';
+import SignupFlow from './SignupFlow';
 
 export function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const { settings, getLogoForContext } = useEnhancedCompanySettings();
 
   // Get company branding
@@ -45,35 +45,10 @@ export function LoginForm() {
       return;
     }
 
-    if (isSignUp && password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setLoading(false);
-      return;
-    }
-
     try {
-      if (isSignUp) {
-        const { error } = await signUp(email, password);
-        if (error) {
-          setError(error.message);
-        } else {
-          setMessage('Check your email for a confirmation link');
-          setIsSignUp(false);
-          setEmail('');
-          setPassword('');
-          setConfirmPassword('');
-        }
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) {
-          setError(error.message);
-        }
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error.message);
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -88,8 +63,20 @@ export function LoginForm() {
     setMessage(null);
     setEmail('');
     setPassword('');
-    setConfirmPassword('');
   };
+
+  // Show SignupFlow when in signup mode
+  if (isSignUp) {
+    return (
+      <SignupFlow
+        onSuccess={() => {
+          setIsSignUp(false);
+          setMessage('Account created successfully! Please sign in.');
+        }}
+        onBack={() => setIsSignUp(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-3 sm:p-4">
@@ -131,13 +118,10 @@ export function LoginForm() {
             </div>
           </div>
           <CardTitle className="text-xl font-semibold text-foreground">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            Welcome Back
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {isSignUp 
-              ? 'Sign up to access your accounting dashboard' 
-              : 'Sign in to access your accounting dashboard'
-            }
+            Sign in to access your accounting dashboard
           </CardDescription>
         </CardHeader>
 
@@ -191,25 +175,6 @@ export function LoginForm() {
               </div>
             </div>
 
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground">
-                  Confirm Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                    className="pl-10 h-11"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            )}
 
             <Button 
               type="submit" 
@@ -219,12 +184,12 @@ export function LoginForm() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
-                  {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                  Signing In...
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  {isSignUp ? 'Create Account' : 'Sign In'}
+                  Sign In
                 </div>
               )}
             </Button>
@@ -234,7 +199,7 @@ export function LoginForm() {
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+              Don't have an account?
             </p>
             <Button
               variant="ghost"
@@ -242,7 +207,7 @@ export function LoginForm() {
               disabled={loading}
               className="text-primary hover:text-primary-hover font-semibold"
             >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
+              Sign Up
             </Button>
           </div>
 

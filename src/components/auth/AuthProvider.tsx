@@ -9,6 +9,14 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ProductType {
+  id: string;
+  name: string;
+  description: string;
+  unit: string;
+  defaultPrice: number;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -16,6 +24,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
+  createInventorySettings: (userId: string, inventoryType: 'single' | 'multiple', products?: ProductType[]) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
   signOut: async () => ({ error: null }),
+  createInventorySettings: async () => {},
 });
 
 export const useAuth = () => {
@@ -64,8 +74,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const createDefaultAccounts = async (userId: string) => {
-    const defaultAccounts = [
+  const createDefaultAccounts = async (userId: string, inventoryType: 'single' | 'multiple' = 'single', products?: ProductType[]) => {
+    const baseAccounts = [
       // Current Assets
       { account_code: '1010', account_name: 'Cash in Hand', category: 'Current Asset', current_balance: 0.00, normal_balance: 'debit' },
       { account_code: '1020', account_name: 'Bank Account', category: 'Current Asset', current_balance: 0.00, normal_balance: 'debit' },
@@ -116,8 +126,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
       { account_code: '5110', account_name: 'Depreciation Expense', category: 'Expense', current_balance: 0.00, normal_balance: 'debit' },
     ];
 
+    // Add product-specific accounts for multiple inventory
+    const productAccounts: any[] = [];
+    if (inventoryType === 'multiple' && products && products.length > 0) {
+      products.forEach((product, index) => {
+        const productCode = 6000 + index * 10;
+        productAccounts.push(
+          {
+            account_code: productCode.toString(),
+            account_name: `${product.name} Inventory`,
+            category: 'Current Asset',
+            current_balance: 0.00,
+            normal_balance: 'debit'
+          },
+          {
+            account_code: (productCode + 1).toString(),
+            account_name: `${product.name} Sales Revenue`,
+            category: 'Revenue',
+            current_balance: 0.00,
+            normal_balance: 'credit'
+          },
+          {
+            account_code: (productCode + 2).toString(),
+            account_name: `${product.name} COGS`,
+            category: 'Expense',
+            current_balance: 0.00,
+            normal_balance: 'debit'
+          }
+        );
+      });
+    }
+
+    const allAccounts = [...baseAccounts, ...productAccounts];
+
     try {
-      const accountsWithUserId = defaultAccounts.map(account => ({
+      const accountsWithUserId = allAccounts.map(account => ({
         ...account,
         user_id: userId,
         created_at: new Date().toISOString(),
@@ -136,15 +179,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const createInventorySettings = async (userId: string, inventoryType: 'single' | 'multiple', products?: ProductType[]) => {
+    try {
+      const { error } = await supabase
+        .from('inventory_settings')
+        .insert({
+          user_id: userId,
+          inventory_type: inventoryType,
+          products: products || [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error creating inventory settings:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error creating inventory settings:', error);
+      throw error;
+    }
+  };
+
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    // If signup was successful, create default accounts
+    // If signup was successful, create default accounts (single inventory by default)
     if (!error && data.user) {
-      await createDefaultAccounts(data.user.id);
+      await createDefaultAccounts(data.user.id, 'single');
+      await createInventorySettings(data.user.id, 'single');
     }
 
     return { error };
@@ -170,6 +236,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signIn,
     signOut,
+    createInventorySettings,
   };
 
   return (

@@ -9,6 +9,8 @@ import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocompl
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions, type TransactionLine } from "@/hooks/useTransactions";
+import { useInventorySettings } from "@/hooks/useInventorySettings";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { formatCurrency, formatNumber, parseNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +37,8 @@ interface TransactionTemplate {
   category: 'sales' | 'purchase' | 'cash' | 'expense' | 'transfer' | 'other';
 }
 
-const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
+// Base templates that work for both single and multiple inventory
+const getBaseTemplates = (): TransactionTemplate[] => [
   {
     id: 'cash-sale',
     name: 'Cash Sale',
@@ -45,6 +48,8 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     lines: [
       { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
       { account_code: '4010', debit_amount: 0, credit_amount: 0 }, // Sales Revenue
+      { account_code: '5010', debit_amount: 0, credit_amount: 0 }, // Cost of Goods Sold
+      { account_code: '1040', debit_amount: 0, credit_amount: 0 }, // Inventory
     ]
   },
   {
@@ -54,8 +59,10 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     icon: '📋',
     category: 'sales',
     lines: [
-      { account_code: '1020', debit_amount: 0, credit_amount: 0 }, // Accounts Receivable
+      { account_code: '1030', debit_amount: 0, credit_amount: 0 }, // Accounts Receivable
       { account_code: '4010', debit_amount: 0, credit_amount: 0 }, // Sales Revenue
+      { account_code: '5010', debit_amount: 0, credit_amount: 0 }, // Cost of Goods Sold
+      { account_code: '1040', debit_amount: 0, credit_amount: 0 }, // Inventory
     ]
   },
   {
@@ -65,7 +72,7 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     icon: '🛒',
     category: 'purchase',
     lines: [
-      { account_code: '5010', debit_amount: 0, credit_amount: 0 }, // Cost of Goods Sold
+      { account_code: '1040', debit_amount: 0, credit_amount: 0 }, // Inventory
       { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
     ]
   },
@@ -76,7 +83,7 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     icon: '📝',
     category: 'purchase',
     lines: [
-      { account_code: '5010', debit_amount: 0, credit_amount: 0 }, // Cost of Goods Sold
+      { account_code: '1040', debit_amount: 0, credit_amount: 0 }, // Inventory
       { account_code: '2010', debit_amount: 0, credit_amount: 0 }, // Accounts Payable
     ]
   },
@@ -88,7 +95,7 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     category: 'cash',
     lines: [
       { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
-      { account_code: '1020', debit_amount: 0, credit_amount: 0 }, // Accounts Receivable
+      { account_code: '1030', debit_amount: 0, credit_amount: 0 }, // Accounts Receivable
     ]
   },
   {
@@ -109,7 +116,7 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     icon: '📊',
     category: 'expense',
     lines: [
-      { account_code: '6010', debit_amount: 0, credit_amount: 0 }, // Office Expenses
+      { account_code: '5020', debit_amount: 0, credit_amount: 0 }, // Salaries & Wages
       { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
     ]
   },
@@ -120,21 +127,104 @@ const TRANSACTION_TEMPLATES: TransactionTemplate[] = [
     icon: '🏦',
     category: 'transfer',
     lines: [
-      { account_code: '1030', debit_amount: 0, credit_amount: 0 }, // Bank Account
+      { account_code: '1020', debit_amount: 0, credit_amount: 0 }, // Bank Account
       { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
     ]
   }
 ];
 
+// Generate product-specific templates for multiple inventory
+const getProductTemplates = (products: any[]): TransactionTemplate[] => {
+  const templates: TransactionTemplate[] = [];
+  
+  products.forEach((product, index) => {
+    const productCode = 6000 + index * 10;
+    
+    // Cash Sale for this product
+    templates.push({
+      id: `cash-sale-${product.id}`,
+      name: `${product.name} Cash Sale`,
+      description: `Sale of ${product.name} for cash`,
+      icon: '💰',
+      category: 'sales',
+      lines: [
+        { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
+        { account_code: (productCode + 1).toString(), debit_amount: 0, credit_amount: 0 }, // Product Sales Revenue
+        { account_code: (productCode + 2).toString(), debit_amount: 0, credit_amount: 0 }, // Product COGS
+        { account_code: productCode.toString(), debit_amount: 0, credit_amount: 0 }, // Product Inventory
+      ]
+    });
+    
+    // Credit Sale for this product
+    templates.push({
+      id: `credit-sale-${product.id}`,
+      name: `${product.name} Credit Sale`,
+      description: `Sale of ${product.name} on credit`,
+      icon: '📋',
+      category: 'sales',
+      lines: [
+        { account_code: '1030', debit_amount: 0, credit_amount: 0 }, // Accounts Receivable
+        { account_code: (productCode + 1).toString(), debit_amount: 0, credit_amount: 0 }, // Product Sales Revenue
+        { account_code: (productCode + 2).toString(), debit_amount: 0, credit_amount: 0 }, // Product COGS
+        { account_code: productCode.toString(), debit_amount: 0, credit_amount: 0 }, // Product Inventory
+      ]
+    });
+    
+    // Cash Purchase for this product
+    templates.push({
+      id: `cash-purchase-${product.id}`,
+      name: `${product.name} Cash Purchase`,
+      description: `Purchase of ${product.name} with cash`,
+      icon: '🛒',
+      category: 'purchase',
+      lines: [
+        { account_code: productCode.toString(), debit_amount: 0, credit_amount: 0 }, // Product Inventory
+        { account_code: '1010', debit_amount: 0, credit_amount: 0 }, // Cash in Hand
+      ]
+    });
+    
+    // Credit Purchase for this product
+    templates.push({
+      id: `credit-purchase-${product.id}`,
+      name: `${product.name} Credit Purchase`,
+      description: `Purchase of ${product.name} on credit`,
+      icon: '📝',
+      category: 'purchase',
+      lines: [
+        { account_code: productCode.toString(), debit_amount: 0, credit_amount: 0 }, // Product Inventory
+        { account_code: '2010', debit_amount: 0, credit_amount: 0 }, // Accounts Payable
+      ]
+    });
+  });
+  
+  return templates;
+};
+
 export default function JournalEntry() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const MAX_AMOUNT = 100_000_000; // maximum allowed amount per line (100M)
   const { accounts, loading: accountsLoading } = useAccounts();
+  const { settings: inventorySettings } = useInventorySettings(user?.id || '');
   const { createTransaction, loading: transactionLoading } = useTransactions();
   
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [autoBalanceEnabled, setAutoBalanceEnabled] = useState(true);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Generate transaction templates based on inventory settings
+  const transactionTemplates = useMemo(() => {
+    const baseTemplates = getBaseTemplates();
+    
+    if (inventorySettings?.inventory_type === 'multiple' && inventorySettings.products) {
+      // For multiple inventory, add product-specific templates
+      const productTemplates = getProductTemplates(inventorySettings.products);
+      return [...baseTemplates, ...productTemplates];
+    }
+    
+    // For single inventory or no inventory settings, return only base templates
+    return baseTemplates;
+  }, [inventorySettings]);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
@@ -160,7 +250,7 @@ export default function JournalEntry() {
     let suggestions: AutocompleteOption[] = [];
     
     if (selectedTemplate) {
-      const template = TRANSACTION_TEMPLATES.find(t => t.id === selectedTemplate);
+      const template = transactionTemplates.find(t => t.id === selectedTemplate);
       if (template) {
         // Suggest accounts from the template that aren't already used
         const templateAccounts = template.lines
@@ -326,7 +416,7 @@ export default function JournalEntry() {
   };
 
   const applyTemplate = (templateId: string) => {
-    const template = TRANSACTION_TEMPLATES.find(t => t.id === templateId);
+    const template = transactionTemplates.find(t => t.id === templateId);
     if (!template) return;
 
     const templateLines: TransactionLine[] = template.lines.map(line => ({
@@ -599,7 +689,7 @@ export default function JournalEntry() {
         <CardContent>
           {/* Desktop Grid View */}
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {TRANSACTION_TEMPLATES.map((template) => (
+            {transactionTemplates.map((template) => (
               <Button
                 key={template.id}
                 variant={selectedTemplate === template.id ? "default" : "outline"}
@@ -617,7 +707,7 @@ export default function JournalEntry() {
 
           {/* Mobile List View */}
           <div className="md:hidden space-y-2">
-            {TRANSACTION_TEMPLATES.map((template) => (
+            {transactionTemplates.map((template) => (
               <Button
                 key={template.id}
                 variant={selectedTemplate === template.id ? "default" : "outline"}

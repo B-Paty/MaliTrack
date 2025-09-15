@@ -16,9 +16,14 @@ import {
   PlusCircle,
   Sparkles,
   Shield,
-  UserCheck
+  UserCheck,
+  Search,
+  Package,
+  ShoppingCart,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -58,6 +63,8 @@ const menuGroups: MenuGroup[] = [
     items: [
       { id: 'major-client', label: 'Major Client', icon: UserCheck },
       { id: 'invoices', label: 'Invoices', icon: FileText },
+      { id: 'sales-module', label: 'Sales Module', icon: ShoppingCart },
+      { id: 'inventory-management', label: 'Inventory Management', icon: Package },
     ]
   },
   {
@@ -79,10 +86,25 @@ const menuGroups: MenuGroup[] = [
     items: [
       { id: 'security', label: 'Security Dashboard', icon: Shield },
     ]
+  },
+  {
+    label: "Support",
+    items: [
+      { id: 'help', label: 'Help & Support', icon: HelpCircle },
+    ]
   }
 ];
 
 export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange }: SidebarProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredMenuGroups = menuGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(group => group.items.length > 0);
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -103,7 +125,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-4 border-b border-primary/10">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-brand-white" />
@@ -118,6 +140,17 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search modules..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
 
@@ -136,7 +169,7 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                 e.stopPropagation();
               }}
             >
-              {menuGroups.map((group, index) => (
+              {filteredMenuGroups.map((group, index) => (
                 <div key={index} className="space-y-2">
                   <div className="px-3 mb-3">
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-primary/20 pb-1">{group.label}</h3>
