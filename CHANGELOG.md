@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### 🧾 INVOICE SYSTEM ENHANCEMENTS
+- **IMPLEMENTED: Major Client Integration**: Invoices now require selection from existing major clients with auto-population of client details (name, email, phone, address)
+- **IMPLEMENTED: Database Persistence**: Created dedicated `invoices` and `invoice_items` tables with proper foreign key relationships to major clients
+- **IMPLEMENTED: Status-Based Filtering**: Added filter dropdown to view invoices by status (All, Draft, Sent, Paid, Overdue) for easy pending invoice tracking
+- **IMPLEMENTED: Bulk Delete Functionality**: Added checkboxes for individual invoice selection, "Select All" functionality, and bulk delete with confirmation dialog
+- **IMPLEMENTED: Enhanced Invoice Template**: Improved invoice template with complete business information, currency specification (Tsh), professional payment terms, and company footer
+- **IMPLEMENTED: Row Level Security**: Added proper RLS policies for invoice data isolation between users
+- **ENHANCED: Invoice Creation Flow**: Streamlined process with client selection → auto-fill details → add items → save to database
+- **ENHANCED: Invoice Management**: Real-time status tracking, visual status badges, and comprehensive invoice lifecycle management
+- **FIXED: Invoice Persistence**: Resolved issue where invoices disappeared when navigating away from the invoice component by implementing proper database storage
 
 ### 🔒 CRITICAL SECURITY FIX
 - **APPLIED: Fixed public access to financial data**: All tables (`chart_of_accounts`, `transactions`, `transaction_lines`, `company_settings`) now require authentication. Dangerous public policies removed and replaced with authenticated-only RLS policies.

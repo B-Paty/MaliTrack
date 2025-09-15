@@ -52,6 +52,10 @@ This file tracks all requested features and their implementation status.
 | 14. Dashboard Live Sections | 🟢 Done | Quick Actions navigate; Recent + Progress from data | High |
 | 15. Color Presets Live Apply | 🟢 Done | Theme updates instantly on selection | Medium |
 | 16. Remove Nav Glow | 🟢 Done | Cleaner active state without crimson glow | Low |
+| 17. Invoice System Overhaul | 🟢 Done | Major client integration, persistence, filtering, bulk delete | High |
+| 18. Invoice Template Enhancement | 🟢 Done | Professional template with business info, currency, terms | High |
+| 19. Invoice Status Management | 🟢 Done | Draft/Sent/Paid/Overdue with filtering and tracking | High |
+| 20. Invoice Bulk Operations | 🟢 Done | Checkbox selection, bulk delete with confirmation | Medium |
 
 ### 5. Export & Reporting
 | Task | Status | Notes | Priority |
@@ -76,12 +80,17 @@ This file tracks all requested features and their implementation status.
 | Performance Testing | 🔴 Pending | Load testing needed | Low |
 
 ## Current Sprint Focus
-**Priority**: Dashboard sections now backed by live data and navigation.
+**Priority**: Invoice system overhaul with major client integration and comprehensive management features.
 
 ## Implementation Summary
-- Quick Actions dispatch navigation to modules
-- Recent Activities lists latest transactions
-- Monthly Progress shows current-month revenue and transaction count
+- Invoice system now requires major client selection with auto-populated details
+- Database persistence with dedicated `invoices` and `invoice_items` tables
+- Status-based filtering for easy pending invoice tracking
+- Bulk delete functionality with confirmation dialogs
+- Enhanced professional invoice template with complete business information
+- Row Level Security policies for proper data isolation
 
 ## Notes
-- Replace Pending Invoices and Active Clients once data sources are introduced
+- Invoice system now fully integrated with major clients
+- All invoice data persists across sessions and navigation
+- Professional invoice template ready for business use
