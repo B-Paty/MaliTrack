@@ -267,7 +267,7 @@ export default function ChartOfAccounts() {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <Badge variant={account.normal_balance === 'debit' ? 'secondary' : 'outline'}>
+                            <Badge variant="outline">
                               {account.normal_balance}
                             </Badge>
                           </td>

@@ -155,7 +155,7 @@ export default function TaxSettings() {
                 <Label htmlFor="tax-type" className="text-lg font-semibold text-foreground">
                   Tax {taxType === 'inclusive' ? 'Inclusive' : 'Exclusive'}
                 </Label>
-                <Badge variant={taxType === 'inclusive' ? 'default' : 'secondary'} className="text-sm">
+                <Badge variant={taxType === 'inclusive' ? 'default' : 'outline'} className="text-sm">
                   {taxType === 'inclusive' ? 'Inclusive' : 'Exclusive'}
                 </Badge>
               </div>
@@ -227,7 +227,7 @@ export default function TaxSettings() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-semibold text-foreground">{rate.name}</h4>
-                      <Badge variant={rate.isActive ? 'default' : 'secondary'} className="text-xs">
+                      <Badge variant={rate.isActive ? 'default' : 'outline'} className="text-xs">
                         {rate.rate}%
                       </Badge>
                       {rate.isActive && (
