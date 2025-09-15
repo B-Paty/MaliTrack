@@ -107,19 +107,19 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Improved Dark Mode with Better Contrast */
-    --background: 220 15% 8%;
-    --foreground: 210 40% 95%;
+    /* Improved Dark Mode with Better Contrast - Pure Grays */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 220 15% 12%;
-    --card-foreground: 210 40% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 15% 12%;
-    --popover-foreground: 210 40% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
 
     /* Brand Colors - Enhanced for Dark Mode */
     --brand-red: 343 89% 45%;
-    --brand-white: 220 15% 12%;
+    --brand-white: 0 0% 12%;
     
     --primary: 343 89% 45%;
     --primary-foreground: 0 0% 100%;
@@ -128,34 +128,34 @@ All colors MUST be HSL.
     --primary-light: 343 89% 15%;
     --primary-muted: 343 89% 35%;
 
-    --secondary: 220 15% 16%;
-    --secondary-foreground: 210 40% 95%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 220 15% 16%;
-    --muted-foreground: 220 15% 70%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 220 15% 18%;
-    --accent-foreground: 210 40% 95%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 343 89% 50%;
-    --destructive-foreground: 210 40% 95%;
+    --destructive-foreground: 0 0% 95%;
 
     --success: 142 76% 40%;
     --success-foreground: 0 0% 100%;
     --warning: 48 96% 58%;
-    --warning-foreground: 220 15% 15%;
+    --warning-foreground: 0 0% 15%;
     --info: 217 91% 65%;
     --info-foreground: 0 0% 100%;
 
-    --border: 220 15% 24%;
-    --input: 220 15% 18%;
+    --border: 0 0% 24%;
+    --input: 0 0% 18%;
     --ring: 343 89% 45%;
 
     /* Dark Mode Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(343 89% 45%), hsl(343 89% 50%));
-    --gradient-secondary: linear-gradient(135deg, hsl(220 15% 12%), hsl(220 15% 16%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 12%), hsl(0 0% 16%));
     --gradient-header: linear-gradient(135deg, hsl(343 89% 45%), hsl(343 89% 40%));
-    --gradient-card: linear-gradient(145deg, hsl(220 15% 12%), hsl(220 15% 14%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 12%), hsl(0 0% 14%));
     --gradient-accent: linear-gradient(135deg, hsl(343 89% 45% / 0.1), hsl(343 89% 45% / 0.2));
     
     /* Dark Mode Shadows */
