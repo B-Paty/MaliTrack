@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useAccounts } from "@/hooks/useAccounts";
+import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import ExportButtons from "@/components/exports/ExportButtons";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useDateRange } from "@/contexts/DateRangeContext";
 
 /**
  * TrialBalance
@@ -19,8 +21,8 @@ import { useToast } from "@/hooks/use-toast";
  * - Shows totals and balance status
  */
 export default function TrialBalance() {
-  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
-  const { accounts, loading, error } = useAccounts();
+  const { accounts, loading, error } = useFilteredAccounts();
+  const { dateRange } = useDateRange();
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
@@ -34,19 +36,26 @@ export default function TrialBalance() {
       }
       categories[account.category].push(account);
 
-      // Calculate debit/credit presentation based on account type and normal balance
-      const balance = account.current_balance;
+      // Use transaction-based balance (can be positive or negative)
+      const transactionBalance = account.current_balance;
       
-      if (balance > 0) {
-        if (
-          account.category === 'Current Asset' ||
-          account.category === 'Fixed Asset' ||
-          account.category === 'Expense' ||
-          (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
-        ) {
-          totalDebits += balance;
-        } else {
-          totalCredits += balance;
+      // For trial balance, determine which side based on normal balance and actual balance
+      if (Math.abs(transactionBalance) > 0.01) {
+        // Assets and Expenses normally have debit balances
+        if (account.normal_balance === 'debit') {
+          if (transactionBalance >= 0) {
+            totalDebits += transactionBalance; // Normal debit balance
+          } else {
+            totalCredits += Math.abs(transactionBalance); // Credit balance in debit account
+          }
+        } 
+        // Liabilities, Equity, and Revenue normally have credit balances
+        else if (account.normal_balance === 'credit') {
+          if (transactionBalance <= 0) {
+            totalCredits += Math.abs(transactionBalance); // Normal credit balance
+          } else {
+            totalDebits += transactionBalance; // Debit balance in credit account
+          }
         }
       }
     });
@@ -67,23 +76,28 @@ export default function TrialBalance() {
   }, [accounts]);
 
   const getBalancePresentation = (account: typeof accounts[0]) => {
-    const balance = account.current_balance;
+    const transactionBalance = account.current_balance;
     
-    if (balance === 0) {
+    if (Math.abs(transactionBalance) < 0.01) {
       return { debit: 0, credit: 0 };
     }
 
-    // Determine how to present the balance based on account type
-    if (
-      account.category === 'Current Asset' ||
-      account.category === 'Fixed Asset' ||
-      account.category === 'Expense' ||
-      (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
-    ) {
-      return { debit: balance, credit: 0 };
-    } else {
-      return { debit: 0, credit: balance };
+    // Show balance in correct column based on normal balance and actual balance
+    if (account.normal_balance === 'debit') {
+      if (transactionBalance >= 0) {
+        return { debit: transactionBalance, credit: 0 }; // Normal debit balance
+      } else {
+        return { debit: 0, credit: Math.abs(transactionBalance) }; // Credit balance in debit account
+      }
+    } else if (account.normal_balance === 'credit') {
+      if (transactionBalance <= 0) {
+        return { debit: 0, credit: Math.abs(transactionBalance) }; // Normal credit balance  
+      } else {
+        return { debit: transactionBalance, credit: 0 }; // Debit balance in credit account
+      }
     }
+    
+    return { debit: 0, credit: 0 };
   };
 
   const getCategoryTotal = (accountList: typeof accounts) => {
@@ -138,6 +152,9 @@ export default function TrialBalance() {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <DateRangePicker title="Trial Balance Period" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -169,26 +186,21 @@ export default function TrialBalance() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Report Parameters
+            Report Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <Label htmlFor="reportDate">As of Date</Label>
-              <Input
-                id="reportDate"
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-                min="2025-01-01"
-                max="2026-12-31"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="text-center">
+              <p className="text-sm text-foreground/70 mb-2">Report Period</p>
+              <p className="text-sm font-semibold text-foreground">
+                {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
+              </p>
             </div>
             
             <div className="text-center">
-              <p className="text-sm text-foreground/70 mb-2">Total Accounts</p>
-              <p className="text-2xl font-bold text-foreground">{accounts.length}</p>
+              <p className="text-sm text-foreground/70 mb-2">Active Accounts</p>
+              <p className="text-2xl font-bold text-foreground">{accounts.filter(acc => Math.abs(acc.current_balance) > 0).length}</p>
             </div>
             
             <div className="text-center">
@@ -220,11 +232,11 @@ export default function TrialBalance() {
                   </CardTitle>
                   <div className="flex gap-8 text-sm">
                     <div className="text-right">
-                      <p className="text-foreground/80 dark:text-foreground">Category Debits</p>
+                      <p className="text-foreground font-medium">Category Debits</p>
                       <p className="font-bold text-foreground">{formatCurrency(categoryTotals.debit)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-foreground/80 dark:text-foreground">Category Credits</p>
+                      <p className="text-foreground font-medium">Category Credits</p>
                       <p className="font-bold text-foreground">{formatCurrency(categoryTotals.credit)}</p>
                     </div>
                   </div>
@@ -244,7 +256,7 @@ export default function TrialBalance() {
                     </thead>
                     <tbody>
                       {accountList
-                        .filter(account => account.current_balance > 0)
+                        .filter(account => Math.abs(account.current_balance) > 0)
                         .map((account, index) => {
                           const presentation = getBalancePresentation(account);
                           
@@ -318,7 +330,7 @@ export default function TrialBalance() {
                         <AlertTriangle className="h-5 w-5 text-destructive" />
                       )}
                       <span className="font-semibold">
-                        As of {new Date(reportDate).toLocaleDateString()}
+                        Period: {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
                       </span>
                     </div>
                   </td>

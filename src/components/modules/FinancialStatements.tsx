@@ -12,23 +12,28 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useAccounts } from "@/hooks/useAccounts";
+import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PDFExporter } from "@/lib/pdfExporter";
 import { useToast } from "@/hooks/use-toast";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useDateRange } from "@/contexts/DateRangeContext";
 
 type StatementType = 'income' | 'balance' | 'cash';
 
 export default function FinancialStatements() {
-  const { accounts, loading: accountsLoading } = useAccounts();
+  const { accounts, loading: accountsLoading } = useFilteredAccounts();
   const { settings, getLogoForContext } = useEnhancedCompanySettings();
   const { toast } = useToast();
+  const { dateRange } = useDateRange();
   
   const [selectedStatement, setSelectedStatement] = useState<StatementType>('income');
-  const [dateFrom, setDateFrom] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
-  const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
   const [exporting, setExporting] = useState(false);
+
+  // Use the global date range
+  const dateFrom = dateRange.startDate;
+  const dateTo = dateRange.endDate;
 
   // Calculate statement data
   const statementData = useMemo(() => {
@@ -40,8 +45,8 @@ export default function FinancialStatements() {
     const liabilities = accounts.filter(acc => acc.category.includes('Liability'));
     const equity = accounts.filter(acc => acc.category === 'Equity');
 
-    const totalRevenue = revenue.reduce((sum, acc) => sum + acc.current_balance, 0);
-    const totalExpenses = expenses.reduce((sum, acc) => sum + acc.current_balance, 0);
+    const totalRevenue = revenue.reduce((sum, acc) => sum + Math.abs(acc.current_balance), 0);
+    const totalExpenses = expenses.reduce((sum, acc) => sum + Math.abs(acc.current_balance), 0);
     const netIncome = totalRevenue - totalExpenses;
 
     const totalAssets = assets.reduce((sum, acc) => 
@@ -153,7 +158,7 @@ export default function FinancialStatements() {
           {statementData.revenue.map(account => (
             <div key={account.account_code} className="flex justify-between py-2">
               <span className="text-foreground">{account.account_name}</span>
-              <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+              <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
             </div>
           ))}
           <div className="flex justify-between py-2 border-t border-border font-semibold">
@@ -172,7 +177,7 @@ export default function FinancialStatements() {
           {statementData.expenses.map(account => (
             <div key={account.account_code} className="flex justify-between py-2">
               <span className="text-foreground">{account.account_name}</span>
-              <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+              <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
             </div>
           ))}
           <div className="flex justify-between py-2 border-t border-border font-semibold">
@@ -336,6 +341,9 @@ export default function FinancialStatements() {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <DateRangePicker title="Financial Statements Period" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -377,26 +385,16 @@ export default function FinancialStatements() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="date-from" className="text-sm font-semibold text-foreground">From Date</Label>
-              <Input
-                id="date-from"
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="mt-1.5 h-11"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="date-to" className="text-sm font-semibold text-foreground">To Date</Label>
-              <Input
-                id="date-to"
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="mt-1.5 h-11"
-              />
+            <div className="md:col-span-2">
+              <Label className="text-sm font-semibold text-foreground">Statement Period</Label>
+              <div className="mt-1.5 p-3 bg-muted/50 rounded-lg border">
+                <p className="text-sm text-foreground">
+                  Using date range: <span className="font-semibold">{formatDate(dateFrom)} to {formatDate(dateTo)}</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Adjust the date range using the filter above to change the statement period.
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
