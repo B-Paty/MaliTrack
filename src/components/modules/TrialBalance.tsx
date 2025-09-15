@@ -36,19 +36,26 @@ export default function TrialBalance() {
       }
       categories[account.category].push(account);
 
-      // Calculate debit/credit presentation based on account type and normal balance
-      const balance = Math.abs(account.current_balance);
+      // Use transaction-based balance (can be positive or negative)
+      const transactionBalance = account.current_balance;
       
-      if (balance > 0) {
-        if (
-          account.category === 'Current Asset' ||
-          account.category === 'Fixed Asset' ||
-          account.category === 'Expense' ||
-          (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
-        ) {
-          totalDebits += balance;
-        } else {
-          totalCredits += balance;
+      // For trial balance, determine which side based on normal balance and actual balance
+      if (Math.abs(transactionBalance) > 0.01) {
+        // Assets and Expenses normally have debit balances
+        if (account.normal_balance === 'debit') {
+          if (transactionBalance >= 0) {
+            totalDebits += transactionBalance; // Normal debit balance
+          } else {
+            totalCredits += Math.abs(transactionBalance); // Credit balance in debit account
+          }
+        } 
+        // Liabilities, Equity, and Revenue normally have credit balances
+        else if (account.normal_balance === 'credit') {
+          if (transactionBalance <= 0) {
+            totalCredits += Math.abs(transactionBalance); // Normal credit balance
+          } else {
+            totalDebits += transactionBalance; // Debit balance in credit account
+          }
         }
       }
     });
@@ -69,23 +76,28 @@ export default function TrialBalance() {
   }, [accounts]);
 
   const getBalancePresentation = (account: typeof accounts[0]) => {
-    const balance = Math.abs(account.current_balance);
+    const transactionBalance = account.current_balance;
     
-    if (balance === 0) {
+    if (Math.abs(transactionBalance) < 0.01) {
       return { debit: 0, credit: 0 };
     }
 
-    // Determine how to present the balance based on account type
-    if (
-      account.category === 'Current Asset' ||
-      account.category === 'Fixed Asset' ||
-      account.category === 'Expense' ||
-      (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
-    ) {
-      return { debit: balance, credit: 0 };
-    } else {
-      return { debit: 0, credit: balance };
+    // Show balance in correct column based on normal balance and actual balance
+    if (account.normal_balance === 'debit') {
+      if (transactionBalance >= 0) {
+        return { debit: transactionBalance, credit: 0 }; // Normal debit balance
+      } else {
+        return { debit: 0, credit: Math.abs(transactionBalance) }; // Credit balance in debit account
+      }
+    } else if (account.normal_balance === 'credit') {
+      if (transactionBalance <= 0) {
+        return { debit: 0, credit: Math.abs(transactionBalance) }; // Normal credit balance  
+      } else {
+        return { debit: transactionBalance, credit: 0 }; // Debit balance in credit account
+      }
     }
+    
+    return { debit: 0, credit: 0 };
   };
 
   const getCategoryTotal = (accountList: typeof accounts) => {

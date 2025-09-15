@@ -17,20 +17,23 @@ export function useFilteredAccounts() {
 
   const filteredAccounts = useMemo(() => {
     return accounts.map(account => {
-      const periodBalance = accountBalances[account.account_code] || 0;
+      // Get the net transaction balance for this account
+      const transactionBalance = accountBalances[account.account_code] || 0;
       
-      // For different account types, we need to handle the balance presentation correctly
-      let displayBalance = periodBalance;
+      // Transaction balance calculation: (debits - credits)
+      // Positive = net debit balance, Negative = net credit balance
       
-      // For credit normal balance accounts, we need to flip the sign for display
-      if (account.normal_balance === 'credit') {
-        displayBalance = -periodBalance;
-      }
+      // For trial balance display, we show the absolute value in the correct column
+      // based on the account's normal balance type and actual balance sign
+      let displayBalance = transactionBalance;
+      
+      // The transaction balance represents the true accounting balance
+      // No need to flip signs - we'll handle presentation in the trial balance component
 
       return {
         ...account,
         period_balance: displayBalance,
-        current_balance: displayBalance
+        current_balance: displayBalance // Use transaction-based balance only
       } as FilteredAccount;
     });
   }, [accounts, accountBalances]);
