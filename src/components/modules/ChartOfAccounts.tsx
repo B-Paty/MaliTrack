@@ -109,7 +109,7 @@ export default function ChartOfAccounts() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto px-4">
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
@@ -144,7 +144,7 @@ export default function ChartOfAccounts() {
 
       {/* Filters */}
       <Card className="shadow-card">
-        <CardContent className="p-6">
+        <CardContent className="p-4 md:p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -208,73 +208,41 @@ export default function ChartOfAccounts() {
             .filter(category => groupedAccounts[category])
             .map(category => (
             <Card key={category} className="shadow-card">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-2 md:pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-3">
-                    <Badge className={categoryColors[category]}>
-                      {category}
-                    </Badge>
-                    <span className="text-lg">
-                      {groupedAccounts[category]?.length || 0} accounts
-                    </span>
+                  <CardTitle className="text-base md:text-lg font-semibold">
+                    {category}
                   </CardTitle>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Category Total</p>
-                    <p className="text-lg font-bold text-foreground">
-                      {formatCurrency(totalsByCategory[category] || 0)}
-                    </p>
+                  <div className="text-right text-sm md:text-base text-muted-foreground">
+                    <span className="mr-2">Total:</span>
+                    <span className="font-bold text-foreground font-mono">{formatCurrency(totalsByCategory[category] || 0)}</span>
                   </div>
                 </div>
               </CardHeader>
-              
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Account Code</th>
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Account Name</th>
-                        <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Current Balance</th>
-                        <th className="text-center py-3 px-4 font-semibold text-muted-foreground">Normal Balance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {groupedAccounts[category]?.map((account, index) => (
-                        <tr
-                          key={account.account_code}
-                          className={cn(
-                            "border-b border-border/50 hover:bg-accent/50 transition-colors cursor-pointer",
-                            index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
-                          )}
-                          onClick={() => setSelectedAccount(account)}
-                        >
-                          <td className="py-3 px-4">
-                            <span className="font-mono font-semibold text-primary">
-                              {account.account_code}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-medium text-foreground">
-                              {account.account_name}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className={cn(
-                              "font-semibold",
-                              account.current_balance > 0 ? "text-foreground" : "text-muted-foreground"
-                            )}>
-                              {formatCurrency(account.current_balance)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <Badge variant="outline">
-                              {account.normal_balance}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+
+              <CardContent className="p-2 md:p-3">
+                <div className="space-y-2">
+                  {groupedAccounts[category]?.map((account) => (
+                    <div
+                      key={account.account_code}
+                      className="grid grid-cols-3 items-center p-3 rounded-lg bg-muted/20 hover:bg-accent/40 transition-colors cursor-pointer"
+                      onClick={() => setSelectedAccount(account)}
+                    >
+                      {/* Left column: stacked code + name */}
+                      <div className="pr-3">
+                        <div className="font-mono text-sm font-semibold text-primary">{account.account_code}</div>
+                        <div className="text-foreground font-medium leading-tight">{account.account_name}</div>
+                      </div>
+                      {/* Center column: normal balance as plain text */}
+                      <div className="text-center text-sm text-muted-foreground">
+                        {account.normal_balance}
+                      </div>
+                      {/* Right column: amount bold and right aligned */}
+                      <div className="text-right font-mono font-semibold text-foreground">
+                        {formatCurrency(account.current_balance)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
