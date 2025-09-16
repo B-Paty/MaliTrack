@@ -119,26 +119,12 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings className="h-6 w-6 text-primary" />
-        <div>
-          <h2 className="text-2xl font-bold">Inventory Management</h2>
-          <p className="text-muted-foreground">Configure your inventory tracking system</p>
-        </div>
-      </div>
+      {/* Header removed per simplification */}
 
       {/* Current Status */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Current Inventory Mode
-          </CardTitle>
-          <CardDescription>
-            Your current inventory management configuration
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Heading removed */}
+        <CardContent className="p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {inventoryType === 'single' ? (
@@ -167,16 +153,11 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
 
       {/* Mode Switching */}
       <Card>
-        <CardHeader>
-          <CardTitle>Switch Inventory Mode</CardTitle>
-          <CardDescription>
-            Change your inventory management approach
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        {/* Heading removed */}
+        <CardContent className="space-y-4 p-4 md:p-6">
           {inventoryType === 'single' ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
                 <div className="flex items-center gap-3">
                   <Package2 className="h-6 w-6 text-primary" />
                   <div>
@@ -219,7 +200,7 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
                 <div className="flex items-center gap-3">
                   <Package className="h-6 w-6 text-primary" />
                   <div>
@@ -248,10 +229,7 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Product Management</CardTitle>
-                <CardDescription>
-                  Manage your products and their default settings
-                </CardDescription>
+                {/* Heading removed */}
               </div>
               <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                 <DialogTrigger asChild>

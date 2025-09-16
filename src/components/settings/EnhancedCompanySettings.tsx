@@ -166,7 +166,7 @@ export default function EnhancedCompanySettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 gap-2 mb-4 md:mb-6">
+        <TabsList className="grid w-full grid-cols-3 gap-2 mb-4 md:mb-6 h-auto p-2">
           <TabsTrigger value="company">Company Info</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
@@ -178,12 +178,7 @@ export default function EnhancedCompanySettings() {
         {/* Company Information Tab */}
         <TabsContent value="company" className="space-y-6">
           <Card className="shadow-elevated border-0 bg-gradient-secondary/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Building2 className="h-5 w-5 text-primary" />
-                Company Information
-              </CardTitle>
-            </CardHeader>
+            {/* Heading removed per mobile/desktop simplification */}
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -297,12 +292,7 @@ export default function EnhancedCompanySettings() {
         {/* Branding Tab */}
         <TabsContent value="branding" className="space-y-6">
           <Card className="shadow-elevated border-0">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Palette className="h-5 w-5 text-primary" />
-                Brand Colors
-              </CardTitle>
-            </CardHeader>
+            {/* Heading removed per simplification */}
             <CardContent className="space-y-6">
               {/* Color Presets */}
               <div>
@@ -588,12 +578,7 @@ export default function EnhancedCompanySettings() {
         {/* Payment Settings Tab */}
         <TabsContent value="payments" className="space-y-6">
           <Card className="shadow-elevated border-0">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <CreditCard className="h-5 w-5 text-primary" />
-                Payment Settings
-              </CardTitle>
-            </CardHeader>
+            {/* Heading removed per simplification */}
             <CardContent className="space-y-6">
               {/* Bank Payment Settings */}
               <div className="space-y-4">
@@ -736,12 +721,7 @@ export default function EnhancedCompanySettings() {
         {/* Export Settings Tab */}
         <TabsContent value="export" className="space-y-6">
           <Card className="shadow-elevated border-0">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Download className="h-5 w-5 text-primary" />
-                Export Preferences
-              </CardTitle>
-            </CardHeader>
+            {/* Heading removed per simplification */}
             <CardContent className="space-y-6">
               <div className="p-6 bg-muted/30 rounded-lg border border-border/50">
                 <h3 className="font-semibold text-foreground mb-4 text-lg">📊 Branded Exports</h3>
