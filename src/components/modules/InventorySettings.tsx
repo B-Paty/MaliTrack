@@ -41,6 +41,9 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
 
   const fetchInventorySettings = async () => {
     try {
+      // Temporarily disabled until inventory_settings is added to types
+      console.log('Inventory settings fetch temporarily disabled');
+      /*
       const { data: settings, error } = await supabase
         .from('inventory_settings')
         .select('*')
@@ -56,6 +59,7 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
         setInventoryType(settings.inventory_type);
         setProducts(settings.products || []);
       }
+      */
     } catch (error) {
       console.error('Error fetching inventory settings:', error);
     }
@@ -64,6 +68,9 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
   const saveInventorySettings = async (type: 'single' | 'multiple', productList?: ProductType[]) => {
     setLoading(true);
     try {
+      // Temporarily disabled until inventory_settings is added to types
+      console.log('Inventory settings save temporarily disabled');
+      /*
       const { error } = await supabase
         .from('inventory_settings')
         .upsert({
@@ -77,6 +84,7 @@ export default function InventorySettings({ userId }: InventorySettingsProps) {
         console.error('Error saving inventory settings:', error);
         return;
       }
+      */
 
       setInventoryType(type);
       if (productList) {

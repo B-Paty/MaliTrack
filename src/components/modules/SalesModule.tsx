@@ -142,7 +142,9 @@ export default function SalesModule() {
       };
 
       const sale = await createSale(saleData);
-      setCompletedSale({ ...saleData, id: sale.id });
+      if (sale?.id) {
+        setCompletedSale({ ...saleData, id: sale.id });
+      }
 
       toast({
         title: "Sale completed successfully!",

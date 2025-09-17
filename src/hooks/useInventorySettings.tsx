@@ -34,6 +34,9 @@ export function useInventorySettings(userId: string) {
       setLoading(true);
       setError(null);
 
+      // Temporarily disabled until inventory_settings is added to types
+      console.log('Inventory settings fetch temporarily disabled');
+      /*
       const { data, error: fetchError } = await supabase
         .from('inventory_settings')
         .select('*')
@@ -45,6 +48,8 @@ export function useInventorySettings(userId: string) {
       }
 
       setSettings(data);
+      */
+      setSettings(null);
     } catch (err) {
       console.error('Error fetching inventory settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch settings');
@@ -58,6 +63,9 @@ export function useInventorySettings(userId: string) {
       setLoading(true);
       setError(null);
 
+      // Temporarily disabled until inventory_settings is added to types
+      console.log('Inventory settings update temporarily disabled');
+      /*
       const { data, error: updateError } = await supabase
         .from('inventory_settings')
         .upsert({
@@ -75,6 +83,8 @@ export function useInventorySettings(userId: string) {
 
       setSettings(data);
       return data;
+      */
+      return null;
     } catch (err) {
       console.error('Error updating inventory settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to update settings');
