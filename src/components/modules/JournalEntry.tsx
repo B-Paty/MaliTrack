@@ -1235,7 +1235,6 @@ export default function JournalEntry() {
         </CardContent>
       </Card>
 
-
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-4 sm:justify-end">
         <Button
