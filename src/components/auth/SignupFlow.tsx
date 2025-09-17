@@ -86,11 +86,11 @@ export default function SignupFlow({ onSuccess, onBack }: SignupFlowProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md mx-4 sm:mx-6">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <UserPlus className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+            <UserPlus className="h-6 w-6 text-foreground" />
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
           <CardDescription>

@@ -384,23 +384,23 @@ export default function SalesModule() {
             </CardHeader>
             <CardContent>
               <Select value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="hover:bg-transparent">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">
+                  <SelectItem value="cash" className="hover:bg-transparent focus:bg-transparent">
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
                       Cash Payment
                     </div>
                   </SelectItem>
-                  <SelectItem value="credit">
+                  <SelectItem value="credit" className="hover:bg-transparent focus:bg-transparent">
                     <div className="flex items-center gap-2">
                       <Receipt className="h-4 w-4" />
                       Credit Sale
                     </div>
                   </SelectItem>
-                  <SelectItem value="bank_transfer">
+                  <SelectItem value="bank_transfer" className="hover:bg-transparent focus:bg-transparent">
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
                       Bank Transfer

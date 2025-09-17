@@ -23,7 +23,7 @@ const quickAccessItems = [
 
 export default function BottomNavigation({ activeModule, onModuleChange }: BottomNavigationProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-elevated backdrop-blur-sm z-50 lg:hidden rounded-t-2xl">
       <div className="flex items-center justify-around px-2 py-2">
         {quickAccessItems.map(item => {
           const Icon = item.icon;
@@ -36,7 +36,7 @@ export default function BottomNavigation({ activeModule, onModuleChange }: Botto
               size="sm"
               onClick={() => onModuleChange(item.id)}
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-1 min-w-0 flex-1",
+                "flex flex-col items-center gap-1 h-auto py-2 px-1 min-w-0 flex-1 hover:bg-transparent active:bg-transparent focus:bg-transparent",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >

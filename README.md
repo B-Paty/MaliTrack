@@ -54,11 +54,8 @@ npm run dev
 - `company_settings.payment_settings` keeps your pay details as JSON.  
 
 ### 📚 Documentation
-- **[Inventory Management System](./INVENTORY_MANAGEMENT_SYSTEM.md)** - Complete guide to single/multiple inventory management
-- **[Journal Entry UX Documentation](./JOURNAL_ENTRY_UX_DOCUMENTATION.md)** - Complete technical guide to all journal entry improvements
-- **[Keyboard Shortcuts Guide](./JOURNAL_ENTRY_KEYBOARD_SHORTCUTS.md)** - Comprehensive keyboard shortcuts reference
+- **[Mobile Development Guide](./MOBILE_DEVELOPMENT.md)** - Complete mobile app development setup
 - **[Changelog](./CHANGELOG.md)** - Detailed history of all features and improvements
-- **[Migration Guide](./MIGRATION_DEPLOYMENT_GUIDE.md)** - Step-by-step deployment instructions
 
 ### Tech
 - React + TypeScript + Vite  
@@ -75,7 +72,6 @@ npm run dev
 - UI parts live in `src/components/`.  
 - Hooks to talk to the database live in `src/hooks/`.  
 
-### Safety
-- Do not commit real secrets. The Supabase anon key is public by design, but rotate keys for production.  
+  
 
 Have fun keeping your books tidy! 🧮✨

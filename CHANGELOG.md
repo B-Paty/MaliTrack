@@ -100,14 +100,8 @@ All notable changes to this project will be documented in this file.
   - Development helpers and debugging tools
 - **DOCUMENTED: Migration System**: Comprehensive documentation for client deployments
   - Detailed comments in all migration files
-  - Step-by-step deployment guide (`MIGRATION_DEPLOYMENT_GUIDE.md`)
   - Client customization instructions
   - Troubleshooting and maintenance guides
-- **CREATED: Static Logo Documentation**: Complete setup guide (`STATIC_LOGO_README.md`)
-  - Logo placement instructions
-  - Configuration examples
-  - API reference and troubleshooting
-  - Migration from dynamic uploads guide
 
 ### ✨ Enhancements
 - Dashboard: Total Revenue and Expenses now computed from live accounts; MoM % derived from transactions.

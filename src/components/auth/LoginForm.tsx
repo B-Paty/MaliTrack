@@ -79,17 +79,17 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-3 sm:p-4">
-      <Card className="w-full max-w-md shadow-premium border-0 bg-gradient-secondary/50 mx-2 sm:mx-0">
-        <CardHeader className="text-center pb-6">
-          <div className="flex items-center justify-center gap-3 mb-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md mx-4 sm:mx-6">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex items-center justify-center mb-6">
             {/* Company Logo */}
             {companyLogo ? (
               <div className="flex-shrink-0">
                 <img
                   src={companyLogo}
                   alt={`${companyName} Logo`}
-                  className="h-10 w-10 sm:h-12 sm:w-auto max-w-[120px] object-contain rounded-lg"
+                  className="h-12 w-auto max-w-[120px] object-contain"
                   onError={(e) => {
                     // Fallback to icon if logo fails to load
                     const target = e.target as HTMLImageElement;
@@ -99,33 +99,26 @@ export function LoginForm() {
                   }}
                 />
                 {/* Fallback Icon (hidden by default) */}
-                <div className="hidden h-10 w-10 sm:h-12 sm:w-12 bg-primary rounded-xl items-center justify-center shadow-lg">
-                  <Building2 className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground" />
+                <div className="hidden h-12 w-12 bg-primary rounded-lg items-center justify-center">
+                  <Building2 className="h-6 w-6 text-primary-foreground" />
                 </div>
               </div>
             ) : (
               /* Default Icon when no logo */
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                <Building2 className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground" />
+              <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
+                <Building2 className="h-6 w-6 text-primary-foreground" />
               </div>
             )}
-
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                {companyName}
-              </h1>
-              <p className="text-sm text-muted-foreground">Accounting System</p>
-            </div>
           </div>
-          <CardTitle className="text-xl font-semibold text-foreground">
-            Welcome Back
+          <CardTitle className="text-2xl font-semibold">
+            Welcome to {companyName}
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription>
             Sign in to access your accounting dashboard
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -140,9 +133,7 @@ export function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
-                Email Address
-              </Label>
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -150,17 +141,15 @@ export function LoginForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="pl-10 h-11"
+                  placeholder="Enter your email"
+                  className="pl-10"
                   disabled={loading}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold text-foreground">
-                Password
-              </Label>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -169,52 +158,54 @@ export function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="pl-10 h-11"
+                  className="pl-10"
                   disabled={loading}
                 />
               </div>
             </div>
 
-
             <Button 
               type="submit" 
-              className="w-full h-11 bg-gradient-primary hover:shadow-glow transition-all"
+              className="w-full"
               disabled={loading}
             >
               {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
-                  Signing In...
-                </div>
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Signing in...
+                </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Sign In
-                </div>
+                <>
+                  <User className="h-4 w-4 mr-2" />
+                  Sign in
+                </>
               )}
             </Button>
           </form>
 
-          <Separator />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or
+              </span>
+            </div>
+          </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
               Don't have an account?
             </p>
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={toggleMode}
               disabled={loading}
-              className="text-primary hover:text-primary-hover font-semibold"
+              className="w-full"
             >
-              Sign Up
+              Create account
             </Button>
-          </div>
-
-          <div className="text-center pt-4">
-            <p className="text-xs text-muted-foreground">
-              Secure access to your financial data
-            </p>
           </div>
         </CardContent>
       </Card>

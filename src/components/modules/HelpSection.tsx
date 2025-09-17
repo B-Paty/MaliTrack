@@ -87,6 +87,90 @@ const faqs: FAQ[] = [
     answer: 'You can reach our support team through the contact form in this Help section, email us at support@qsasolutions.com, or call +255 XXX XXX XXX during business hours.',
     category: 'Support',
     tags: ['contact', 'support', 'help']
+  },
+  {
+    id: '11',
+    question: 'How do I use transaction templates?',
+    answer: 'Transaction templates provide pre-configured journal entries for common business transactions. Select a template like "Cash Sale" or "Credit Purchase" and the system will automatically populate the appropriate accounts. You can modify amounts before saving.',
+    category: 'Accounting',
+    tags: ['templates', 'transactions', 'automation']
+  },
+  {
+    id: '12',
+    question: 'What is auto-balancing and how does it work?',
+    answer: 'Auto-balancing automatically calculates missing debit or credit amounts to ensure your journal entries balance. When enabled, enter amounts on one side and the system will calculate the balancing amount on the other side based on account types.',
+    category: 'Accounting',
+    tags: ['auto-balance', 'journal', 'automation']
+  },
+  {
+    id: '13',
+    question: 'How do I manage my chart of accounts?',
+    answer: 'Go to Chart of Accounts to view, add, edit, or deactivate accounts. The system uses a standard chart of accounts structure with assets (1000s), liabilities (2000s), equity (3000s), income (4000s), and expenses (5000s-6000s).',
+    category: 'Accounting',
+    tags: ['accounts', 'chart', 'setup']
+  },
+  {
+    id: '14',
+    question: 'How do I set up major clients for invoicing?',
+    answer: 'In the Major Client module, add client information including name, contact details, and billing preferences. Once set up, you can create invoices directly for these clients with automatic calculations and PDF generation.',
+    category: 'Invoicing',
+    tags: ['clients', 'setup', 'invoicing']
+  },
+  {
+    id: '15',
+    question: 'How do I generate and view reports?',
+    answer: 'Access reports through the Reports section or within specific modules. Available reports include Trial Balance, Financial Statements, Inventory Reports, and Stock Analysis. Reports can be filtered by date range and exported to PDF or Excel.',
+    category: 'Reports',
+    tags: ['reports', 'financial', 'export']
+  },
+  {
+    id: '16',
+    question: 'How do I use keyboard shortcuts for faster data entry?',
+    answer: 'Use Ctrl+Enter to save transactions, Ctrl+N to add new lines, Ctrl+T to toggle auto-balance, Ctrl+K to view all shortcuts, and Escape to clear templates. These shortcuts significantly speed up data entry.',
+    category: 'Navigation',
+    tags: ['shortcuts', 'productivity', 'speed']
+  },
+  {
+    id: '17',
+    question: 'How do I track stock movements and transactions?',
+    answer: 'The Inventory Management module automatically tracks all stock movements from sales, purchases, and adjustments. View transaction history in the Transactions tab to see detailed movement records with dates, quantities, and values.',
+    category: 'Inventory',
+    tags: ['tracking', 'movements', 'history']
+  },
+  {
+    id: '18',
+    question: 'How do I set up and manage product categories?',
+    answer: 'Product categories help organize your inventory. When adding products, select or create categories like "Electronics", "Clothing", etc. Categories are used for reporting and filtering products in the inventory system.',
+    category: 'Inventory',
+    tags: ['categories', 'organization', 'products']
+  },
+  {
+    id: '19',
+    question: 'How do I handle inventory adjustments and corrections?',
+    answer: 'Use the inventory adjustment feature to correct stock levels due to damage, theft, or counting discrepancies. These adjustments automatically create the appropriate journal entries to maintain accurate financial records.',
+    category: 'Inventory',
+    tags: ['adjustments', 'corrections', 'accuracy']
+  },
+  {
+    id: '20',
+    question: 'How do I backup and restore my data?',
+    answer: 'Your data is automatically backed up to secure cloud storage. You can also export your data through the Reports section. For data restoration or migration assistance, contact our support team.',
+    category: 'Support',
+    tags: ['backup', 'restore', 'data']
+  },
+  {
+    id: '21',
+    question: 'How do I customize the dashboard and interface?',
+    answer: 'The dashboard automatically adapts to your business type and shows relevant metrics. You can switch between modules using the sidebar or bottom navigation on mobile. Interface preferences are saved automatically.',
+    category: 'Navigation',
+    tags: ['dashboard', 'customization', 'interface']
+  },
+  {
+    id: '22',
+    question: 'How do I handle multi-currency transactions?',
+    answer: 'Currently, the system operates in Tanzanian Shillings (Tsh). Multi-currency support is planned for future releases. Contact support if you need assistance with currency conversion calculations.',
+    category: 'Accounting',
+    tags: ['currency', 'international', 'future']
   }
 ];
 
@@ -137,54 +221,53 @@ export default function HelpSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-0">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3">
-          <HelpCircle className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Help & Support</h1>
+      <div className="text-center space-y-3 md:space-y-4">
+        <div className="flex items-center justify-center gap-2 md:gap-3">
+          <HelpCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold">Help & Support</h1>
         </div>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-sm md:text-lg px-4">
           Find answers to common questions and get support for your accounting system
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-4">
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-primary">{faqs.length}</div>
-            <div className="text-sm text-muted-foreground">FAQ Articles</div>
+          <CardContent className="p-3 md:p-6 text-center">
+            <div className="text-lg md:text-2xl font-bold text-primary">{faqs.length}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">FAQ Articles</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-primary">{categories.length - 1}</div>
-            <div className="text-sm text-muted-foreground">Categories</div>
+          <CardContent className="p-3 md:p-6 text-center">
+            <div className="text-lg md:text-2xl font-bold text-primary">{categories.length - 1}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Categories</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-primary">24/7</div>
-            <div className="text-sm text-muted-foreground">Support Available</div>
+          <CardContent className="p-3 md:p-6 text-center">
+            <div className="text-lg md:text-2xl font-bold text-primary">24/7</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Support Available</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="faq" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="faq">FAQ</TabsTrigger>
-          <TabsTrigger value="contact">Contact Support</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
+      <Tabs defaultValue="faq" className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="faq" className="text-xs md:text-sm px-2 md:px-4">FAQ</TabsTrigger>
+          <TabsTrigger value="contact" className="text-xs md:text-sm px-2 md:px-4">Contact Support</TabsTrigger>
         </TabsList>
 
         {/* FAQ Tab */}
-        <TabsContent value="faq" className="space-y-6">
+        <TabsContent value="faq" className="space-y-4 md:space-y-6">
           {/* Search and Filter */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex flex-col gap-3 md:gap-4">
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -192,17 +275,18 @@ export default function HelpSection() {
                       placeholder="Search FAQs..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 text-sm"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 md:gap-2 overflow-x-auto pb-2">
                   {categories.map(category => (
                     <Button
                       key={category}
                       variant={selectedCategory === category ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSelectedCategory(category)}
+                      className="text-xs md:text-sm px-2 md:px-3 whitespace-nowrap flex-shrink-0"
                     >
                       {category}
                     </Button>
@@ -213,13 +297,13 @@ export default function HelpSection() {
           </Card>
 
           {/* FAQ List */}
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {filteredFAQs.length === 0 ? (
               <Card>
-                <CardContent className="p-8 text-center">
-                  <HelpCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No FAQs Found</h3>
-                  <p className="text-muted-foreground">
+                <CardContent className="p-6 md:p-8 text-center">
+                  <HelpCircle className="h-8 w-8 md:h-12 md:w-12 mx-auto text-muted-foreground mb-3 md:mb-4" />
+                  <h3 className="text-base md:text-lg font-semibold mb-2">No FAQs Found</h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     Try adjusting your search terms or browse all categories.
                   </p>
                 </CardContent>
@@ -228,25 +312,26 @@ export default function HelpSection() {
               filteredFAQs.map(faq => (
                 <Card key={faq.id} className="hover:shadow-md transition-shadow">
                   <CardHeader 
-                    className="cursor-pointer"
+                    className="cursor-pointer pb-3 md:pb-6"
                     onClick={() => toggleFAQ(faq.id)}
                   >
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{faq.question}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{faq.category}</Badge>
+                    <div className="flex items-start justify-between gap-3">
+                      <CardTitle className="text-sm md:text-lg flex-1 min-w-0 pr-2">{faq.question}</CardTitle>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Badge variant="outline" className="text-xs hidden sm:inline-flex">{faq.category}</Badge>
                         {expandedFAQ === faq.id ? (
-                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                          <ChevronUp className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                         ) : (
-                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                          <ChevronDown className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                         )}
                       </div>
                     </div>
                   </CardHeader>
                   {expandedFAQ === faq.id && (
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4">{faq.answer}</p>
-                      <div className="flex flex-wrap gap-2">
+                    <CardContent className="pt-0">
+                      <p className="text-sm md:text-base text-muted-foreground mb-4">{faq.answer}</p>
+                      <div className="flex flex-wrap gap-1 md:gap-2">
+                        <Badge variant="outline" className="text-xs sm:hidden">{faq.category}</Badge>
                         {faq.tags.map(tag => (
                           <Badge key={tag} variant="secondary" className="text-xs">
                             {tag}
@@ -262,17 +347,17 @@ export default function HelpSection() {
         </TabsContent>
 
         {/* Contact Support Tab */}
-        <TabsContent value="contact" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TabsContent value="contact" className="space-y-4 md:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Contact Form */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <MessageCircle className="h-4 w-4 md:h-5 md:w-5" />
                   Send us a Message
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label>Name *</Label>
@@ -318,13 +403,13 @@ export default function HelpSection() {
 
             {/* Contact Information */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Phone className="h-4 w-4 md:h-5 md:w-5" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 md:space-y-6 pt-0">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-primary" />
@@ -349,140 +434,13 @@ export default function HelpSection() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <h4 className="font-semibold mb-3">Quick Links</h4>
-                  <div className="space-y-2">
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      User Manual
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Video Tutorials
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      System Status
-                    </Button>
-                  </div>
-                </div>
+
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        {/* Resources Tab */}
-        <TabsContent value="resources" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5" />
-                  Getting Started
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  New to the system? Start here with our comprehensive guide.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Guide
-                </Button>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Video Tutorials
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Watch step-by-step video tutorials for all features.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Watch Videos
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ExternalLink className="h-5 w-5" />
-                  API Documentation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Technical documentation for developers and integrations.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Docs
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5" />
-                  Best Practices
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Learn best practices for efficient accounting and inventory management.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Read More
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Community Forum
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Connect with other users and share experiences.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Join Forum
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ExternalLink className="h-5 w-5" />
-                  System Updates
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Stay updated with the latest features and improvements.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Updates
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
       </Tabs>
     </div>
   );

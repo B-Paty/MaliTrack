@@ -385,17 +385,7 @@ export default function FinancialStatements() {
               </Select>
             </div>
             
-            <div className="md:col-span-2">
-              <Label className="text-sm font-semibold text-foreground">Statement Period</Label>
-              <div className="mt-1.5 p-3 bg-muted/50 rounded-lg border">
-                <p className="text-sm text-foreground">
-                  Using date range: <span className="font-semibold">{formatDate(dateFrom)} to {formatDate(dateTo)}</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Adjust the date range using the filter above to change the statement period.
-                </p>
-              </div>
-            </div>
+
           </div>
         </CardContent>
       </Card>

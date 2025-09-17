@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MobileTemplateSelector, type TransactionTemplate as MobileTransactionTemplate } from "@/components/ui/MobileTemplateSelector";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions, type TransactionLine } from "@/hooks/useTransactions";
 import { useInventorySettings } from "@/hooks/useInventorySettings";
@@ -211,6 +212,7 @@ export default function JournalEntry() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [autoBalanceEnabled, setAutoBalanceEnabled] = useState(true);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Generate transaction templates based on inventory settings
   const transactionTemplates = useMemo(() => {
@@ -360,6 +362,33 @@ export default function JournalEntry() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [totals.isBalanced, form.description, autoBalanceEnabled, showKeyboardShortcuts]);
+
+  // Responsive behavior handling - dynamic switching between mobile and desktop layouts
+  useEffect(() => {
+    const checkIsMobile = () => {
+      // Use the same breakpoint as Tailwind's md (768px)
+      const isMobileView = window.innerWidth < 768;
+      setIsMobile(isMobileView);
+    };
+
+    // Check initial state
+    checkIsMobile();
+
+    // Add resize listener for dynamic switching
+    const handleResize = () => {
+      checkIsMobile();
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Also listen for orientation changes on mobile devices
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
 
   // Auto-balancing logic
   const applyAutoBalance = (lines: TransactionLine[], changedIndex: number, changedField: 'debit_amount' | 'credit_amount', changedValue: number) => {
@@ -694,7 +723,7 @@ export default function JournalEntry() {
                 key={template.id}
                 variant={selectedTemplate === template.id ? "default" : "outline"}
                 onClick={() => applyTemplate(template.id)}
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-all"
+                className="h-auto p-4 flex flex-col items-center gap-2 transition-all hover:bg-transparent hover:text-foreground"
               >
                 <span className="text-2xl">{template.icon}</span>
                 <div className="text-center">
@@ -705,22 +734,14 @@ export default function JournalEntry() {
             ))}
           </div>
 
-          {/* Mobile List View */}
-          <div className="md:hidden space-y-2">
-            {transactionTemplates.map((template) => (
-              <Button
-                key={template.id}
-                variant={selectedTemplate === template.id ? "default" : "outline"}
-                onClick={() => applyTemplate(template.id)}
-                className="w-full h-auto p-3 flex items-center gap-3 hover:shadow-md transition-all text-left"
-              >
-                <span className="text-xl flex-shrink-0">{template.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate">{template.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{template.description}</div>
-                </div>
-              </Button>
-            ))}
+          {/* Mobile Dropdown View */}
+          <div className="md:hidden">
+            <MobileTemplateSelector
+              templates={transactionTemplates as MobileTransactionTemplate[]}
+              selectedTemplate={selectedTemplate}
+              onTemplateSelect={setSelectedTemplate}
+              onApplyTemplate={applyTemplate}
+            />
           </div>
         </CardContent>
       </Card>
@@ -749,8 +770,8 @@ export default function JournalEntry() {
         </CardContent>
       </Card>
 
-      {/* Keyboard Shortcuts */}
-      <Card className="shadow-card border-0">
+      {/* Keyboard Shortcuts - Desktop Only */}
+      <Card className="shadow-card border-0 hidden md:block">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -764,7 +785,7 @@ export default function JournalEntry() {
               variant={showKeyboardShortcuts ? "default" : "outline"}
               size="sm"
               onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
-              className="gap-2"
+              className="gap-2 hover:bg-transparent hover:text-foreground"
             >
               <Keyboard className="h-4 w-4" />
               {showKeyboardShortcuts ? "Hide" : "Show"} Shortcuts
@@ -835,7 +856,7 @@ export default function JournalEntry() {
                       description: `Loaded "${transaction.description}" from recent transactions`,
                     });
                   }}
-                  className="h-auto p-3 flex flex-col items-start gap-2 hover:shadow-md transition-all"
+                  className="h-auto p-3 flex flex-col items-start gap-2 transition-all"
                 >
                   <div className="font-semibold text-sm text-left">{transaction.description}</div>
                   <div className="text-xs text-muted-foreground text-left">
@@ -921,7 +942,7 @@ export default function JournalEntry() {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl text-foreground">Journal Lines</CardTitle>
-            <Button onClick={addLine} variant="outline" size="sm" className="gap-2 hover:shadow-md transition-shadow">
+            <Button onClick={addLine} variant="outline" size="sm" className="gap-2 transition-shadow">
               <Plus className="h-4 w-4" />
               Add Line
             </Button>
@@ -949,7 +970,7 @@ export default function JournalEntry() {
                   
                   return (
                     <tr key={index} className={cn(
-                      "border-b border-border/50 hover:bg-accent/30 transition-colors",
+                      "border-b border-border/50 transition-colors",
                       isAutoBalanced && "bg-primary/5"
                     )}>
                       <td className="py-4 px-3">
@@ -1032,7 +1053,7 @@ export default function JournalEntry() {
                           variant="ghost"
                           size="icon"
                           onClick={() => removeLine(index)}
-                          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive transition-colors"
                           disabled={form.lines.length <= 2}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1173,7 +1194,7 @@ export default function JournalEntry() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeLine(index)}
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="text-muted-foreground hover:text-destructive transition-colors"
                         disabled={form.lines.length <= 2}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />

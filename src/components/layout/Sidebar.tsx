@@ -4,7 +4,7 @@
  * - Collapsible on mobile
  * - Highlights active module and calls onModuleChange
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Calculator, 
   FileText, 
@@ -97,6 +97,22 @@ const menuGroups: MenuGroup[] = [
 
 export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange }: SidebarProps) {
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
   
   const filteredMenuGroups = menuGroups.map(group => ({
     ...group,
@@ -110,17 +126,32 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden bg-black/20 backdrop-blur-sm"
           onClick={onClose}
+          style={{ 
+            overscrollBehavior: 'contain',
+            touchAction: 'none'
+          }}
         />
       )}
       
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-background border-r border-border z-50 transform transition-smooth duration-300 ease-in-out shadow-premium overflow-hidden md:rounded-none rounded-r-2xl",
+          "fixed top-16 h-[calc(100vh-4rem)] w-72 bg-background z-50 transition-transform duration-300 ease-in-out overflow-hidden overscroll-contain shadow-elevated backdrop-blur-sm rounded-tr-2xl",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
+        style={{ 
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          left: '0px',
+          marginLeft: '0px',
+          paddingLeft: '0px',
+          borderTopRightRadius: '1rem',
+          borderBottomRightRadius: '0px',
+          borderTopLeftRadius: '0px',
+          borderBottomLeftRadius: '0px'
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -155,18 +186,12 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-3 py-4 overscroll-contain touch-pan-y">
+          <ScrollArea className="flex-1 px-3 py-4 overscroll-contain">
             <div
-              className="space-y-6 pb-24"
-              onTouchMove={(e) => {
-                // Prevent scroll events from bubbling to parent elements on mobile
-                e.stopPropagation();
-              }}
-              onWheel={(e) => {
-                // Prevent wheel events from affecting parent scroll on mobile
-                // Note: Removed preventDefault() to avoid passive event listener issues
-                // The overscroll-contain CSS property handles most containment
-                e.stopPropagation();
+              className="space-y-6 pb-24 overscroll-none"
+              style={{ 
+                overscrollBehavior: 'contain',
+                touchAction: 'pan-y'
               }}
             >
               {filteredMenuGroups.map((group, index) => (
@@ -206,8 +231,8 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
             </div>
           </ScrollArea>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-primary/10">
+          {/* Footer - Hidden on mobile */}
+          <div className="p-4 border-t border-primary/10 hidden lg:block">
             <div className="bg-gradient-accent rounded-xl p-4 border border-primary/10">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
