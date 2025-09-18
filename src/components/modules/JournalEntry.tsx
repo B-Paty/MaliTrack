@@ -69,7 +69,7 @@ const getBaseTemplates = (): TransactionTemplate[] => [
   {
     id: 'cash-purchase',
     name: 'Cash Purchase',
-    description: 'Purchase of goods/services with cash',
+    description: 'Purchase with cash',
     icon: '🛒',
     category: 'purchase',
     lines: [
@@ -80,7 +80,7 @@ const getBaseTemplates = (): TransactionTemplate[] => [
   {
     id: 'credit-purchase',
     name: 'Credit Purchase',
-    description: 'Purchase of goods/services on credit',
+    description: 'Purchase on credit',
     icon: '📝',
     category: 'purchase',
     lines: [
@@ -124,7 +124,7 @@ const getBaseTemplates = (): TransactionTemplate[] => [
   {
     id: 'bank-transfer',
     name: 'Bank Transfer',
-    description: 'Transfer between bank accounts',
+    description: 'Transfer between Money accounts',
     icon: '🏦',
     category: 'transfer',
     lines: [
