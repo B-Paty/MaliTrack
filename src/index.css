@@ -117,16 +117,16 @@ All colors MUST be HSL.
     --popover: 0 0% 7%; /* #121212 */
     --popover-foreground: 0 0% 100%; /* White text */
 
-    /* Brand Colors - Material Design Purple Primary */
-    --brand-red: 270 100% 75%; /* #BB86FC - Material Purple 200 */
+    /* Brand Colors - Material Design Blue Primary */
+    --brand-red: 210 100% 65%; /* Material Blue */
     --brand-white: 0 0% 7%; /* #121212 */
     
-    --primary: 270 100% 75%; /* #BB86FC - Material Purple 200 */
-    --primary-foreground: 0 0% 0%; /* Black text on purple */
-    --primary-hover: 270 100% 80%;
-    --primary-glow: 270 100% 85%;
-    --primary-light: 270 100% 20%;
-    --primary-muted: 270 100% 60%;
+    --primary: 210 100% 65%; /* Material Blue */
+    --primary-foreground: 0 0% 0%; /* Black text on blue */
+    --primary-hover: 210 100% 70%;
+    --primary-glow: 210 100% 75%;
+    --primary-light: 210 100% 20%;
+    --primary-muted: 210 100% 55%;
 
     --secondary: 180 100% 50%; /* #03DAC6 - Material Teal 200 */
     --secondary-foreground: 0 0% 0%; /* Black text on teal */
@@ -151,12 +151,12 @@ All colors MUST be HSL.
     --input: 0 0% 18%;
     --ring: 343 89% 45%;
 
-    /* Dark Mode Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(343 89% 45%), hsl(343 89% 50%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 12%), hsl(0 0% 16%));
-    --gradient-header: linear-gradient(135deg, hsl(343 89% 45%), hsl(343 89% 40%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 12%), hsl(0 0% 14%));
-    --gradient-accent: linear-gradient(135deg, hsl(343 89% 45% / 0.1), hsl(343 89% 45% / 0.2));
+    /* Dark Mode - No gradients */
+    --gradient-primary: none;
+    --gradient-secondary: none;
+    --gradient-header: none;
+    --gradient-card: none;
+    --gradient-accent: none;
     
     /* Dark Mode Shadows */
     --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.3);

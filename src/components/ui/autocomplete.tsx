@@ -39,14 +39,39 @@ export function Autocomplete({
     setInputValue(selectedOption ? selectedOption.label : value || "");
   }, [value, options]);
 
-  // Filter options based on input
+  // Filter options based on input with enhanced matching
   const filteredOptions = options.filter(option => {
-    const searchTerm = inputValue.toLowerCase();
-    return (
-      option.value.toLowerCase().includes(searchTerm) ||
-      option.label.toLowerCase().includes(searchTerm) ||
-      (option.description && option.description.toLowerCase().includes(searchTerm))
-    );
+    if (!inputValue.trim()) return true;
+    
+    // Convert to lowercase for case-insensitive matching
+    const searchTerms = inputValue.toLowerCase().split(/\s+/);
+    const optionValue = option.value.toLowerCase();
+    const optionLabel = option.label.toLowerCase();
+    const optionDesc = (option.description || '').toLowerCase();
+    
+    // Every search term must match at least one field
+    return searchTerms.every(term => {
+      // Direct matches
+      if (optionValue.includes(term) || optionLabel.includes(term) || optionDesc.includes(term)) {
+        return true;
+      }
+      
+      // Handle possessive forms and plurals
+      const withoutS = term.endsWith('s') ? term.slice(0, -1) : term;
+      const withoutApostropheS = term.endsWith("'s") ? term.slice(0, -2) : term;
+      
+      return (
+        // Check variations of the term
+        [withoutS, withoutApostropheS].some(variation =>
+          optionValue.includes(variation) ||
+          optionLabel.includes(variation) ||
+          optionDesc.includes(variation)
+        ) ||
+        // Check if term matches the start of any word in the fields
+        optionLabel.split(/\s+/).some(word => word.startsWith(term)) ||
+        optionDesc.split(/\s+/).some(word => word.startsWith(term))
+      );
+    });
   }).slice(0, maxSuggestions);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

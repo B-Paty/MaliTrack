@@ -231,30 +231,31 @@ export default function JournalEntry() {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
   
-  // Prepare autocomplete options from accounts
+  // Prepare autocomplete options from accounts with better search matching
   const accountOptions: AutocompleteOption[] = useMemo(() => 
     accounts.map(account => ({
       value: account.account_code,
       label: account.account_name,
-      description: `${account.category} • Balance: ${formatCurrency(account.current_balance || 0)}`
+      description: `${account.category} • ${account.account_code} • Balance: ${formatCurrency(account.current_balance || 0)}`,
+      keywords: `${account.account_code} ${account.account_name} ${account.category}`.toLowerCase()
     })), [accounts]
   );
 
-  // Smart account suggestions based on context
+  // Smart account suggestions based on context with improved matching
   const getSmartAccountSuggestions = (currentLineIndex: number, otherLines: TransactionLine[]) => {
     const currentLine = form.lines[currentLineIndex];
     const otherAccounts = otherLines.map(line => line.account_code).filter(Boolean);
     
-    // Get accounts that haven't been used yet
+    // Get all available accounts that haven't been used yet
     const availableAccounts = accounts.filter(acc => !otherAccounts.includes(acc.account_code));
     
-    // Smart suggestions based on transaction type and context
+    // Start with template-specific suggestions if we have a template
     let suggestions: AutocompleteOption[] = [];
     
     if (selectedTemplate) {
       const template = transactionTemplates.find(t => t.id === selectedTemplate);
       if (template) {
-        // Suggest accounts from the template that aren't already used
+        // Get template accounts and mark them as recommended
         const templateAccounts = template.lines
           .map(line => accounts.find(acc => acc.account_code === line.account_code))
           .filter(Boolean)
@@ -263,42 +264,64 @@ export default function JournalEntry() {
         suggestions = templateAccounts.map(account => ({
           value: account!.account_code,
           label: account!.account_name,
-          description: `${account!.category} • Balance: ${formatCurrency(account!.current_balance || 0)} • Template suggestion`
+          description: `${account!.category} • ${account!.account_code} • Balance: ${formatCurrency(account!.current_balance || 0)} • Template suggestion`,
+          keywords: `${account!.account_code} ${account!.account_name} ${account!.category}`.toLowerCase()
         }));
       }
     }
     
-    // Add common account suggestions based on transaction type
+    // Add category-specific suggestions based on transaction type
+    const relevantCategories = new Set<string>();
+    if (selectedTemplate) {
+      if (selectedTemplate.includes('sale')) {
+        relevantCategories.add('Revenue');
+        relevantCategories.add('Asset');
+      } else if (selectedTemplate.includes('purchase')) {
+        relevantCategories.add('Expense');
+        relevantCategories.add('Liability');
+        relevantCategories.add('Asset');
+      } else if (selectedTemplate.includes('receipt') || selectedTemplate.includes('payment')) {
+        relevantCategories.add('Asset');
+        relevantCategories.add('Liability');
+      } else if (selectedTemplate.includes('expense')) {
+        relevantCategories.add('Expense');
+        relevantCategories.add('Asset');
+      } else if (selectedTemplate.includes('transfer')) {
+        relevantCategories.add('Asset');
+      }
+    }
+    
+    // If no template or categories, include all accounts
+    if (relevantCategories.size === 0) {
+      relevantCategories.add('Asset');
+      relevantCategories.add('Liability');
+      relevantCategories.add('Equity');
+      relevantCategories.add('Revenue');
+      relevantCategories.add('Expense');
+    }
+    
+    // Add common account suggestions from relevant categories
     const commonSuggestions = availableAccounts
-      .filter(acc => {
-        // Suggest accounts that make sense for the current context
-        if (selectedTemplate === 'cash-sale' || selectedTemplate === 'credit-sale') {
-          return acc.category === 'Revenue' || acc.category === 'Asset';
-        } else if (selectedTemplate === 'cash-purchase' || selectedTemplate === 'credit-purchase') {
-          return acc.category === 'Expense' || acc.category === 'Liability';
-        } else if (selectedTemplate === 'cash-receipt' || selectedTemplate === 'cash-payment') {
-          return acc.category === 'Asset' || acc.category === 'Liability';
-        } else if (selectedTemplate === 'expense') {
-          return acc.category === 'Expense' || acc.category === 'Asset';
-        } else if (selectedTemplate === 'bank-transfer') {
-          return acc.category === 'Asset';
-        }
-        return true;
-      })
-      .slice(0, 5) // Limit to top 5 suggestions
+      .filter(acc => relevantCategories.has(acc.category))
       .map(account => ({
         value: account.account_code,
         label: account.account_name,
-        description: `${account.category} • Balance: ${formatCurrency(account.current_balance || 0)}`
+        description: `${account.category} • ${account.account_code} • Balance: ${formatCurrency(account.current_balance || 0)}`,
+        keywords: `${account.account_code} ${account.account_name} ${account.category}`.toLowerCase()
       }));
     
-    // Combine template suggestions with common suggestions
+    // Combine and deduplicate suggestions
     const allSuggestions = [...suggestions, ...commonSuggestions];
-    
-    // Remove duplicates and return
-    return allSuggestions.filter((suggestion, index, self) => 
+    const uniqueSuggestions = allSuggestions.filter((suggestion, index, self) => 
       index === self.findIndex(s => s.value === suggestion.value)
     );
+    
+    // Always include all accounts for searching, but put relevant ones first
+    const remainingAccounts = accountOptions.filter(option => 
+      !uniqueSuggestions.some(s => s.value === option.value)
+    );
+    
+    return [...uniqueSuggestions, ...remainingAccounts];
   };
   
   const [form, setForm] = useState<JournalEntryForm>({
@@ -730,9 +753,9 @@ export default function JournalEntry() {
             {transactionTemplates.map((template) => (
               <Button
                 key={template.id}
-                variant={selectedTemplate === template.id ? "default" : "outline"}
+                variant="outline"
                 onClick={() => applyTemplate(template.id)}
-                className="h-auto p-4 flex flex-col items-center gap-2 transition-all hover:bg-transparent hover:text-foreground"
+                className="h-auto p-4 flex flex-col items-center gap-2 dark:hover:bg-transparent dark:bg-transparent"
               >
                 <span className="text-2xl">{template.icon}</span>
                 <div className="text-center">
