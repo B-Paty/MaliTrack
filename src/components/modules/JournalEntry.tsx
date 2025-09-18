@@ -499,35 +499,40 @@ export default function JournalEntry() {
     setForm(prev => {
       const updatedLines = prev.lines.map((line, i) => {
         if (i === index) {
-          const updatedLine = { ...line, [field]: value };
+          const updatedLine = { ...line };
           
-          // Auto-populate account name when code is selected
+          // Handle account code updates
           if (field === 'account_code') {
+            updatedLine.account_code = value as string;
             const account = accounts.find(acc => acc.account_code === value);
             updatedLine.account_name = account?.account_name || '';
+            return updatedLine;
           }
           
-          // Ensure only debit OR credit is entered and clamp to MAX_AMOUNT
-          if (field === 'debit_amount') {
-            const numValue = typeof value === 'string' ? parseNumber(value) : value;
-            const clamped = Math.min(numValue, MAX_AMOUNT);
-            updatedLine.debit_amount = clamped;
-            if (clamped > 0) {
-              updatedLine.credit_amount = 0;
+          // Handle amount updates
+          if (field === 'debit_amount' || field === 'credit_amount') {
+            // For string inputs (from typing), only validate format
+            if (typeof value === 'string') {
+              // Allow empty or valid number format (digits and commas)
+              if (value === '' || /^[0-9,]*$/.test(value)) {
+                const numValue = parseNumber(value);
+                updatedLine[field] = numValue;
+                
+                // Only clear the opposite field and apply auto-balance if we have a real value
+                if (numValue > 0) {
+                  updatedLine[field === 'debit_amount' ? 'credit_amount' : 'debit_amount'] = 0;
+                }
+              }
+              // If invalid format, keep existing value
+              return updatedLine;
             }
             
-            // Apply auto-balancing
-            return applyAutoBalance(prev.lines, index, 'debit_amount', clamped)[index];
-          } else if (field === 'credit_amount') {
-            const numValue = typeof value === 'string' ? parseNumber(value) : value;
-            const clamped = Math.min(numValue, MAX_AMOUNT);
-            updatedLine.credit_amount = clamped;
-            if (clamped > 0) {
-              updatedLine.debit_amount = 0;
+            // For number inputs (from auto-balance), apply directly with clamping
+            const numValue = Math.min(value as number, MAX_AMOUNT);
+            updatedLine[field] = numValue;
+            if (numValue > 0) {
+              updatedLine[field === 'debit_amount' ? 'credit_amount' : 'debit_amount'] = 0;
             }
-            
-            // Apply auto-balancing
-            return applyAutoBalance(prev.lines, index, 'credit_amount', clamped)[index];
           }
           
           return updatedLine;
@@ -535,16 +540,20 @@ export default function JournalEntry() {
         return line;
       });
 
-      // Apply auto-balancing to all lines if amount was changed
-      if (field === 'debit_amount' || field === 'credit_amount') {
-        const numValue = typeof value === 'string' ? parseNumber(value) : value;
-        const clamped = Math.min(numValue, MAX_AMOUNT);
-        const autoBalancedLines = applyAutoBalance(updatedLines, index, field as 'debit_amount' | 'credit_amount', clamped);
-        
-        return {
-          ...prev,
-          lines: autoBalancedLines
-        };
+      // Only apply auto-balancing if we have a complete valid number
+      // and auto-balance is enabled
+      if ((field === 'debit_amount' || field === 'credit_amount') && 
+          typeof value === 'string' && 
+          value !== '' && 
+          autoBalanceEnabled) {
+        const numValue = parseNumber(value);
+        if (numValue > 0) {
+          const autoBalancedLines = applyAutoBalance(updatedLines, index, field as 'debit_amount' | 'credit_amount', numValue);
+          return {
+            ...prev,
+            lines: autoBalancedLines
+          };
+        }
       }
 
       return {
