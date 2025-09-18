@@ -413,58 +413,10 @@ export default function JournalEntry() {
     };
   }, []);
 
-  // Auto-balancing logic
+  // Auto-balancing logic (now manual)
   const applyAutoBalance = (lines: TransactionLine[], changedIndex: number, changedField: 'debit_amount' | 'credit_amount', changedValue: number) => {
-    if (!autoBalanceEnabled) return lines;
-
-    const updatedLines = [...lines];
-    const totalDebits = updatedLines.reduce((sum, line, index) => {
-      if (index === changedIndex && changedField === 'debit_amount') {
-        return sum + changedValue;
-      }
-      return sum + (line.debit_amount || 0);
-    }, 0);
-    
-    const totalCredits = updatedLines.reduce((sum, line, index) => {
-      if (index === changedIndex && changedField === 'credit_amount') {
-        return sum + changedValue;
-      }
-      return sum + (line.credit_amount || 0);
-    }, 0);
-
-    const difference = totalDebits - totalCredits;
-    
-    // Find the last empty line to auto-balance
-    const lastEmptyIndex = updatedLines.findIndex((line, index) => 
-      index !== changedIndex && 
-      line.account_code && 
-      (line.debit_amount === 0 || line.credit_amount === 0)
-    );
-
-    if (lastEmptyIndex !== -1 && Math.abs(difference) > 0.01) {
-      const lastLine = updatedLines[lastEmptyIndex];
-      const account = accounts.find(acc => acc.account_code === lastLine.account_code);
-      
-      if (account) {
-        if (account.normal_balance === 'debit' && difference > 0) {
-          // Need to credit this account
-          updatedLines[lastEmptyIndex] = {
-            ...lastLine,
-            debit_amount: 0,
-            credit_amount: Math.abs(difference)
-          };
-        } else if (account.normal_balance === 'credit' && difference < 0) {
-          // Need to debit this account
-          updatedLines[lastEmptyIndex] = {
-            ...lastLine,
-            debit_amount: Math.abs(difference),
-            credit_amount: 0
-          };
-        }
-      }
-    }
-
-    return updatedLines;
+    // Auto-balance disabled - return lines unchanged
+    return lines;
   };
 
   const applyTemplate = (templateId: string) => {
@@ -541,21 +493,18 @@ export default function JournalEntry() {
                 const numValue = parseNumber(value);
                 updatedLine[field] = numValue;
                 
-                // Only clear the opposite field and apply auto-balance if we have a real value
+                // Only clear the opposite field if user is actively entering a value
                 if (numValue > 0) {
+                  // Clear the opposite field (debit/credit) only for the current line
                   updatedLine[field === 'debit_amount' ? 'credit_amount' : 'debit_amount'] = 0;
                 }
               }
-              // If invalid format, keep existing value
               return updatedLine;
             }
             
-            // For number inputs (from auto-balance), apply directly with clamping
+            // For number inputs, just update the specified field
             const numValue = Math.min(value as number, MAX_AMOUNT);
             updatedLine[field] = numValue;
-            if (numValue > 0) {
-              updatedLine[field === 'debit_amount' ? 'credit_amount' : 'debit_amount'] = 0;
-            }
           }
           
           return updatedLine;
@@ -563,22 +512,7 @@ export default function JournalEntry() {
         return line;
       });
 
-      // Only apply auto-balancing if we have a complete valid number
-      // and auto-balance is enabled
-      if ((field === 'debit_amount' || field === 'credit_amount') && 
-          typeof value === 'string' && 
-          value !== '' && 
-          autoBalanceEnabled) {
-        const numValue = parseNumber(value);
-        if (numValue > 0) {
-          const autoBalancedLines = applyAutoBalance(updatedLines, index, field as 'debit_amount' | 'credit_amount', numValue);
-          return {
-            ...prev,
-            lines: autoBalancedLines
-          };
-        }
-      }
-
+      // We don't modify other lines automatically anymore
       return {
         ...prev,
         lines: updatedLines
