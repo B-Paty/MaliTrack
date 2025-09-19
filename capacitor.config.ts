@@ -12,11 +12,8 @@ const config: CapacitorConfig = {
       launchShowDuration: 2000,
       backgroundColor: '#ffffff',
       showSpinner: false
-    },
-    StatusBar: {
-      style: 'default',
-      backgroundColor: '#ffffff'
     }
+    // StatusBar configuration is handled dynamically in useCapacitor hook
   }
 };
 

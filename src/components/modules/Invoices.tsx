@@ -48,10 +48,10 @@ export default function Invoices() {
     invoiceNumber: generateInvoiceNumber(),
     dateOfService: new Date().toISOString().split('T')[0],
     dateOfInvoice: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
     items: [],
     termsAndConditions: `Payment Terms:
-• Payment is due within 15 days of invoice date (Due: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()})
+• Payment is due within 3 days of invoice date (Due: ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()})
 • Late payments will incur a penalty of 2% per week on the outstanding amount
 • Please include invoice number in all payment references`,
     personalNote: "Thank you for your business! We appreciate your partnership.",
@@ -198,10 +198,10 @@ export default function Invoices() {
         invoiceNumber: generateInvoiceNumber(),
         dateOfService: new Date().toISOString().split('T')[0],
         dateOfInvoice: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         items: [],
         termsAndConditions: `Payment Terms:
-• Payment is due within 15 days of invoice date (Due: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()})
+• Payment is due within 3 days of invoice date (Due: ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()})
 • Late payments will incur a penalty of 2% per week on the outstanding amount
 • Please include invoice number in all payment references`,
         personalNote: "Thank you for your business! We appreciate your partnership.",

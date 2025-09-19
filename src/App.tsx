@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { ThemeProvider, useTheme } from "@/components/layout/ThemeProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useCapacitor } from "@/hooks/useCapacitor";
@@ -13,7 +13,8 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const deviceInfo = useCapacitor();
+  const { theme } = useTheme();
+  const deviceInfo = useCapacitor(theme);
   
   return (
     <QueryClientProvider client={queryClient}>

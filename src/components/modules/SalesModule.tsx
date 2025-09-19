@@ -170,7 +170,7 @@ export default function SalesModule() {
 
     try {
       const today = new Date();
-      const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+      const dueDate = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
 
       const invoiceData: CreateInvoiceData = {
         invoiceNumber: await generateInvoiceNumber(),
@@ -184,7 +184,7 @@ export default function SalesModule() {
         subtotal: completedSale.subtotal,
         taxAmount: completedSale.tax_amount,
         totalAmount: completedSale.total_amount,
-        termsAndConditions: `Payment due within 30 days. ${completedSale.payment_method === 'cash' ? 'Paid in cash.' : completedSale.payment_method === 'credit' ? 'Credit sale - payment pending.' : 'Bank transfer payment.'}`,
+        termsAndConditions: `Payment due within 3 days. ${completedSale.payment_method === 'cash' ? 'Paid in cash.' : completedSale.payment_method === 'credit' ? 'Credit sale - payment pending.' : 'Bank transfer payment.'}`,
         personalNote: completedSale.notes,
         status: completedSale.payment_method === 'cash' ? 'paid' : 'sent',
         items: completedSale.items.map((item: SaleItem) => ({
