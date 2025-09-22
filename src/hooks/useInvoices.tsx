@@ -75,10 +75,6 @@ export function useInvoices() {
       if (!user) {
         throw new Error('User must be authenticated to fetch invoices');
       }
-
-      // Temporarily disabled until invoices table is added to types
-      console.log('Invoice fetch temporarily disabled');
-      /*
       const { data: invoicesData, error: fetchError } = await supabase
         .from('invoices')
         .select(`
@@ -99,8 +95,7 @@ export function useInvoices() {
         throw fetchError;
       }
 
-      // Format the data to match our interface
-      const formattedInvoices = invoicesData?.map(invoice => ({
+      const formattedInvoices = invoicesData?.map((invoice: any) => ({
         id: invoice.id,
         invoiceNumber: invoice.invoice_number,
         clientId: invoice.client_id,
@@ -117,20 +112,18 @@ export function useInvoices() {
         termsAndConditions: invoice.terms_and_conditions,
         personalNote: invoice.personal_note,
         status: invoice.status,
-        items: invoice.invoice_items.map((item: any) => ({
+        items: (invoice.invoice_items || []).map((item: any) => ({
           id: item.id,
           description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unit_price,
-          total: item.total,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unit_price),
+          total: Number(item.total),
         })),
         created_at: invoice.created_at,
         updated_at: invoice.updated_at,
       })) || [];
 
       setInvoices(formattedInvoices);
-      */
-      setInvoices([]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch invoices';
       setError(errorMessage);
@@ -149,11 +142,6 @@ export function useInvoices() {
       if (!user) {
         throw new Error('User must be authenticated to create invoices');
       }
-
-      // Temporarily disabled until invoices table is added to types
-      console.log('Invoice creation temporarily disabled');
-      /*
-      // Create the invoice
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert([{
@@ -179,7 +167,6 @@ export function useInvoices() {
 
       if (invoiceError) throw invoiceError;
 
-      // Create invoice items
       if (invoiceData.items && invoiceData.items.length > 0) {
         const itemsWithInvoiceId = invoiceData.items.map(item => ({
           invoice_id: invoice.id,
@@ -201,14 +188,8 @@ export function useInvoices() {
         description: `Invoice ${invoiceData.invoiceNumber} created successfully`,
       });
 
-      await fetchInvoices(); // Refresh the list
+      await fetchInvoices();
       return invoice;
-      */
-      toast({
-        title: 'Info',
-        description: 'Invoice creation temporarily disabled',
-      });
-      return null;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create invoice';
       toast({
@@ -225,13 +206,59 @@ export function useInvoices() {
       if (!user) {
         throw new Error('User must be authenticated to update invoices');
       }
+      const updatePayload: any = {};
+      if (invoiceData.clientId !== undefined) updatePayload.client_id = invoiceData.clientId;
+      if (invoiceData.invoiceNumber !== undefined) updatePayload.invoice_number = invoiceData.invoiceNumber;
+      if (invoiceData.clientName !== undefined) updatePayload.client_name = invoiceData.clientName;
+      if (invoiceData.clientEmail !== undefined) updatePayload.client_email = invoiceData.clientEmail;
+      if (invoiceData.clientPhone !== undefined) updatePayload.client_phone = invoiceData.clientPhone;
+      if (invoiceData.clientAddress !== undefined) updatePayload.client_address = invoiceData.clientAddress;
+      if (invoiceData.dateOfService !== undefined) updatePayload.date_of_service = invoiceData.dateOfService;
+      if (invoiceData.dateOfInvoice !== undefined) updatePayload.date_of_invoice = invoiceData.dateOfInvoice;
+      if (invoiceData.dueDate !== undefined) updatePayload.due_date = invoiceData.dueDate;
+      if (invoiceData.subtotal !== undefined) updatePayload.subtotal = invoiceData.subtotal;
+      if (invoiceData.taxAmount !== undefined) updatePayload.tax_amount = invoiceData.taxAmount;
+      if (invoiceData.totalAmount !== undefined) updatePayload.total_amount = invoiceData.totalAmount;
+      if (invoiceData.termsAndConditions !== undefined) updatePayload.terms_and_conditions = invoiceData.termsAndConditions;
+      if (invoiceData.personalNote !== undefined) updatePayload.personal_note = invoiceData.personalNote;
+      if (invoiceData.status !== undefined) updatePayload.status = invoiceData.status;
 
-      // Temporarily disabled until invoices table is added to types
-      console.log('Invoice update temporarily disabled');
+      if (Object.keys(updatePayload).length > 0) {
+        const { error: updateError } = await supabase
+          .from('invoices')
+          .update(updatePayload)
+          .eq('id', invoiceId)
+          .eq('user_id', user.id);
+        if (updateError) throw updateError;
+      }
+
+      if (invoiceData.items !== undefined) {
+        const { error: delErr } = await supabase
+          .from('invoice_items')
+          .delete()
+          .eq('invoice_id', invoiceId);
+        if (delErr) throw delErr;
+
+        if (invoiceData.items.length > 0) {
+          const items = invoiceData.items.map(item => ({
+            invoice_id: invoiceId,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            total: item.total,
+          }));
+          const { error: insErr } = await supabase
+            .from('invoice_items')
+            .insert(items);
+          if (insErr) throw insErr;
+        }
+      }
+
       toast({
-        title: 'Info',
-        description: 'Invoice update temporarily disabled',
+        title: 'Success',
+        description: 'Invoice updated successfully',
       });
+      await fetchInvoices();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update invoice';
       toast({
@@ -248,13 +275,24 @@ export function useInvoices() {
       if (!user) {
         throw new Error('User must be authenticated to delete invoices');
       }
+      const { error: itemsErr } = await supabase
+        .from('invoice_items')
+        .delete()
+        .eq('invoice_id', invoiceId);
+      if (itemsErr) throw itemsErr;
 
-      // Temporarily disabled until invoices table is added to types
-      console.log('Invoice deletion temporarily disabled');
+      const { error: invErr } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', invoiceId)
+        .eq('user_id', user.id);
+      if (invErr) throw invErr;
+
       toast({
-        title: 'Info',
-        description: 'Invoice deletion temporarily disabled',
+        title: 'Success',
+        description: 'Invoice deleted',
       });
+      await fetchInvoices();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete invoice';
       toast({
@@ -271,13 +309,25 @@ export function useInvoices() {
       if (!user) {
         throw new Error('User must be authenticated to delete invoices');
       }
+      if (!invoiceIds.length) return;
+      const { error: itemsErr } = await supabase
+        .from('invoice_items')
+        .delete()
+        .in('invoice_id', invoiceIds);
+      if (itemsErr) throw itemsErr;
 
-      // Temporarily disabled until invoices table is added to types
-      console.log('Bulk invoice deletion temporarily disabled');
+      const { error: invErr } = await supabase
+        .from('invoices')
+        .delete()
+        .in('id', invoiceIds)
+        .eq('user_id', user.id);
+      if (invErr) throw invErr;
+
       toast({
-        title: 'Info',
-        description: 'Bulk invoice deletion temporarily disabled',
+        title: 'Success',
+        description: 'Invoices deleted',
       });
+      await fetchInvoices();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete invoices';
       toast({

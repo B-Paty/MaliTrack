@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Package, 
   TrendingUp, 
@@ -25,10 +25,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { InventoryProduct, InventoryReport, LowStockAlert, InventoryTransaction } from '@/types/inventory';
 
 export default function InventoryManagement() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [products, setProducts] = useState<InventoryProduct[]>([]);
   const [reports, setReports] = useState<InventoryReport[]>([]);
   const [alerts, setAlerts] = useState<LowStockAlert[]>([]);
@@ -38,8 +41,10 @@ export default function InventoryManagement() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showProductDetails, setShowProductDetails] = useState(false);
+  const [showEditProduct, setShowEditProduct] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
+  const [editProduct, setEditProduct] = useState<Partial<InventoryProduct> | null>(null);
   const [productToDelete, setProductToDelete] = useState<InventoryProduct | null>(null);
   const [newProduct, setNewProduct] = useState<Partial<InventoryProduct>>({
     category: 'General',
@@ -51,54 +56,79 @@ export default function InventoryManagement() {
     maximum_stock: 1000
   });
 
-  // Mock data - replace with actual API calls
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setProducts([
-        {
-          id: '1',
-          name: 'Rice',
-          category: 'Food & Beverages',
-          unit_of_measure: 'kg',
-          cost_per_unit: 2600,
-          selling_price: 3500,
-          current_stock: 26,
-          minimum_stock: 50,
-          maximum_stock: 500,
-          inventory_account_code: '1040',
-          cogs_account_code: '5010'
-        }
-      ]);
+  const fetchInventory = useCallback(async () => {
+    try {
+      if (!user) return;
+      setLoading(true);
 
-      setAlerts([
-        {
-          product_id: '1',
-          product_name: 'Rice',
-          current_stock: 45,
-          minimum_stock: 50,
-          days_remaining: 3,
-          alert_level: 'low'
-        }
-      ]);
+      const { data, error } = await (supabase as any)
+        .from('inventory_levels')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('product_name', { ascending: true });
 
-      setTransactions([
-        {
-          id: '1',
-          product_id: '1',
-          transaction_type: 'sale',
-          quantity: 5,
-          unit_price: 3500,
-          total_amount: 17500,
-          reference_number: 'SALE-001',
-          transaction_date: '2025-01-03',
-          description: 'Cash sale of rice'
-        }
-      ]);
+      if (error) throw error;
 
+      const mapped: InventoryProduct[] = (data || []).map((row: any) => ({
+        id: row.product_id,
+        name: row.product_name,
+        category: 'General',
+        unit_of_measure: row.product_unit,
+        cost_per_unit: Number(row.cost_per_unit ?? 0),
+        selling_price: Number(row.selling_price ?? 0),
+        current_stock: Number(row.current_stock ?? 0),
+        minimum_stock: Number(row.minimum_stock ?? 0),
+        maximum_stock: Number(row.maximum_stock ?? 0),
+        inventory_account_code: '1040',
+        cogs_account_code: '5010',
+      }));
+
+      setProducts(mapped);
+
+      // Derive alerts from minimum_stock
+      const lowAlerts = mapped
+        .filter(p => p.current_stock <= p.minimum_stock)
+        .map(p => ({
+          product_id: p.id,
+          product_name: p.name,
+          current_stock: p.current_stock,
+          minimum_stock: p.minimum_stock,
+          days_remaining: 0,
+          alert_level: 'low' as const,
+        }));
+      setAlerts(lowAlerts);
+
+      // Optionally fetch recent movements for transactions
+      const { data: moves } = await (supabase as any)
+        .from('inventory_movements')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const mappedTx: InventoryTransaction[] = (moves || []).map((m: any) => ({
+        id: m.id,
+        product_id: m.product_id,
+        transaction_type: m.movement_type,
+        quantity: Number(m.quantity),
+        unit_price: Number(m.unit_price ?? 0),
+        total_amount: Number(m.total_value ?? (Number(m.quantity) * Number(m.unit_price ?? 0))),
+        reference_number: m.reference_type || '',
+        transaction_date: m.movement_date,
+        description: m.notes || `${m.movement_type} - ${m.product_name}`,
+      }));
+      setTransactions(mappedTx);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load inventory';
+      toast({ variant: 'destructive', title: 'Error', description: msg });
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user) fetchInventory();
+  }, [user, fetchInventory]);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -126,21 +156,49 @@ export default function InventoryManagement() {
       return;
     }
 
-    const product: InventoryProduct = {
-      id: `prod_${Date.now()}`,
-      name: newProduct.name!,
-      category: newProduct.category!,
-      unit_of_measure: newProduct.unit_of_measure!,
-      cost_per_unit: newProduct.cost_per_unit || 0,
-      selling_price: newProduct.selling_price || 0,
-      current_stock: newProduct.current_stock || 0,
-      minimum_stock: newProduct.minimum_stock || 10,
-      maximum_stock: newProduct.maximum_stock || 1000,
-      inventory_account_code: `104${products.length}`,
-      cogs_account_code: `501${products.length}`,
+    const productId = `${newProduct.name!.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+    const qty = Number(newProduct.current_stock || 0);
+    const unitPrice = Number(newProduct.cost_per_unit || 0);
+    const totalValue = qty * unitPrice;
+
+    const insertMovement = async () => {
+      try {
+        if (!user) {
+          throw new Error('You must be signed in to add inventory');
+        }
+
+        // Record initial stock as a purchase movement so trigger updates inventory_levels
+        const { error } = await (supabase as any)
+          .from('inventory_movements')
+          .insert([{
+            user_id: user.id,
+            product_id: productId,
+            product_name: newProduct.name!,
+            movement_type: 'purchase',
+            quantity: qty,
+            unit_price: unitPrice,
+            total_value: totalValue,
+            reference_type: newProduct.unit_of_measure || 'unit',
+            notes: 'Initial stock via Inventory Management',
+            movement_date: new Date().toISOString().split('T')[0],
+          }]);
+
+        if (error) throw error;
+
+        await fetchInventory();
+
+        toast({
+          title: 'Product Added',
+          description: `${newProduct.name} recorded with ${qty} ${newProduct.unit_of_measure}`,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to add inventory';
+        toast({ variant: 'destructive', title: 'Error', description: msg });
+      }
     };
 
-    setProducts(prev => [...prev, product]);
+    void insertMovement();
+
     setNewProduct({
       category: 'General',
       unit_of_measure: 'units',
@@ -151,16 +209,71 @@ export default function InventoryManagement() {
       maximum_stock: 1000
     });
     setShowAddProduct(false);
-
-    toast({
-      title: 'Product Added',
-      description: `${product.name} has been added to your inventory.`,
-    });
   };
 
   const handleViewProduct = (product: InventoryProduct) => {
     setSelectedProduct(product);
     setShowProductDetails(true);
+  };
+
+  const openEditProduct = (product: InventoryProduct) => {
+    setSelectedProduct(product);
+    setEditProduct({ ...product });
+    setShowEditProduct(true);
+  };
+
+  const saveEditProduct = async () => {
+    if (!user || !selectedProduct || !editProduct) return;
+    try {
+      const updates: any = {};
+      if (editProduct.name !== undefined) updates.product_name = editProduct.name;
+      if (editProduct.unit_of_measure !== undefined) updates.product_unit = editProduct.unit_of_measure;
+      if (editProduct.cost_per_unit !== undefined) updates.cost_per_unit = Number(editProduct.cost_per_unit || 0);
+      if (editProduct.selling_price !== undefined) updates.selling_price = Number(editProduct.selling_price || 0);
+      if (editProduct.minimum_stock !== undefined) updates.minimum_stock = Number(editProduct.minimum_stock || 0);
+      if (editProduct.maximum_stock !== undefined) updates.maximum_stock = Number(editProduct.maximum_stock || 0);
+
+      // Persist field updates
+      if (Object.keys(updates).length > 0) {
+        const { error: upErr } = await (supabase as any)
+          .from('inventory_levels')
+          .update(updates)
+          .eq('user_id', user.id)
+          // NOTE: we map product.id to product_id from DB
+          .eq('product_id', selectedProduct.id as any);
+        if (upErr) throw upErr;
+      }
+
+      // Handle stock adjustment via movement if quantity changed
+      if (editProduct.current_stock !== undefined && editProduct.current_stock !== selectedProduct.current_stock) {
+        const delta = Number(editProduct.current_stock) - Number(selectedProduct.current_stock);
+        if (delta !== 0) {
+          const { error: mvErr } = await (supabase as any)
+            .from('inventory_movements')
+            .insert([{
+              user_id: user.id,
+              product_id: selectedProduct.id, // product_id in DB
+              product_name: editProduct.name || selectedProduct.name,
+              movement_type: 'adjustment',
+              quantity: Math.abs(delta),
+              unit_price: Number(editProduct.cost_per_unit ?? selectedProduct.cost_per_unit ?? 0),
+              total_value: Math.abs(delta) * Number(editProduct.cost_per_unit ?? selectedProduct.cost_per_unit ?? 0),
+              reference_type: editProduct.unit_of_measure || selectedProduct.unit_of_measure || 'unit',
+              notes: delta > 0 ? 'Manual stock increase' : 'Manual stock decrease',
+              movement_date: new Date().toISOString().split('T')[0],
+            }]);
+          if (mvErr) throw mvErr;
+        }
+      }
+
+      toast({ title: 'Saved', description: 'Product updated successfully' });
+      setShowEditProduct(false);
+      setEditProduct(null);
+      await fetchInventory();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update product';
+      toast({ variant: 'destructive', title: 'Error', description: msg });
+    }
   };
 
   const handleDeleteProduct = (product: InventoryProduct) => {
@@ -204,7 +317,12 @@ export default function InventoryManagement() {
           <p className="text-muted-foreground text-sm md:text-base">Real-time stock tracking and automated management</p>
         </div>
         <div className="flex gap-2 md:gap-3 flex-shrink-0">
-          <Button variant="outline" size="sm" className="flex-1 md:flex-initial hover:bg-transparent active:bg-transparent focus:bg-transparent">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchInventory}
+            className="flex-1 md:flex-initial hover:bg-transparent active:bg-transparent focus:bg-transparent"
+          >
             <RefreshCw className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden xs:inline">Refresh</span>
           </Button>
@@ -368,7 +486,7 @@ export default function InventoryManagement() {
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </Button>
-                      <Button variant="outline" size="sm" className="hover:bg-transparent hover:text-foreground">
+                      <Button variant="outline" size="sm" onClick={() => openEditProduct(product)} className="hover:bg-transparent hover:text-foreground">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -805,7 +923,7 @@ export default function InventoryManagement() {
                 <Button variant="outline" size="sm" onClick={() => setShowProductDetails(false)}>
                   Close
                 </Button>
-                <Button size="sm" className="hover:bg-transparent hover:text-foreground">
+                <Button size="sm" className="hover:bg-transparent hover:text-foreground" onClick={() => openEditProduct(selectedProduct)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
@@ -833,6 +951,59 @@ export default function InventoryManagement() {
               Delete Product
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={showEditProduct} onOpenChange={setShowEditProduct}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>Update product details and adjust stock if needed</DialogDescription>
+          </DialogHeader>
+          {editProduct && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input value={editProduct.name || ''} onChange={e => setEditProduct(prev => ({ ...prev!, name: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Unit of Measure</Label>
+                  <Input value={editProduct.unit_of_measure || ''} onChange={e => setEditProduct(prev => ({ ...prev!, unit_of_measure: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Current Stock</Label>
+                  <Input type="number" value={editProduct.current_stock ?? selectedProduct?.current_stock ?? 0}
+                    onChange={e => setEditProduct(prev => ({ ...prev!, current_stock: parseFloat(e.target.value) || 0 }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cost per Unit (COGS) - Tsh</Label>
+                  <Input type="number" value={editProduct.cost_per_unit ?? 0}
+                    onChange={e => setEditProduct(prev => ({ ...prev!, cost_per_unit: parseFloat(e.target.value) || 0 }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Selling Price - Tsh</Label>
+                  <Input type="number" value={editProduct.selling_price ?? 0}
+                    onChange={e => setEditProduct(prev => ({ ...prev!, selling_price: parseFloat(e.target.value) || 0 }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Minimum Stock</Label>
+                  <Input type="number" value={editProduct.minimum_stock ?? 0}
+                    onChange={e => setEditProduct(prev => ({ ...prev!, minimum_stock: parseFloat(e.target.value) || 0 }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Maximum Stock</Label>
+                  <Input type="number" value={editProduct.maximum_stock ?? 0}
+                    onChange={e => setEditProduct(prev => ({ ...prev!, maximum_stock: parseFloat(e.target.value) || 0 }))} />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowEditProduct(false)}>Cancel</Button>
+                <Button onClick={saveEditProduct}>Save Changes</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

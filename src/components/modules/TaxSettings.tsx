@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calculator, Save, Percent, Settings, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useTaxSettings } from "@/hooks/useTaxSettings";
 
 interface TaxRate {
   id: string;
@@ -19,6 +20,7 @@ interface TaxRate {
 
 export default function TaxSettings() {
   const { toast } = useToast();
+  const { taxSettings, updateTaxSettings } = useTaxSettings();
   
   const [taxType, setTaxType] = useState<'inclusive' | 'exclusive'>('exclusive');
   const [taxRates, setTaxRates] = useState<TaxRate[]>([
@@ -50,6 +52,17 @@ export default function TaxSettings() {
     rate: 0,
     description: ''
   });
+
+  // Initialize UI from persisted tax settings
+  useEffect(() => {
+    if (taxSettings) {
+      setTaxType(taxSettings.taxType || 'exclusive');
+      setTaxRates(prev => {
+        const activeRate = taxSettings.taxRate ?? 0;
+        return prev.map(r => ({ ...r, isActive: r.rate === activeRate }));
+      });
+    }
+  }, [taxSettings]);
 
   const handleTaxTypeChange = (checked: boolean) => {
     setTaxType(checked ? 'inclusive' : 'exclusive');
@@ -96,11 +109,15 @@ export default function TaxSettings() {
     });
   };
 
-  const handleSaveSettings = () => {
-    toast({
-      title: "Success",
-      description: "Tax settings saved successfully"
-    });
+  const handleSaveSettings = async () => {
+    const active = taxRates.find(r => r.isActive);
+    const effectiveRate = active ? active.rate : 0;
+    try {
+      await updateTaxSettings({ taxType, taxRate: effectiveRate, taxName: active?.name || 'VAT', taxDescription: active?.description || '' });
+      toast({ title: "Success", description: `Saved: ${taxType} at ${effectiveRate}%` });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to save tax settings", variant: "destructive" });
+    }
   };
 
   const calculateTaxExample = (amount: number, rate: number) => {

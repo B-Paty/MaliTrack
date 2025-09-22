@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Trash2, Calculator, ShoppingCart, Package, User, CreditCard, DollarSign, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,9 @@ import { useInventorySettings } from '@/hooks/useInventorySettings';
 import { useSales, type SaleItem } from '@/hooks/useSales';
 import { useInvoices, type CreateInvoiceData } from '@/hooks/useInvoices';
 import { formatCurrency } from '@/lib/formatters';
+import { supabase } from '@/integrations/supabase/client';
+import { useTransactions } from '@/hooks/useTransactions';
+import { useTaxSettings } from '@/hooks/useTaxSettings';
 
 export default function SalesModule() {
   const { toast } = useToast();
@@ -21,8 +24,59 @@ export default function SalesModule() {
   const { settings: inventorySettings } = useInventorySettings(user?.id || '');
   const { createSale, getAvailableStock, loading } = useSales(user?.id || '');
   const { createInvoice, generateInvoiceNumber } = useInvoices();
+  const { taxSettings } = useTaxSettings();
+  const { createTransaction } = useTransactions();
 
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+  const [inventoryProducts, setInventoryProducts] = useState<any[]>([]);
+  const [loadingInventory, setLoadingInventory] = useState<boolean>(false);
+  const [majorClients, setMajorClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
+  const fetchInventory = useCallback(async () => {
+    try {
+      if (!user) return;
+      setLoadingInventory(true);
+      const { data, error } = await (supabase as any)
+        .from('inventory_levels')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('product_name', { ascending: true });
+      if (error) throw error;
+      const mapped = (data || []).map((row: any) => ({
+        id: row.product_id,
+        name: row.product_name,
+        unit: row.product_unit,
+        defaultPrice: Number(row.selling_price ?? 0),
+        current_stock: Number(row.current_stock ?? 0),
+      }));
+      setInventoryProducts(mapped);
+    } catch (err) {
+      // soft fail in UI
+    } finally {
+      setLoadingInventory(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) fetchInventory();
+  }, [user, fetchInventory]);
+
+  // Load major clients for selection
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        if (!user) return;
+        const { data } = await (supabase as any)
+          .from('major_clients')
+          .select('id, client_name, client_phone, client_address, client_email')
+          .order('created_at', { ascending: false });
+        setMajorClients(data || []);
+      } catch {
+        setMajorClients([]);
+      }
+    };
+    void loadClients();
+  }, [user]);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
@@ -31,6 +85,12 @@ export default function SalesModule() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit' | 'bank_transfer'>('cash');
   const [notes, setNotes] = useState('');
   const [taxRate, setTaxRate] = useState(18); // Default VAT rate
+  // Sync tax rate from saved Tax Settings
+  useEffect(() => {
+    if (taxSettings && typeof taxSettings.taxRate === 'number') {
+      setTaxRate(taxSettings.taxRate);
+    }
+  }, [taxSettings]);
   const [completedSale, setCompletedSale] = useState<any>(null);
 
   // Calculate totals
@@ -127,6 +187,20 @@ export default function SalesModule() {
     }
 
     try {
+      // Prevent overselling: ensure requested qty <= available stock
+      const insufficient = saleItems.find(item => {
+        const p = inventoryProducts.find(ip => ip.id === item.product_id);
+        return !p || (p.current_stock ?? 0) < item.quantity;
+      });
+      if (insufficient) {
+        toast({
+          title: 'Insufficient stock',
+          description: `${insufficient.product_name} has only ${inventoryProducts.find(ip => ip.id === insufficient.product_id)?.current_stock ?? 0} available`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const saleData = {
         sale_date: new Date().toISOString().split('T')[0],
         customer_name: customerInfo.name || undefined,
@@ -144,6 +218,64 @@ export default function SalesModule() {
       const sale = await createSale(saleData);
       if (sale?.id) {
         setCompletedSale({ ...saleData, id: sale.id });
+
+        // Record inventory movements to reduce stock
+        try {
+          if (user && saleItems.length > 0) {
+            const movements = saleItems.map((item) => ({
+              user_id: user.id,
+              product_id: item.product_id,
+              product_name: item.product_name,
+              movement_type: 'sale',
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total_value: item.quantity * item.unit_price,
+              reference_id: sale.id,
+              reference_type: 'sale',
+              notes: `Sale ${sale.id}`,
+              movement_date: saleData.sale_date,
+            }));
+            const { error: mvErr } = await (supabase as any)
+              .from('inventory_movements')
+              .insert(movements);
+            if (mvErr) {
+              toast({ title: 'Warning', description: 'Sale saved, but inventory not updated', variant: 'destructive' });
+            } else {
+              // Refresh local inventory cache
+              void fetchInventory();
+            }
+          }
+        } catch {
+          // Non-fatal; already reported above if possible
+        }
+
+        // Create accounting transaction (double-entry)
+        try {
+          const cogsTotal = saleItems.reduce((sum, item) => {
+            const p = inventoryProducts.find((ip) => ip.id === item.product_id);
+            const cost = Number(p?.cost_per_unit ?? 0);
+            return sum + cost * item.quantity;
+          }, 0);
+
+          const isCash = paymentMethod === 'cash';
+          const debitAccount = isCash ? '1010' : '1030'; // Cash or Accounts Receivable
+          const creditSales = '4010';
+          const cogsAccount = '5010';
+          const inventoryAccount = '1040';
+
+          await createTransaction({
+            transaction_date: saleData.sale_date,
+            description: `Sale ${sale.id}${selectedClientId ? ` to client ${selectedClientId}` : ''}`,
+            lines: [
+              { account_code: debitAccount, debit_amount: totals.totalAmount, credit_amount: 0 },
+              { account_code: creditSales, debit_amount: 0, credit_amount: totals.totalAmount },
+              { account_code: cogsAccount, debit_amount: cogsTotal, credit_amount: 0 },
+              { account_code: inventoryAccount, debit_amount: 0, credit_amount: cogsTotal },
+            ],
+          } as any);
+        } catch {
+          toast({ title: 'Warning', description: 'Sale saved, but accounting entry failed', variant: 'destructive' });
+        }
       }
 
       toast({
@@ -172,12 +304,18 @@ export default function SalesModule() {
       const today = new Date();
       const dueDate = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
 
+      // Resolve client details if a major client was selected
+      const selectedClient = selectedClientId
+        ? majorClients.find((c) => c.id === selectedClientId)
+        : undefined;
+
       const invoiceData: CreateInvoiceData = {
         invoiceNumber: await generateInvoiceNumber(),
-        clientName: completedSale.customer_name || 'Walk-in Customer',
-        clientEmail: undefined, // Sales module doesn't capture email
-        clientPhone: completedSale.customer_phone,
-        clientAddress: completedSale.customer_address,
+        clientId: selectedClient?.id,
+        clientName: selectedClient?.client_name || completedSale.customer_name || 'Walk-in Customer',
+        clientEmail: selectedClient?.client_email || undefined,
+        clientPhone: selectedClient?.client_phone || completedSale.customer_phone,
+        clientAddress: selectedClient?.client_address || completedSale.customer_address,
         dateOfService: completedSale.sale_date,
         dateOfInvoice: today.toISOString().split('T')[0],
         dueDate: dueDate.toISOString().split('T')[0],
@@ -212,7 +350,7 @@ export default function SalesModule() {
     }
   };
 
-  const availableProducts = inventorySettings?.products || [];
+  const availableProducts = inventoryProducts;
 
   return (
     <div className="space-y-6">
@@ -235,10 +373,26 @@ export default function SalesModule() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {availableProducts.length > 0 ? (
+              {/* Major Client Selection */}
+              <div className="mb-4">
+                <Label className="mb-1 block">Major Client (optional)</Label>
+                <Select value={selectedClientId} onValueChange={(v: any) => setSelectedClientId(v)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a client (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {majorClients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.client_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {loadingInventory ? (
+                <div className="text-center py-8 text-muted-foreground">Loading inventory...</div>
+              ) : availableProducts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {availableProducts.map((product) => {
-                    const availableStock = getAvailableStock(product.id);
+                    const availableStock = product.current_stock ?? 0;
                     return (
                       <div
                         key={product.id}
@@ -249,7 +403,6 @@ export default function SalesModule() {
                           <div className="flex-1">
                             <div className="font-medium">{product.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {product.description && `${product.description} • `}
                               Unit: {product.unit}
                             </div>
                             <div className="text-sm font-medium text-primary">
@@ -269,8 +422,8 @@ export default function SalesModule() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No products available</p>
-                  <p className="text-sm">Add products in Settings → Inventory</p>
+                  <p>No inventory products available</p>
+                  <p className="text-sm">Add inventory in Inventory Management</p>
                 </div>
               )}
             </CardContent>

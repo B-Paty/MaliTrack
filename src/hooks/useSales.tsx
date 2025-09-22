@@ -5,6 +5,8 @@
  */
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export interface SaleItem {
   id?: string;
@@ -56,6 +58,7 @@ export function useSales(userId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (userId) {
@@ -68,10 +71,40 @@ export function useSales(userId: string) {
     try {
       setLoading(true);
       setError(null);
-
-      // Temporarily disabled until sales table is added to types
-      console.log('Sales fetch temporarily disabled');
-      setSales([]);
+      if (!userId) return;
+      const { data, error: fetchError } = await (supabase as any)
+        .from('sales')
+        .select(`*, sale_items (*)`)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (fetchError) throw fetchError;
+      const mapped: Sale[] = (data || []).map((s: any) => ({
+        id: s.id,
+        user_id: s.user_id,
+        sale_number: s.sale_number,
+        sale_date: s.sale_date,
+        payment_method: s.payment_method,
+        subtotal: Number(s.subtotal || 0),
+        tax_amount: Number(s.tax_amount || 0),
+        total_amount: Number(s.total_amount || 0),
+        status: s.status,
+        customer_name: s.customer_name || undefined,
+        customer_phone: s.customer_phone || undefined,
+        customer_address: s.customer_address || undefined,
+        notes: s.notes || undefined,
+        items: (s.sale_items || []).map((it: any) => ({
+          id: it.id,
+          product_id: it.product_id,
+          product_name: it.product_name,
+          product_unit: it.product_unit,
+          quantity: Number(it.quantity),
+          unit_price: Number(it.unit_price),
+          total_price: Number(it.total_price),
+        })),
+        created_at: s.created_at,
+        updated_at: s.updated_at,
+      }));
+      setSales(mapped);
     } catch (err) {
       console.error('Error fetching sales:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch sales');
@@ -82,9 +115,28 @@ export function useSales(userId: string) {
 
   const fetchInventoryLevels = async () => {
     try {
-      // Temporarily disabled until inventory_levels table is added to types
-      console.log('Inventory levels fetch temporarily disabled');
-      setInventoryLevels([]);
+      if (!userId) return;
+      const { data, error: invErr } = await (supabase as any)
+        .from('inventory_levels')
+        .select('*')
+        .eq('user_id', userId)
+        .order('product_name', { ascending: true });
+      if (invErr) throw invErr;
+      const mapped: InventoryLevel[] = (data || []).map((row: any) => ({
+        id: row.id,
+        user_id: row.user_id,
+        product_id: row.product_id,
+        product_name: row.product_name,
+        product_unit: row.product_unit,
+        current_stock: Number(row.current_stock || 0),
+        minimum_stock: Number(row.minimum_stock || 0),
+        maximum_stock: Number(row.maximum_stock || 0),
+        cost_per_unit: Number(row.cost_per_unit || 0),
+        selling_price: Number(row.selling_price || 0),
+        last_updated: row.last_updated,
+        created_at: row.created_at,
+      }));
+      setInventoryLevels(mapped);
     } catch (err) {
       console.error('Error fetching inventory levels:', err);
     }
@@ -94,15 +146,45 @@ export function useSales(userId: string) {
     try {
       setLoading(true);
       setError(null);
-
-      // Temporarily disabled until sales table is added to types
-      console.log('Sale creation temporarily disabled');
-      toast({
-        title: 'Info',
-        description: 'Sale creation temporarily disabled',
-      });
-      
-      return null;
+      if (!user) throw new Error('User must be authenticated to create sales');
+      const { data: saleNumber, error: numErr } = await (supabase as any).rpc('generate_sale_number');
+      if (numErr) throw numErr;
+      const { data: sale, error: saleErr } = await (supabase as any)
+        .from('sales')
+        .insert([{
+          user_id: user.id,
+          sale_number: saleNumber,
+          sale_date: saleData.sale_date,
+          payment_method: saleData.payment_method,
+          subtotal: saleData.subtotal,
+          tax_amount: saleData.tax_amount,
+          total_amount: saleData.total_amount,
+          notes: saleData.notes,
+          status: saleData.status,
+          customer_name: saleData.customer_name,
+          customer_phone: saleData.customer_phone,
+          customer_address: saleData.customer_address,
+        }])
+        .select()
+        .single();
+      if (saleErr) throw saleErr;
+      if (saleData.items && saleData.items.length > 0) {
+        const saleItems = saleData.items.map((item) => ({
+          sale_id: sale.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_unit: item.product_unit,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+        }));
+        const { error: itemsErr } = await (supabase as any)
+          .from('sale_items')
+          .insert(saleItems);
+        if (itemsErr) throw itemsErr;
+      }
+      await fetchSales();
+      return sale as Sale;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create sale';
       setError(errorMessage);
@@ -121,13 +203,26 @@ export function useSales(userId: string) {
     try {
       setLoading(true);
       setError(null);
-
-      // Temporarily disabled until sales table is added to types
-      console.log('Sale update temporarily disabled');
-      toast({
-        title: 'Info',
-        description: 'Sale update temporarily disabled',
-      });
+      const updatePayload: any = {};
+      if (saleData.sale_date !== undefined) updatePayload.sale_date = saleData.sale_date;
+      if (saleData.payment_method !== undefined) updatePayload.payment_method = saleData.payment_method;
+      if (saleData.subtotal !== undefined) updatePayload.subtotal = saleData.subtotal;
+      if (saleData.tax_amount !== undefined) updatePayload.tax_amount = saleData.tax_amount;
+      if (saleData.total_amount !== undefined) updatePayload.total_amount = saleData.total_amount;
+      if (saleData.notes !== undefined) updatePayload.notes = saleData.notes;
+      if (saleData.status !== undefined) updatePayload.status = saleData.status;
+      if (saleData.customer_name !== undefined) updatePayload.customer_name = saleData.customer_name;
+      if (saleData.customer_phone !== undefined) updatePayload.customer_phone = saleData.customer_phone;
+      if (saleData.customer_address !== undefined) updatePayload.customer_address = saleData.customer_address;
+      if (Object.keys(updatePayload).length > 0) {
+        const { error: updErr } = await (supabase as any)
+          .from('sales')
+          .update(updatePayload)
+          .eq('id', saleId)
+          .eq('user_id', userId);
+        if (updErr) throw updErr;
+      }
+      await fetchSales();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update sale';
       setError(errorMessage);
@@ -146,13 +241,18 @@ export function useSales(userId: string) {
     try {
       setLoading(true);
       setError(null);
-
-      // Temporarily disabled until sales table is added to types
-      console.log('Sale deletion temporarily disabled');
-      toast({
-        title: 'Info',
-        description: 'Sale deletion temporarily disabled',
-      });
+      const { error: itemErr } = await (supabase as any)
+        .from('sale_items')
+        .delete()
+        .eq('sale_id', saleId);
+      if (itemErr) throw itemErr;
+      const { error: delErr } = await (supabase as any)
+        .from('sales')
+        .delete()
+        .eq('id', saleId)
+        .eq('user_id', userId);
+      if (delErr) throw delErr;
+      await fetchSales();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete sale';
       setError(errorMessage);
@@ -169,8 +269,11 @@ export function useSales(userId: string) {
 
   const updateInventoryLevel = async (productId: string, newStock: number) => {
     try {
-      // Temporarily disabled until inventory_levels table is added to types
-      console.log('Inventory level update temporarily disabled');
+      await (supabase as any)
+        .from('inventory_levels')
+        .update({ current_stock: newStock })
+        .eq('user_id', userId)
+        .eq('product_id', productId);
     } catch (err) {
       console.error('Error updating inventory level:', err);
     }
