@@ -45,14 +45,29 @@ export default function FinancialStatements() {
     const liabilities = accounts.filter(acc => acc.category.includes('Liability'));
     const equity = accounts.filter(acc => acc.category === 'Equity');
 
-    const totalRevenue = revenue.reduce((sum, acc) => sum + Math.abs(acc.current_balance), 0);
-    const totalExpenses = expenses.reduce((sum, acc) => sum + Math.abs(acc.current_balance), 0);
+    // For revenue (credit-normal): positive balance means credit balance
+    const totalRevenue = revenue.reduce((sum, acc) => sum + acc.current_balance, 0);
+    
+    // For expenses (debit-normal): positive balance means debit balance
+    const totalExpenses = expenses.reduce((sum, acc) => sum + acc.current_balance, 0);
+    
+    // Net income: Revenue - Expenses
     const netIncome = totalRevenue - totalExpenses;
 
-    const totalAssets = assets.reduce((sum, acc) => 
-      acc.normal_balance === 'debit' ? sum + acc.current_balance : sum - acc.current_balance, 0
-    );
+    // Assets (mostly debit-normal)
+    const totalAssets = assets.reduce((sum, acc) => {
+      if (acc.category === 'Contra-Asset') {
+        // Contra accounts reduce the asset total
+        return sum - acc.current_balance;
+      }
+      // Regular assets
+      return sum + acc.current_balance;
+    }, 0);
+
+    // Liabilities (credit-normal)
     const totalLiabilities = liabilities.reduce((sum, acc) => sum + acc.current_balance, 0);
+    
+    // Equity (credit-normal) plus current period income
     const totalEquity = equity.reduce((sum, acc) => sum + acc.current_balance, 0) + netIncome;
 
     return {
