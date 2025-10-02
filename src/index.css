@@ -21,6 +21,10 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Safe area variables for mobile apps */
+    --safe-area-top: 0px;
+    --safe-area-bottom: 0px;
+    
     /* Modern White Background System */
     --background: 0 0% 98%;
     --foreground: 220 15% 15%;

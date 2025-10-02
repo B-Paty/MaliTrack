@@ -52,10 +52,15 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
   };
 
   return (
-    <header className={cn(
-      "h-16 bg-background border-b border-border flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50 md:rounded-none rounded-b-2xl",
-      className
-    )}>
+    <header 
+      className={cn(
+        "h-16 bg-background border-b border-border flex items-center justify-between px-4 lg:px-6 shadow-elevated backdrop-blur-sm sticky top-0 z-50 md:rounded-none rounded-b-2xl",
+        className
+      )}
+      style={{
+        paddingTop: 'var(--safe-area-top, 0px)',
+      }}
+    >
       {/* Left Section: Menu + Company Branding */}
       <div className="flex items-center gap-4">
         {/* Mobile Menu Button */}
@@ -103,7 +108,7 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
               {companyName}
             </h1>
             <div className="flex items-center gap-1">
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground border-border">
                 <Sparkles className="h-3 w-3 mr-1" />
                 Accounting System
               </Badge>

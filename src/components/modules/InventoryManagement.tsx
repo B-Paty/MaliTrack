@@ -244,26 +244,16 @@ export default function InventoryManagement() {
         if (upErr) throw upErr;
       }
 
-      // Handle stock adjustment via movement if quantity changed
+      // Handle stock adjustment via direct update to inventory_levels (not movement)
       if (editProduct.current_stock !== undefined && editProduct.current_stock !== selectedProduct.current_stock) {
-        const delta = Number(editProduct.current_stock) - Number(selectedProduct.current_stock);
-        if (delta !== 0) {
-          const { error: mvErr } = await (supabase as any)
-            .from('inventory_movements')
-            .insert([{
-              user_id: user.id,
-              product_id: selectedProduct.id, // product_id in DB
-              product_name: editProduct.name || selectedProduct.name,
-              movement_type: 'adjustment',
-              quantity: Math.abs(delta),
-              unit_price: Number(editProduct.cost_per_unit ?? selectedProduct.cost_per_unit ?? 0),
-              total_value: Math.abs(delta) * Number(editProduct.cost_per_unit ?? selectedProduct.cost_per_unit ?? 0),
-              reference_type: editProduct.unit_of_measure || selectedProduct.unit_of_measure || 'unit',
-              notes: delta > 0 ? 'Manual stock increase' : 'Manual stock decrease',
-              movement_date: new Date().toISOString().split('T')[0],
-            }]);
-          if (mvErr) throw mvErr;
-        }
+        const newStock = Number(editProduct.current_stock);
+        const { error: stockErr } = await (supabase as any)
+          .from('inventory_levels')
+          .update({ current_stock: newStock })
+          .eq('user_id', user.id)
+          .eq('product_id', selectedProduct.id);
+        
+        if (stockErr) throw stockErr;
       }
 
       toast({ title: 'Saved', description: 'Product updated successfully' });
@@ -281,17 +271,37 @@ export default function InventoryManagement() {
     setShowDeleteDialog(true);
   };
 
-  const confirmDeleteProduct = () => {
-    if (productToDelete) {
-      setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
-      setAlerts(prev => prev.filter(a => a.product_id !== productToDelete.id));
-      setTransactions(prev => prev.filter(t => t.product_id !== productToDelete.id));
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete || !user) return;
+    
+    try {
+      // Delete from database
+      const { error: delMovErr } = await (supabase as any)
+        .from('inventory_movements')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productToDelete.id);
       
+      if (delMovErr) throw delMovErr;
+
+      const { error: delLevelErr } = await (supabase as any)
+        .from('inventory_levels')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productToDelete.id);
+      
+      if (delLevelErr) throw delLevelErr;
+
       toast({
         title: 'Product Deleted',
         description: `${productToDelete.name} has been removed from your inventory.`,
       });
       
+      await fetchInventory();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete product';
+      toast({ variant: 'destructive', title: 'Error', description: msg });
+    } finally {
       setShowDeleteDialog(false);
       setProductToDelete(null);
     }
