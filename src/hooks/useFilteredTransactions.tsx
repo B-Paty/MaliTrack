@@ -46,7 +46,7 @@ export function useFilteredTransactions() {
       });
     });
 
-    // Second pass: calculate balances based on account type
+    // Second pass: calculate balances correctly for each account type
     filteredTransactions.forEach(transaction => {
       transaction.lines.forEach(line => {
         if (!balances[line.account_code]) {
@@ -54,6 +54,11 @@ export function useFilteredTransactions() {
         }
 
         const normalBalance = accountTypes.get(line.account_code) || 'debit';
+        
+        // Standard accounting equation:
+        // Assets = Liabilities + Equity
+        // Debits increase: Assets (1xxx), Expenses (5xxx)
+        // Credits increase: Liabilities (2xxx), Equity (3xxx), Revenue (4xxx)
         
         if (normalBalance === 'debit') {
           // For debit-normal accounts (Assets, Expenses)

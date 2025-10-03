@@ -39,7 +39,11 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
   };
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    // Always toggle between light and dark (skip system)
+    const currentTheme = theme === "system" 
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : theme;
+    setTheme(currentTheme === "dark" ? "light" : "dark");
   };
 
   const companyLogo = getLogoForContext('header');
@@ -126,7 +130,10 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
           onClick={toggleTheme}
           className="text-muted-foreground hover:text-primary hover:bg-primary/5 transition-fast"
         >
-          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) 
+            ? <Sun className="h-5 w-5" /> 
+            : <Moon className="h-5 w-5" />
+          }
         </Button>
 
         {/* Refresh Settings */}

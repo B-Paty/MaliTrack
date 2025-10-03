@@ -19,6 +19,7 @@ import { PDFExporter } from "@/lib/pdfExporter";
 import { useToast } from "@/hooks/use-toast";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import { useDateRange } from "@/contexts/DateRangeContext";
+import { PeriodClosingDialog } from "@/components/modules/PeriodClosingDialog";
 
 type StatementType = 'income' | 'balance' | 'cash';
 
@@ -35,7 +36,7 @@ export default function FinancialStatements() {
   const dateFrom = dateRange.startDate;
   const dateTo = dateRange.endDate;
 
-  // Calculate statement data
+  // Calculate statement data with proper accounting rules
   const statementData = useMemo(() => {
     if (!accounts.length) return null;
 
@@ -45,30 +46,45 @@ export default function FinancialStatements() {
     const liabilities = accounts.filter(acc => acc.category.includes('Liability'));
     const equity = accounts.filter(acc => acc.category === 'Equity');
 
-    // For revenue (credit-normal): positive balance means credit balance
-    const totalRevenue = revenue.reduce((sum, acc) => sum + acc.current_balance, 0);
+    // Revenue accounts: credit-normal (positive balance = credit balance)
+    // Display as positive amounts
+    const totalRevenue = revenue.reduce((sum, acc) => {
+      // For revenue, positive current_balance is correct (represents credit)
+      return sum + Math.abs(acc.current_balance);
+    }, 0);
     
-    // For expenses (debit-normal): positive balance means debit balance
-    const totalExpenses = expenses.reduce((sum, acc) => sum + acc.current_balance, 0);
+    // Expense accounts: debit-normal (positive balance = debit balance)
+    // Display as positive amounts
+    const totalExpenses = expenses.reduce((sum, acc) => {
+      // For expenses, positive current_balance is correct (represents debit)
+      return sum + Math.abs(acc.current_balance);
+    }, 0);
     
     // Net income: Revenue - Expenses
     const netIncome = totalRevenue - totalExpenses;
 
-    // Assets (mostly debit-normal)
+    // Asset accounts: debit-normal (positive balance = debit balance)
     const totalAssets = assets.reduce((sum, acc) => {
       if (acc.category === 'Contra-Asset') {
-        // Contra accounts reduce the asset total
-        return sum - acc.current_balance;
+        // Contra-assets reduce total assets (e.g., Accumulated Depreciation)
+        return sum - Math.abs(acc.current_balance);
       }
-      // Regular assets
+      // Regular assets: positive debit balance is normal
+      // Use the actual balance (which should be positive for assets)
       return sum + acc.current_balance;
     }, 0);
 
-    // Liabilities (credit-normal)
-    const totalLiabilities = liabilities.reduce((sum, acc) => sum + acc.current_balance, 0);
+    // Liability accounts: credit-normal (positive balance = credit balance)
+    const totalLiabilities = liabilities.reduce((sum, acc) => {
+      // Liabilities should have positive balances (representing credits)
+      return sum + Math.abs(acc.current_balance);
+    }, 0);
     
-    // Equity (credit-normal) plus current period income
-    const totalEquity = equity.reduce((sum, acc) => sum + acc.current_balance, 0) + netIncome;
+    // Equity accounts: credit-normal (positive balance = credit balance)
+    // Add current period net income
+    const totalEquity = equity.reduce((sum, acc) => {
+      return sum + Math.abs(acc.current_balance);
+    }, 0) + netIncome;
 
     return {
       revenue,
@@ -270,7 +286,7 @@ export default function FinancialStatements() {
               <div key={account.account_code} className="flex justify-between py-2">
                 <span className="text-foreground">{account.account_name}</span>
                 <span className="font-mono text-foreground">
-                  {formatCurrency(account.normal_balance === 'debit' ? account.current_balance : -account.current_balance)}
+                  {formatCurrency(Math.abs(account.current_balance))}
                 </span>
               </div>
             ))}
@@ -291,7 +307,7 @@ export default function FinancialStatements() {
               {statementData.liabilities.map(account => (
                 <div key={account.account_code} className="flex justify-between py-2">
                   <span className="text-foreground">{account.account_name}</span>
-                  <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+                  <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
                 </div>
               ))}
               <div className="flex justify-between py-2 border-t border-border font-semibold">
@@ -310,7 +326,7 @@ export default function FinancialStatements() {
               {statementData.equity.map(account => (
                 <div key={account.account_code} className="flex justify-between py-2">
                   <span className="text-foreground">{account.account_name}</span>
-                  <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+                  <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
                 </div>
               ))}
               <div className="flex justify-between py-2">
@@ -369,6 +385,7 @@ export default function FinancialStatements() {
         </div>
         
         <div className="flex items-center gap-2">
+          <PeriodClosingDialog />
           <Badge variant="outline" className="gap-1 text-sm px-3 py-1">
             <Calendar className="h-4 w-4" />
             {formatDate(dateFrom)} - {formatDate(dateTo)}

@@ -214,9 +214,46 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_layers: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          purchase_date: string
+          quantity_remaining: number
+          reference_id: string | null
+          unit_cost: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          purchase_date: string
+          quantity_remaining?: number
+          reference_id?: string | null
+          unit_cost: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          purchase_date?: string
+          quantity_remaining?: number
+          reference_id?: string | null
+          unit_cost?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory_levels: {
         Row: {
           cost_per_unit: number
+          costing_method: string | null
           created_at: string | null
           current_stock: number
           id: string
@@ -231,6 +268,7 @@ export type Database = {
         }
         Insert: {
           cost_per_unit?: number
+          costing_method?: string | null
           created_at?: string | null
           current_stock?: number
           id?: string
@@ -245,6 +283,7 @@ export type Database = {
         }
         Update: {
           cost_per_unit?: number
+          costing_method?: string | null
           created_at?: string | null
           current_stock?: number
           id?: string
@@ -542,6 +581,48 @@ export type Database = {
         }
         Relationships: []
       }
+      period_closings: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          closing_date: string
+          created_at: string | null
+          id: string
+          is_closed: boolean
+          net_income: number
+          period_end: string
+          period_start: string
+          period_type: string
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_date: string
+          created_at?: string | null
+          id?: string
+          is_closed?: boolean
+          net_income?: number
+          period_end: string
+          period_start: string
+          period_type: string
+          user_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_date?: string
+          created_at?: string | null
+          id?: string
+          is_closed?: boolean
+          net_income?: number
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sale_items: {
         Row: {
           created_at: string | null
@@ -719,6 +800,8 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          edit_count: number | null
+          edited_at: string | null
           id: string
           reference_number: string
           transaction_date: string
@@ -728,6 +811,8 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          edit_count?: number | null
+          edited_at?: string | null
           id?: string
           reference_number: string
           transaction_date: string
@@ -737,6 +822,8 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          edit_count?: number | null
+          edited_at?: string | null
           id?: string
           reference_number?: string
           transaction_date?: string
@@ -750,6 +837,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_fifo_cogs: {
+        Args: { p_product_id: string; p_quantity: number; p_user_id: string }
+        Returns: number
+      }
       can_access_audit_logs: {
         Args: { target_user_id: string }
         Returns: boolean

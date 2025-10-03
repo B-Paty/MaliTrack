@@ -244,16 +244,28 @@ export default function InventoryManagement() {
         if (upErr) throw upErr;
       }
 
-      // Handle stock adjustment via direct update to inventory_levels (not movement)
+      // Handle stock adjustment via inventory movement (creates proper accounting entries)
       if (editProduct.current_stock !== undefined && editProduct.current_stock !== selectedProduct.current_stock) {
         const newStock = Number(editProduct.current_stock);
-        const { error: stockErr } = await (supabase as any)
-          .from('inventory_levels')
-          .update({ current_stock: newStock })
-          .eq('user_id', user.id)
-          .eq('product_id', selectedProduct.id);
+        const quantityDiff = newStock - selectedProduct.current_stock;
         
-        if (stockErr) throw stockErr;
+        // Create adjustment movement
+        const { error: movementErr } = await (supabase as any)
+          .from('inventory_movements')
+          .insert({
+            user_id: user.id,
+            product_id: selectedProduct.id,
+            product_name: selectedProduct.name,
+            movement_type: 'adjustment',
+            quantity: quantityDiff,
+            unit_price: selectedProduct.cost_per_unit,
+            total_value: quantityDiff * selectedProduct.cost_per_unit,
+            reference_type: 'adjustment',
+            notes: `Stock adjustment from ${selectedProduct.current_stock} to ${newStock}`,
+            movement_date: new Date().toISOString().split('T')[0],
+          });
+        
+        if (movementErr) throw movementErr;
       }
 
       toast({ title: 'Saved', description: 'Product updated successfully' });

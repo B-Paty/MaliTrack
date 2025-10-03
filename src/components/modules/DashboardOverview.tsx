@@ -53,7 +53,7 @@ export default function DashboardOverview() {
     return d >= start && d <= end;
   };
 
-  const { totalRevenue, totalExpenses, revenueMoM, expensesMoM, revenueThisMonth, invoicesCountThisMonth } = useMemo(() => {
+  const { totalRevenue, totalExpenses, revenueMoM, expensesMoM, revenueThisMonth, pendingInvoicesCount } = useMemo(() => {
     // Totals from filtered period
     const revenueAccounts = accounts.filter(acc => acc.category === 'Revenue');
     const expenseAccounts = accounts.filter(acc => acc.category === 'Expense');
@@ -93,16 +93,20 @@ export default function DashboardOverview() {
       return ((current - prev) / prev) * 100;
     };
 
-    // Use filtered transactions count for activity
-    const invoicesCountThisMonth = transactions.length;
+    // Count pending/sent invoices from transactions with specific descriptions
+    // In a real implementation, this would query the invoices table
+    const pendingInvoicesCount = transactions.filter(tx => 
+      tx.description?.toLowerCase().includes('invoice') || 
+      tx.description?.toLowerCase().includes('sale')
+    ).length;
 
     return {
       totalRevenue,
       totalExpenses,
       revenueMoM: pct(revenueThis, revenuePrev),
       expensesMoM: pct(expensesThis, expensesPrev),
-      revenueThisMonth: totalRevenue, // For the selected period
-      invoicesCountThisMonth
+      revenueThisMonth: totalRevenue,
+      pendingInvoicesCount
     };
   }, [accounts, transactions, accountByCode, now, startOfThisMonth]);
 
@@ -125,7 +129,7 @@ export default function DashboardOverview() {
     },
     {
       title: "Pending Invoices",
-      value: String(invoicesCountThisMonth),
+      value: String(pendingInvoicesCount),
       change: "0.0%",
       trend: "down",
       icon: FileText

@@ -249,13 +249,34 @@ export default function SalesModule() {
           // Non-fatal; already reported above if possible
         }
 
-        // Create accounting transaction (double-entry)
+        // Create accounting transaction (double-entry) with accurate COGS using FIFO
         try {
-          const cogsTotal = saleItems.reduce((sum, item) => {
-            const p = inventoryProducts.find((ip) => ip.id === item.product_id);
-            const cost = Number(p?.cost_per_unit ?? 0);
-            return sum + cost * item.quantity;
-          }, 0);
+          // Calculate COGS using FIFO from inventory layers
+          let cogsTotal = 0;
+          for (const item of saleItems) {
+            try {
+              const { data: fifoData, error: fifoErr } = await (supabase as any)
+                .rpc('calculate_fifo_cogs', {
+                  p_user_id: user.id,
+                  p_product_id: item.product_id,
+                  p_quantity: item.quantity
+                });
+              
+              if (fifoErr) {
+                // Fallback to simple cost calculation if FIFO fails
+                const p = inventoryProducts.find((ip) => ip.id === item.product_id);
+                const cost = Number(p?.cost_per_unit ?? 0);
+                cogsTotal += cost * item.quantity;
+              } else {
+                cogsTotal += Number(fifoData || 0);
+              }
+            } catch {
+              // Fallback calculation
+              const p = inventoryProducts.find((ip) => ip.id === item.product_id);
+              const cost = Number(p?.cost_per_unit ?? 0);
+              cogsTotal += cost * item.quantity;
+            }
+          }
 
           const isCash = paymentMethod === 'cash';
           const debitAccount = isCash ? '1010' : '1030'; // Cash or Accounts Receivable
@@ -273,8 +294,9 @@ export default function SalesModule() {
               { account_code: inventoryAccount, debit_amount: 0, credit_amount: cogsTotal },
             ],
           } as any);
-        } catch {
-          toast({ title: 'Warning', description: 'Sale saved, but accounting entry failed', variant: 'destructive' });
+        } catch (err) {
+          console.error('Accounting entry error:', err);
+          toast({ title: 'Warning', description: 'Sale saved, but accounting entry may be inaccurate', variant: 'destructive' });
         }
       }
 
