@@ -20,7 +20,7 @@
  */
 export const LOGO_CONFIG = {
   // Logo file names for different themes
-  LOGO_FILENAME_LIGHT: 'malitrack-logo-light.jpg',
+  LOGO_FILENAME_LIGHT: 'malitrack-logo-light.png',
   LOGO_FILENAME_DARK: 'malitrack-logo-dark.png',
   
   // Fallback logo (legacy)
