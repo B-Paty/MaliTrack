@@ -47,7 +47,7 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
   };
 
   const companyLogo = getLogoForContext('header');
-  const companyName = settings?.company_name || 'QSA Solutions';
+  const companyName = settings?.company_name || 'MaliTrack';
 
 
 

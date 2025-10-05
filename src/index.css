@@ -4,15 +4,15 @@
 
 /* Company Branding System */
 :root {
-  /* Default company branding colors */
-  --company-primary: 161 5 45; /* QSA Crimson */
-  --company-secondary: 248 249 250; /* Light gray */
-  --company-accent: 243 244 246; /* Accent gray */
+  /* Default company branding colors - MaliTrack Palette */
+  --company-primary: 9 96 62; /* #FF371E - MaliTrack Orange */
+  --company-secondary: 0 0 88; /* #E1E1E1 - Light gray */
+  --company-accent: 0 2 20; /* #323131 - Dark gray */
   
   /* Branding utilities */
-  --brand-h: 351;
-  --brand-s: 94%;
-  --brand-l: 29%;
+  --brand-h: 9;
+  --brand-s: 96%;
+  --brand-l: 62%;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
@@ -35,16 +35,16 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    /* Modern Brand Colors - Crimson Red & Pure White */
-    --brand-red: 343 89% 37%;  /* #BD032F - Deep Crimson Red */
+    /* Modern Brand Colors - MaliTrack Orange & Pure White */
+    --brand-red: 9 96% 56%;  /* #FF371E - MaliTrack Orange */
     --brand-white: 0 0% 100%;  /* #FFFFFF - Pure White */
     
-    --primary: 343 89% 37%;    /* #BD032F - Main brand color */
+    --primary: 9 96% 56%;    /* #FF371E - Main brand color */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 343 89% 32%;
-    --primary-glow: 343 89% 45%;
-    --primary-light: 343 89% 95%;
-    --primary-muted: 343 89% 50%;
+    --primary-hover: 9 96% 50%;
+    --primary-glow: 9 96% 62%;
+    --primary-light: 9 96% 95%;
+    --primary-muted: 9 96% 45%;
 
     /* Clean Modern Grays */
     --secondary: 210 40% 98%;
@@ -56,8 +56,8 @@ All colors MUST be HSL.
     --accent: 210 40% 94%;
     --accent-foreground: 220 15% 15%;
 
-    /* Status Colors with Red Theme */
-    --destructive: 343 89% 37%;
+    /* Status Colors with MaliTrack Theme */
+    --destructive: 9 96% 56%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 76% 36%;
@@ -70,16 +70,16 @@ All colors MUST be HSL.
     /* Modern Borders & Inputs */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 343 89% 37%;
+    --ring: 9 96% 56%;
 
     --radius: 12px;
 
     /* Modern Professional Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(343 89% 37%), hsl(343 89% 42%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --gradient-header: linear-gradient(135deg, hsl(343 89% 37%), hsl(343 89% 32%));
+    --gradient-primary: linear-gradient(135deg, hsl(9 96% 56%), hsl(9 96% 62%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 88%));
+    --gradient-header: linear-gradient(135deg, hsl(9 96% 56%), hsl(9 96% 50%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 99%));
-    --gradient-accent: linear-gradient(135deg, hsl(343 89% 37% / 0.05), hsl(343 89% 37% / 0.1));
+    --gradient-accent: linear-gradient(135deg, hsl(9 96% 56% / 0.05), hsl(9 96% 56% / 0.1));
     
     /* Modern Elevated Shadows */
     --shadow-card: 0 1px 3px 0 hsl(220 15% 15% / 0.1), 0 1px 2px -1px hsl(220 15% 15% / 0.1);
@@ -153,7 +153,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 24%;
     --input: 0 0% 18%;
-    --ring: 343 89% 45%;
+    --ring: 9 96% 56%;
 
     /* Dark Mode - No gradients */
     --gradient-primary: none;

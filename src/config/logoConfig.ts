@@ -20,13 +20,13 @@
  */
 export const LOGO_CONFIG = {
   // Logo file name (place this file in /public/images/logo/)
-  LOGO_FILENAME: 'qsalogo.png',
+  LOGO_FILENAME: 'malitrack-logo.png',
 
   // Logo alt text for accessibility
-  LOGO_ALT_TEXT: 'Company Logo',
+  LOGO_ALT_TEXT: 'MaliTrack Logo',
 
   // Company name (used in various places)
-  COMPANY_NAME: 'QSA Solutions',
+  COMPANY_NAME: 'MaliTrack',
 
   // Logo dimensions (max width/height in pixels)
   MAX_WIDTH: 200,

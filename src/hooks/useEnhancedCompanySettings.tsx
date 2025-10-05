@@ -38,11 +38,11 @@ export interface EnhancedCompanySettings {
 }
 
 export const brandingPresets: BrandingPreset[] = [
-  { name: 'QSA Crimson', primaryColor: '#a1052d', description: 'Professional deep red' },
+  { name: 'MaliTrack Orange', primaryColor: '#FF371E', description: 'Bold and energetic' },
+  { name: 'Deep Red', primaryColor: '#A01504', description: 'Professional deep red' },
   { name: 'Ocean Blue', primaryColor: '#0ea5e9', description: 'Trustworthy blue' },
   { name: 'Forest Green', primaryColor: '#059669', description: 'Growth and stability' },
   { name: 'Royal Purple', primaryColor: '#7c3aed', description: 'Premium and elegant' },
-  { name: 'Sunset Orange', primaryColor: '#ea580c', description: 'Energetic and modern' },
   { name: 'Charcoal Gray', primaryColor: '#374151', description: 'Professional neutral' },
   { name: 'Emerald', primaryColor: '#10b981', description: 'Fresh and vibrant' },
   { name: 'Indigo', primaryColor: '#6366f1', description: 'Creative and innovative' },
@@ -119,10 +119,10 @@ export function useEnhancedCompanySettings() {
 
         const staticLogoPath = getStaticLogo();
         const defaultSettings: EnhancedCompanySettings = {
-          company_name: 'QSA Solutions',
-          primary_color: '#a1052d',
-          secondary_color: '#ffffff',
-          accent_color: '#f3f4f6',
+          company_name: 'MaliTrack',
+          primary_color: '#FF371E',
+          secondary_color: '#E1E1E1',
+          accent_color: '#323131',
           logo_position: 'left',
           logo_path: staticLogoPath, // Use static logo from configuration
           logo_base64: null, // Not needed for static files
@@ -149,10 +149,10 @@ export function useEnhancedCompanySettings() {
       }
 
       const defaultSettings: EnhancedCompanySettings = {
-        company_name: 'QSA Solutions',
-        primary_color: '#a1052d',
-        secondary_color: '#ffffff',
-        accent_color: '#f3f4f6',
+        company_name: 'MaliTrack',
+        primary_color: '#FF371E',
+        secondary_color: '#E1E1E1',
+        accent_color: '#323131',
         logo_position: 'left',
         address: '',
         phone: '',
@@ -221,8 +221,8 @@ export function useEnhancedCompanySettings() {
       if (!settings?.id) {
         // Create new settings
         const insertData = {
-          company_name: 'QSA Solutions',
-          primary_color: '#a1052d',
+          company_name: 'MaliTrack',
+          primary_color: '#FF371E',
           user_id: user.id,
           ...settingsUpdate,
           payment_settings: settingsUpdate.payment_settings || {}
