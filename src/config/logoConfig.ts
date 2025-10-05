@@ -19,7 +19,11 @@
  * 3. Optionally update LOGO_ALT_TEXT and COMPANY_NAME
  */
 export const LOGO_CONFIG = {
-  // Logo file name (place this file in /public/images/logo/)
+  // Logo file names for different themes
+  LOGO_FILENAME_LIGHT: 'malitrack-logo-light.jpg',
+  LOGO_FILENAME_DARK: 'malitrack-logo-dark.png',
+  
+  // Fallback logo (legacy)
   LOGO_FILENAME: 'malitrack-logo.png',
 
   // Logo alt text for accessibility
@@ -52,6 +56,15 @@ export const LOGO_PATHS = {
   get FULL_LOGO_PATH() {
     return `${this.LOGO_FOLDER}/${LOGO_CONFIG.LOGO_FILENAME}`;
   },
+  
+  // Theme-specific logo paths
+  get LIGHT_LOGO_PATH() {
+    return `${this.LOGO_FOLDER}/${LOGO_CONFIG.LOGO_FILENAME_LIGHT}`;
+  },
+  
+  get DARK_LOGO_PATH() {
+    return `${this.LOGO_FOLDER}/${LOGO_CONFIG.LOGO_FILENAME_DARK}`;
+  },
 
   // Fallback logo options (for when main logo fails to load)
   FALLBACK_LOGOS: [
@@ -67,9 +80,15 @@ export const LOGO_PATHS = {
 
 /**
  * Get the full logo path for the current client configuration
+ * @param theme - Optional theme to get specific logo ('light' or 'dark')
  * @returns Full path to the logo file
  */
-export function getLogoPath(): string {
+export function getLogoPath(theme?: 'light' | 'dark'): string {
+  if (theme === 'light') {
+    return LOGO_PATHS.LIGHT_LOGO_PATH;
+  } else if (theme === 'dark') {
+    return LOGO_PATHS.DARK_LOGO_PATH;
+  }
   return LOGO_PATHS.FULL_LOGO_PATH;
 }
 

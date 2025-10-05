@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Lock, Mail, User, Building2 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { useEnhancedCompanySettings } from '@/hooks/useEnhancedCompanySettings';
+import { useTheme } from '@/components/layout/ThemeProvider';
 import SignupFlow from './SignupFlow';
 
 export function LoginForm() {
@@ -27,10 +28,16 @@ export function LoginForm() {
 
   const { signIn } = useAuth();
   const { settings, getLogoForContext } = useEnhancedCompanySettings();
+  const { theme } = useTheme();
+
+  // Determine current theme for logo selection
+  const currentTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
 
   // Get company branding
-  const companyName = settings?.company_name || 'QSA Solutions';
-  const companyLogo = getLogoForContext('preview');
+  const companyName = settings?.company_name || 'MaliTrack';
+  const companyLogo = getLogoForContext('preview', currentTheme);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

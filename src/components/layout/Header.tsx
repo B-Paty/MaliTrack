@@ -27,9 +27,14 @@ export default function Header({ onToggleSidebar, companyName }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { settings, getLogoForContext } = useEnhancedCompanySettings();
   
+  // Determine current theme for logo selection
+  const currentTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
+  
   // Get company name from settings or fallback to prop
-  const displayCompanyName = settings?.company_name || companyName || 'QSA Solutions';
-  const companyLogo = getLogoForContext('header');
+  const displayCompanyName = settings?.company_name || companyName || 'MaliTrack';
+  const companyLogo = getLogoForContext('header', currentTheme);
 
   const handleSignOut = async () => {
     await signOut();

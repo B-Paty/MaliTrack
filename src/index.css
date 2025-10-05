@@ -111,38 +111,38 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Material Design Dark Theme - Following #121212 Palette */
+    /* Dark Theme with MaliTrack Orange */
     --background: 0 0% 7%; /* #121212 */
     --foreground: 0 0% 100%; /* White text on dark background */
 
-    --card: 0 0% 7%; /* #121212 - Same as background */
+    --card: 0 0% 10%; /* Slightly lighter than background */
     --card-foreground: 0 0% 100%; /* White text */
 
-    --popover: 0 0% 7%; /* #121212 */
-    --popover-foreground: 0 0% 100%; /* White text */
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Brand Colors - Material Design Blue Primary */
-    --brand-red: 210 100% 65%; /* Material Blue */
+    /* Brand Colors - MaliTrack Orange for Dark Mode */
+    --brand-red: 9 96% 56%; /* #FF371E - MaliTrack Orange */
     --brand-white: 0 0% 7%; /* #121212 */
     
-    --primary: 210 100% 65%; /* Material Blue */
-    --primary-foreground: 0 0% 0%; /* Black text on blue */
-    --primary-hover: 210 100% 70%;
-    --primary-glow: 210 100% 75%;
-    --primary-light: 210 100% 20%;
-    --primary-muted: 210 100% 55%;
+    --primary: 9 96% 56%; /* #FF371E - MaliTrack Orange */
+    --primary-foreground: 0 0% 100%; /* White text on orange */
+    --primary-hover: 9 96% 62%;
+    --primary-glow: 9 96% 65%;
+    --primary-light: 9 96% 15%;
+    --primary-muted: 9 96% 45%;
 
-    --secondary: 180 100% 50%; /* #03DAC6 - Material Teal 200 */
-    --secondary-foreground: 0 0% 0%; /* Black text on teal */
+    --secondary: 0 0% 18%; /* Dark gray */
+    --secondary-foreground: 0 0% 100%; /* White text */
 
     --muted: 0 0% 15%; /* Slightly lighter than background */
     --muted-foreground: 0 0% 70%; /* Muted white text */
 
-    --accent: 0 0% 15%; /* Slightly lighter accent */
+    --accent: 0 0% 18%; /* Dark accent */
     --accent-foreground: 0 0% 100%; /* White text */
 
-    --destructive: 350 100% 70%; /* #CF6679 - Material Design Error */
-    --destructive-foreground: 0 0% 0%; /* Black text on error */
+    --destructive: 9 96% 56%; /* MaliTrack Orange for errors */
+    --destructive-foreground: 0 0% 100%;
 
     --success: 142 76% 40%;
     --success-foreground: 0 0% 100%;

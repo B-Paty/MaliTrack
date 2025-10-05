@@ -62,22 +62,16 @@ export function useEnhancedCompanySettings() {
   const { user } = useAuth();
 
   /**
-   * Get logo from static file system
+   * Get logo from static file system with theme support
    * Logo files are placed manually in /public/images/logo/ folder
    * This replaces the dynamic upload system with static file loading
    */
-  const getStaticLogo = useCallback((): string => {
+  const getStaticLogo = useCallback((theme?: 'light' | 'dark'): string => {
     try {
-
-      
-      // Get the configured logo path
-      const logoPath = getLogoPath();
-
-
+      // Get the configured logo path for the specified theme
+      const logoPath = getLogoPath(theme);
       return logoPath;
     } catch (error) {
-
-
       // Fallback to default logo if config fails
       const fallbackLogos = ['/images/contactless.png', '/images/card (1).png', '/images/LIPA.png'];
       return fallbackLogos[0];
@@ -317,10 +311,10 @@ export function useEnhancedCompanySettings() {
    * Get logo for specific context (header, export, preview)
    * Uses static logo system instead of dynamic uploads
    */
-  const getLogoForContext = useCallback((context: 'header' | 'export' | 'preview') => {
+  const getLogoForContext = useCallback((context: 'header' | 'export' | 'preview', theme?: 'light' | 'dark') => {
     try {
-      // Get static logo path from configuration
-      const staticLogoPath = getStaticLogo();
+      // Get static logo path from configuration with theme support
+      const staticLogoPath = getStaticLogo(theme);
 
       if (!staticLogoPath) {
         return null;

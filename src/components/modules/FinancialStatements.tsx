@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
+import { useTheme } from "@/components/layout/ThemeProvider";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PDFExporter } from "@/lib/pdfExporter";
 import { useToast } from "@/hooks/use-toast";
@@ -26,11 +27,17 @@ type StatementType = 'income' | 'balance' | 'cash';
 export default function FinancialStatements() {
   const { accounts, loading: accountsLoading } = useFilteredAccounts();
   const { settings, getLogoForContext } = useEnhancedCompanySettings();
+  const { theme } = useTheme();
   const { toast } = useToast();
   const { dateRange } = useDateRange();
   
   const [selectedStatement, setSelectedStatement] = useState<StatementType>('income');
   const [exporting, setExporting] = useState(false);
+
+  // Determine current theme for logo selection
+  const currentTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
 
   // Use the global date range
   const dateFrom = dateRange.startDate;
@@ -145,8 +152,8 @@ export default function FinancialStatements() {
   const renderIncomeStatement = () => {
     if (!statementData) return null;
 
-    const companyLogo = getLogoForContext('preview');
-    const companyName = settings?.company_name || 'QSA Solutions';
+    const companyLogo = getLogoForContext('preview', currentTheme);
+    const companyName = settings?.company_name || 'MaliTrack';
 
     return (
       <div className="space-y-6">
@@ -242,8 +249,8 @@ export default function FinancialStatements() {
   const renderBalanceSheet = () => {
     if (!statementData) return null;
 
-    const companyLogo = getLogoForContext('preview');
-    const companyName = settings?.company_name || 'QSA Solutions';
+    const companyLogo = getLogoForContext('preview', currentTheme);
+    const companyName = settings?.company_name || 'MaliTrack';
 
     return (
       <div className="space-y-6">

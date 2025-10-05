@@ -46,7 +46,12 @@ export default function EnhancedHeader({ onToggleSidebar, className }: EnhancedH
     setTheme(currentTheme === "dark" ? "light" : "dark");
   };
 
-  const companyLogo = getLogoForContext('header');
+  // Determine current theme for logo selection
+  const currentTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
+
+  const companyLogo = getLogoForContext('header', currentTheme);
   const companyName = settings?.company_name || 'MaliTrack';
 
 

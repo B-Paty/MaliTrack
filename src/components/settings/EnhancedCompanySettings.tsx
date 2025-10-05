@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
 import { usePaymentSettings } from "@/hooks/usePaymentSettings";
+import { useTheme } from "@/components/layout/ThemeProvider";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import InventorySettings from "@/components/modules/InventorySettings";
@@ -58,6 +59,7 @@ const ColorPresetCard = ({ preset, isSelected, onSelect }: ColorPresetCardProps)
 export default function EnhancedCompanySettings() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const {
     settings,
     loading,
@@ -73,6 +75,11 @@ export default function EnhancedCompanySettings() {
   const [localPayments, setLocalPayments] = useState(paymentSettings);
 
   const [activeTab, setActiveTab] = useState("company");
+  
+  // Determine current theme for logo selection
+  const currentTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
 
   // Update local settings when database settings change
   useEffect(() => {
@@ -141,7 +148,7 @@ export default function EnhancedCompanySettings() {
     );
   }
 
-  const currentLogo = getLogoForContext('preview');
+  const currentLogo = getLogoForContext('preview', currentTheme);
 
   return (
     <div className="space-y-6">
