@@ -31,8 +31,11 @@ export const formatNumber = (value: number): string => {
  * Parse string to number for calculations - Supports large whole numbers
  */
 export const parseNumber = (value: string): number => {
-  const cleanValue = value.replace(/[^0-9]/g, '');
-  const parsed = parseInt(cleanValue, 10);
+  // Remove all non-numeric characters except commas
+  const cleanValue = value.replace(/[^0-9,]/g, '');
+  // Remove commas and parse
+  const numberString = cleanValue.replace(/,/g, '');
+  const parsed = parseInt(numberString, 10);
   return isNaN(parsed) ? 0 : parsed;
 };
 

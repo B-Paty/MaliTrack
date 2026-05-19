@@ -1,16 +1,18 @@
 import { useMemo, useState } from "react";
-import { Calendar, Download, CheckCircle, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Calendar, CheckCircle, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { useAccounts } from "@/hooks/useAccounts";
+import { Button } from "@/components/ui/button";
+import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
 import { formatCurrency, getCategoryOrder } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { PDFExporter } from "@/lib/pdfExporter";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import ExportButtons from "@/components/exports/ExportButtons";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useDateRange } from "@/contexts/DateRangeContext";
 
 /**
  * TrialBalance
@@ -19,11 +21,8 @@ import { useToast } from "@/hooks/use-toast";
  * - Shows totals and balance status
  */
 export default function TrialBalance() {
-  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
-  const { accounts, loading, error } = useAccounts();
-  const { settings } = useCompanySettings();
-  const { toast } = useToast();
-  const [exporting, setExporting] = useState(false);
+  const { accounts, loading, error } = useFilteredAccounts();
+  const { dateRange } = useDateRange();
 
   const trialBalanceData = useMemo(() => {
     // Group accounts by category and calculate balances
@@ -37,19 +36,26 @@ export default function TrialBalance() {
       }
       categories[account.category].push(account);
 
-      // Calculate debit/credit presentation based on account type and normal balance
-      const balance = account.current_balance;
+      // Use transaction-based balance (can be positive or negative)
+      const transactionBalance = account.current_balance;
       
-      if (balance > 0) {
-        if (
-          account.category === 'Current Asset' ||
-          account.category === 'Fixed Asset' ||
-          account.category === 'Expense' ||
-          (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
-        ) {
-          totalDebits += balance;
-        } else {
-          totalCredits += balance;
+      // For trial balance, determine which side based on normal balance and actual balance
+      if (Math.abs(transactionBalance) > 0.01) {
+        // Assets and Expenses normally have debit balances
+        if (account.normal_balance === 'debit') {
+          if (transactionBalance >= 0) {
+            totalDebits += transactionBalance; // Normal debit balance
+          } else {
+            totalCredits += Math.abs(transactionBalance); // Credit balance in debit account
+          }
+        } 
+        // Liabilities, Equity, and Revenue normally have credit balances
+        else if (account.normal_balance === 'credit') {
+          if (transactionBalance <= 0) {
+            totalCredits += Math.abs(transactionBalance); // Normal credit balance
+          } else {
+            totalDebits += transactionBalance; // Debit balance in credit account
+          }
         }
       }
     });
@@ -70,23 +76,28 @@ export default function TrialBalance() {
   }, [accounts]);
 
   const getBalancePresentation = (account: typeof accounts[0]) => {
-    const balance = account.current_balance;
+    const transactionBalance = account.current_balance;
     
-    if (balance === 0) {
+    if (Math.abs(transactionBalance) < 0.01) {
       return { debit: 0, credit: 0 };
     }
 
-    // Determine how to present the balance based on account type
-    if (
-      account.category === 'Current Asset' ||
-      account.category === 'Fixed Asset' ||
-      account.category === 'Expense' ||
-      (account.category === 'Equity' && account.normal_balance === 'debit') // Dividends Paid
-    ) {
-      return { debit: balance, credit: 0 };
-    } else {
-      return { debit: 0, credit: balance };
+    // Show balance in correct column based on normal balance and actual balance
+    if (account.normal_balance === 'debit') {
+      if (transactionBalance >= 0) {
+        return { debit: transactionBalance, credit: 0 }; // Normal debit balance
+      } else {
+        return { debit: 0, credit: Math.abs(transactionBalance) }; // Credit balance in debit account
+      }
+    } else if (account.normal_balance === 'credit') {
+      if (transactionBalance <= 0) {
+        return { debit: 0, credit: Math.abs(transactionBalance) }; // Normal credit balance  
+      } else {
+        return { debit: transactionBalance, credit: 0 }; // Debit balance in credit account
+      }
     }
+    
+    return { debit: 0, credit: 0 };
   };
 
   const getCategoryTotal = (accountList: typeof accounts) => {
@@ -113,55 +124,20 @@ export default function TrialBalance() {
     'Expense': 'bg-warning/20 text-warning border-warning/30',
   };
 
-  const handleExport = async () => {
-    if (!accounts.length) {
-      toast({
-        variant: 'destructive',
-        title: 'Export Error',
-        description: 'No accounts data to export',
-      });
-      return;
-    }
-    
-    setExporting(true);
-    try {
-      const exporter = new PDFExporter({
-        title: 'Trial Balance',
-        subtitle: `As of ${new Date(reportDate).toLocaleDateString()}`,
-        companyName: settings?.company_name || 'QSA Solutions',
-        reportDate: reportDate,
-        pageSize: 'a4',
-        orientation: 'portrait'
-      });
-      
-      exporter.exportTrialBalance(accounts, `trial-balance-${reportDate}.pdf`);
-      
-      toast({
-        title: 'Success',
-        description: 'Trial Balance exported successfully',
-      });
-    } catch (error) {
-      console.error('Trial Balance export failed:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Export Error',
-        description: error instanceof Error ? error.message : 'Failed to export PDF',
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
+
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading trial balance...</p>
+          <p className="text-foreground/70">Loading trial balance...</p>
         </div>
       </div>
     );
   }
+
+
 
   if (error) {
     return (
@@ -176,11 +152,14 @@ export default function TrialBalance() {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <DateRangePicker title="Trial Balance Period" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Trial Balance</h1>
-          <p className="text-muted-foreground mt-2">Verify that total debits equal total credits across all accounts</p>
+          <p className="text-foreground/70 mt-2">Verify that total debits equal total credits across all accounts</p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -198,10 +177,7 @@ export default function TrialBalance() {
             )}
           </Badge>
           
-          <Button variant="outline" className="gap-2 hover:shadow-md transition-shadow" onClick={handleExport} disabled={exporting}>
-            <Download className="h-4 w-4" />
-            {exporting ? 'Exporting...' : 'Export PDF'}
-          </Button>
+          <ExportButtons reportTitle="Trial Balance" />
         </div>
       </div>
 
@@ -210,30 +186,25 @@ export default function TrialBalance() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Report Parameters
+            Report Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <Label htmlFor="reportDate">As of Date</Label>
-              <Input
-                id="reportDate"
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-                min="2025-01-01"
-                max="2026-12-31"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="text-center">
+              <p className="text-sm text-foreground/70 mb-2">Report Period</p>
+              <p className="text-sm font-semibold text-foreground">
+                {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
+              </p>
             </div>
             
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Total Accounts</p>
-              <p className="text-2xl font-bold text-foreground">{accounts.length}</p>
+              <p className="text-sm text-foreground/70 mb-2">Active Accounts</p>
+              <p className="text-2xl font-bold text-foreground">{accounts.filter(acc => Math.abs(acc.current_balance) > 0).length}</p>
             </div>
             
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Balance Status</p>
+              <p className="text-sm text-foreground/70 mb-2">Balance Status</p>
               <Badge variant={trialBalanceData.isBalanced ? "default" : "destructive"} className="text-lg p-2">
                 {trialBalanceData.isBalanced ? "In Balance" : "Out of Balance"}
               </Badge>
@@ -241,6 +212,8 @@ export default function TrialBalance() {
           </div>
         </CardContent>
       </Card>
+
+
 
       {/* Trial Balance Report */}
       <div className="space-y-4">
@@ -257,16 +230,16 @@ export default function TrialBalance() {
                       {category}
                     </Badge>
                   </CardTitle>
-                  <div className="flex gap-8 text-sm">
-                    <div className="text-right">
-                      <p className="text-muted-foreground">Category Debits</p>
-                      <p className="font-bold text-foreground">{formatCurrency(categoryTotals.debit)}</p>
+                    <div className="flex gap-8 text-sm">
+                      <div className="text-right">
+                        <p className="text-foreground dark:text-foreground font-medium">Category Debits</p>
+                        <p className="font-bold text-foreground dark:text-foreground">{formatCurrency(categoryTotals.debit)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-foreground dark:text-foreground font-medium">Category Credits</p>
+                        <p className="font-bold text-foreground dark:text-foreground">{formatCurrency(categoryTotals.credit)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-muted-foreground">Category Credits</p>
-                      <p className="font-bold text-foreground">{formatCurrency(categoryTotals.credit)}</p>
-                    </div>
-                  </div>
                 </div>
               </CardHeader>
               
@@ -275,15 +248,15 @@ export default function TrialBalance() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Account Code</th>
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Account Name</th>
-                        <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Debit Balance</th>
-                        <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Credit Balance</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Account Code</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Account Name</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground dark:text-foreground">Debit Balance</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground dark:text-foreground">Credit Balance</th>
                       </tr>
                     </thead>
                     <tbody>
                       {accountList
-                        .filter(account => account.current_balance > 0)
+                        .filter(account => Math.abs(account.current_balance) > 0)
                         .map((account, index) => {
                           const presentation = getBalancePresentation(account);
                           
@@ -340,11 +313,11 @@ export default function TrialBalance() {
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-primary/20">
-                  <th className="text-left py-4 px-4 text-lg font-bold text-foreground" colSpan={2}>
+                  <th className="text-left py-4 px-4 text-lg font-bold text-foreground dark:text-foreground" colSpan={2}>
                     TRIAL BALANCE TOTALS
                   </th>
-                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground">TOTAL DEBITS</th>
-                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground">TOTAL CREDITS</th>
+                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground dark:text-foreground">TOTAL DEBITS</th>
+                  <th className="text-right py-4 px-4 text-lg font-bold text-foreground dark:text-foreground">TOTAL CREDITS</th>
                 </tr>
               </thead>
               <tbody>
@@ -357,7 +330,7 @@ export default function TrialBalance() {
                         <AlertTriangle className="h-5 w-5 text-destructive" />
                       )}
                       <span className="font-semibold">
-                        As of {new Date(reportDate).toLocaleDateString()}
+                        Period: {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
                       </span>
                     </div>
                   </td>
@@ -373,7 +346,7 @@ export default function TrialBalance() {
                   </td>
                 </tr>
                 <tr className="bg-primary/10">
-                  <td colSpan={2} className="py-2 px-4 text-sm font-medium text-muted-foreground">
+                  <td colSpan={2} className="py-2 px-4 text-sm font-medium text-foreground">
                     Difference (should be zero)
                   </td>
                   <td colSpan={2} className="py-2 px-4 text-right">

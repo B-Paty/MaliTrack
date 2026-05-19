@@ -12,25 +12,38 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useAccounts } from "@/hooks/useAccounts";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useFilteredAccounts } from "@/hooks/useFilteredAccounts";
+import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
+import { useTheme } from "@/components/layout/ThemeProvider";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PDFExporter } from "@/lib/pdfExporter";
 import { useToast } from "@/hooks/use-toast";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import { useDateRange } from "@/contexts/DateRangeContext";
+import { PeriodClosingDialog } from "@/components/modules/PeriodClosingDialog";
 
 type StatementType = 'income' | 'balance' | 'cash';
 
 export default function FinancialStatements() {
-  const { accounts, loading: accountsLoading } = useAccounts();
-  const { settings } = useCompanySettings();
+  const { accounts, loading: accountsLoading } = useFilteredAccounts();
+  const { settings, getLogoForContext } = useEnhancedCompanySettings();
+  const { theme } = useTheme();
   const { toast } = useToast();
+  const { dateRange } = useDateRange();
   
   const [selectedStatement, setSelectedStatement] = useState<StatementType>('income');
-  const [dateFrom, setDateFrom] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
-  const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
   const [exporting, setExporting] = useState(false);
 
-  // Calculate statement data
+  // Determine current theme for logo selection
+  const currentTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
+
+  // Use the global date range
+  const dateFrom = dateRange.startDate;
+  const dateTo = dateRange.endDate;
+
+  // Calculate statement data with proper accounting rules
   const statementData = useMemo(() => {
     if (!accounts.length) return null;
 
@@ -40,15 +53,45 @@ export default function FinancialStatements() {
     const liabilities = accounts.filter(acc => acc.category.includes('Liability'));
     const equity = accounts.filter(acc => acc.category === 'Equity');
 
-    const totalRevenue = revenue.reduce((sum, acc) => sum + acc.current_balance, 0);
-    const totalExpenses = expenses.reduce((sum, acc) => sum + acc.current_balance, 0);
+    // Revenue accounts: credit-normal (positive balance = credit balance)
+    // Display as positive amounts
+    const totalRevenue = revenue.reduce((sum, acc) => {
+      // For revenue, positive current_balance is correct (represents credit)
+      return sum + Math.abs(acc.current_balance);
+    }, 0);
+    
+    // Expense accounts: debit-normal (positive balance = debit balance)
+    // Display as positive amounts
+    const totalExpenses = expenses.reduce((sum, acc) => {
+      // For expenses, positive current_balance is correct (represents debit)
+      return sum + Math.abs(acc.current_balance);
+    }, 0);
+    
+    // Net income: Revenue - Expenses
     const netIncome = totalRevenue - totalExpenses;
 
-    const totalAssets = assets.reduce((sum, acc) => 
-      acc.normal_balance === 'debit' ? sum + acc.current_balance : sum - acc.current_balance, 0
-    );
-    const totalLiabilities = liabilities.reduce((sum, acc) => sum + acc.current_balance, 0);
-    const totalEquity = equity.reduce((sum, acc) => sum + acc.current_balance, 0) + netIncome;
+    // Asset accounts: debit-normal (positive balance = debit balance)
+    const totalAssets = assets.reduce((sum, acc) => {
+      if (acc.category === 'Contra-Asset') {
+        // Contra-assets reduce total assets (e.g., Accumulated Depreciation)
+        return sum - Math.abs(acc.current_balance);
+      }
+      // Regular assets: positive debit balance is normal
+      // Use the actual balance (which should be positive for assets)
+      return sum + acc.current_balance;
+    }, 0);
+
+    // Liability accounts: credit-normal (positive balance = credit balance)
+    const totalLiabilities = liabilities.reduce((sum, acc) => {
+      // Liabilities should have positive balances (representing credits)
+      return sum + Math.abs(acc.current_balance);
+    }, 0);
+    
+    // Equity accounts: credit-normal (positive balance = credit balance)
+    // Add current period net income
+    const totalEquity = equity.reduce((sum, acc) => {
+      return sum + Math.abs(acc.current_balance);
+    }, 0) + netIncome;
 
     return {
       revenue,
@@ -87,7 +130,7 @@ export default function FinancialStatements() {
       });
       
       if (selectedStatement === 'income' || selectedStatement === 'balance') {
-        exporter.exportFinancialStatement(selectedStatement, statementData, { from: dateFrom, to: dateTo });
+        await exporter.exportFinancialStatement(selectedStatement, statementData, { from: dateFrom, to: dateTo }, undefined, settings);
         
         toast({
           title: 'Success',
@@ -109,10 +152,34 @@ export default function FinancialStatements() {
   const renderIncomeStatement = () => {
     if (!statementData) return null;
 
+    const companyLogo = getLogoForContext('preview', currentTheme);
+    const companyName = settings?.company_name || 'MaliTrack';
+
     return (
       <div className="space-y-6">
         <div className="text-center border-b border-border pb-6">
-          <h2 className="text-2xl font-bold text-foreground">{settings?.company_name || 'QSA Solutions'}</h2>
+          {/* Company Logo */}
+          {companyLogo && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={companyLogo} 
+                alt={`${companyName} Logo`}
+                className="h-16 w-auto object-contain"
+                onError={(e) => {
+                  console.warn('Failed to load company logo:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          {/* Company Name with Branding */}
+          <h2 className="text-2xl font-bold" style={{ 
+            color: settings?.primary_color || '#a1052d' 
+          }}>
+            {companyName}
+          </h2>
+          
           <h3 className="text-xl font-semibold text-muted-foreground mt-2">Income Statement</h3>
           <p className="text-muted-foreground mt-1">
             For the period from {formatDate(dateFrom)} to {formatDate(dateTo)}
@@ -120,11 +187,16 @@ export default function FinancialStatements() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">REVENUE</h4>
+          <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+            color: settings?.primary_color || '#a1052d',
+            borderColor: settings?.primary_color || '#a1052d'
+          }}>
+            REVENUE
+          </h4>
           {statementData.revenue.map(account => (
             <div key={account.account_code} className="flex justify-between py-2">
               <span className="text-foreground">{account.account_name}</span>
-              <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+              <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
             </div>
           ))}
           <div className="flex justify-between py-2 border-t border-border font-semibold">
@@ -134,11 +206,16 @@ export default function FinancialStatements() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">EXPENSES</h4>
+          <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+            color: settings?.primary_color || '#a1052d',
+            borderColor: settings?.primary_color || '#a1052d'
+          }}>
+            EXPENSES
+          </h4>
           {statementData.expenses.map(account => (
             <div key={account.account_code} className="flex justify-between py-2">
               <span className="text-foreground">{account.account_name}</span>
-              <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+              <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
             </div>
           ))}
           <div className="flex justify-between py-2 border-t border-border font-semibold">
@@ -147,9 +224,13 @@ export default function FinancialStatements() {
           </div>
         </div>
 
-        <div className="border-t-2 border-primary pt-4">
+        <div className="border-t-2 pt-4" style={{ 
+          borderColor: settings?.primary_color || '#a1052d' 
+        }}>
           <div className="flex justify-between py-3 text-xl font-bold">
-            <span className="text-foreground">NET INCOME</span>
+            <span className="text-foreground">
+              {statementData.netIncome >= 0 ? 'NET INCOME' : 'NET LOSS'}
+            </span>
             <span className={`font-mono flex items-center gap-2 ${
               statementData.netIncome >= 0 ? 'text-success' : 'text-destructive'
             }`}>
@@ -168,22 +249,51 @@ export default function FinancialStatements() {
   const renderBalanceSheet = () => {
     if (!statementData) return null;
 
+    const companyLogo = getLogoForContext('preview', currentTheme);
+    const companyName = settings?.company_name || 'MaliTrack';
+
     return (
       <div className="space-y-6">
         <div className="text-center border-b border-border pb-6">
-          <h2 className="text-2xl font-bold text-foreground">{settings?.company_name || 'QSA Solutions'}</h2>
+          {/* Company Logo */}
+          {companyLogo && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={companyLogo} 
+                alt={`${companyName} Logo`}
+                className="h-16 w-auto object-contain"
+                onError={(e) => {
+                  console.warn('Failed to load company logo:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          {/* Company Name with Branding */}
+          <h2 className="text-2xl font-bold" style={{ 
+            color: settings?.primary_color || '#a1052d' 
+          }}>
+            {companyName}
+          </h2>
+          
           <h3 className="text-xl font-semibold text-muted-foreground mt-2">Balance Sheet</h3>
           <p className="text-muted-foreground mt-1">As of {formatDate(dateTo)}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">ASSETS</h4>
+            <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+              color: settings?.primary_color || '#a1052d',
+              borderColor: settings?.primary_color || '#a1052d'
+            }}>
+              ASSETS
+            </h4>
             {statementData.assets.map(account => (
               <div key={account.account_code} className="flex justify-between py-2">
                 <span className="text-foreground">{account.account_name}</span>
                 <span className="font-mono text-foreground">
-                  {formatCurrency(account.normal_balance === 'debit' ? account.current_balance : -account.current_balance)}
+                  {formatCurrency(Math.abs(account.current_balance))}
                 </span>
               </div>
             ))}
@@ -195,11 +305,16 @@ export default function FinancialStatements() {
 
           <div className="space-y-6">
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">LIABILITIES</h4>
+              <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+                color: settings?.primary_color || '#a1052d',
+                borderColor: settings?.primary_color || '#a1052d'
+              }}>
+                LIABILITIES
+              </h4>
               {statementData.liabilities.map(account => (
                 <div key={account.account_code} className="flex justify-between py-2">
                   <span className="text-foreground">{account.account_name}</span>
-                  <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+                  <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
                 </div>
               ))}
               <div className="flex justify-between py-2 border-t border-border font-semibold">
@@ -209,16 +324,27 @@ export default function FinancialStatements() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">EQUITY</h4>
+              <h4 className="text-lg font-semibold border-b pb-2" style={{ 
+                color: settings?.primary_color || '#a1052d',
+                borderColor: settings?.primary_color || '#a1052d'
+              }}>
+                EQUITY
+              </h4>
               {statementData.equity.map(account => (
                 <div key={account.account_code} className="flex justify-between py-2">
                   <span className="text-foreground">{account.account_name}</span>
-                  <span className="font-mono text-foreground">{formatCurrency(account.current_balance)}</span>
+                  <span className="font-mono text-foreground">{formatCurrency(Math.abs(account.current_balance))}</span>
                 </div>
               ))}
               <div className="flex justify-between py-2">
-                <span className="text-foreground">Retained Earnings (Current Period)</span>
-                <span className="font-mono text-foreground">{formatCurrency(statementData.netIncome)}</span>
+                <span className="text-foreground">
+                  {statementData.netIncome >= 0 ? 'Retained Earnings (Current Period)' : 'Accumulated Loss'}
+                </span>
+                <span className={`font-mono ${
+                  statementData.netIncome >= 0 ? 'text-foreground' : 'text-destructive'
+                }`}>
+                  {formatCurrency(statementData.netIncome)}
+                </span>
               </div>
               <div className="flex justify-between py-2 border-t border-border font-semibold">
                 <span className="text-foreground">Total Equity</span>
@@ -226,7 +352,9 @@ export default function FinancialStatements() {
               </div>
             </div>
 
-            <div className="border-t-2 border-primary pt-4">
+            <div className="border-t-2 pt-4" style={{ 
+              borderColor: settings?.primary_color || '#a1052d' 
+            }}>
               <div className="flex justify-between py-2 font-semibold text-lg">
                 <span className="text-foreground">Total Liabilities & Equity</span>
                 <span className="font-mono text-foreground">{formatCurrency(statementData.totalLiabilities + statementData.totalEquity)}</span>
@@ -251,6 +379,9 @@ export default function FinancialStatements() {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <DateRangePicker title="Financial Statements Period" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -261,6 +392,7 @@ export default function FinancialStatements() {
         </div>
         
         <div className="flex items-center gap-2">
+          <PeriodClosingDialog />
           <Badge variant="outline" className="gap-1 text-sm px-3 py-1">
             <Calendar className="h-4 w-4" />
             {formatDate(dateFrom)} - {formatDate(dateTo)}
@@ -292,27 +424,7 @@ export default function FinancialStatements() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="date-from" className="text-sm font-semibold text-foreground">From Date</Label>
-              <Input
-                id="date-from"
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="mt-1.5 h-11"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="date-to" className="text-sm font-semibold text-foreground">To Date</Label>
-              <Input
-                id="date-to"
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="mt-1.5 h-11"
-              />
-            </div>
+
           </div>
         </CardContent>
       </Card>

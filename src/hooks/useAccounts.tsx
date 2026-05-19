@@ -13,9 +13,11 @@
  * - updateAccount(code, updates): Promise<Account> update and merge
  * - deleteAccount(code): Promise<void> remove by primary key
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useLeakDetection } from '@/hooks/useLeakDetection';
 
 export interface Account {
   account_code: string;
@@ -32,24 +34,42 @@ export function useAccounts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { logDataAccess } = useLeakDetection();
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      if (!user) {
+        console.warn('No authenticated user found');
+        setAccounts([]);
+        return;
+      }
+
+
+
       const { data, error: fetchError } = await supabase
         .from('chart_of_accounts')
         .select('*')
+        .eq('user_id', user.id)
         .order('account_code');
 
       if (fetchError) {
+        console.error('Database error:', fetchError);
         throw fetchError;
       }
+
+
+
+      // Log data access for leak detection
+      await logDataAccess('chart_of_accounts', 'SELECT', undefined, data?.length || 0);
 
       setAccounts(data as Account[] || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch accounts';
+      console.error('fetchAccounts error:', err);
       setError(errorMessage);
       toast({
         variant: 'destructive',
@@ -59,17 +79,31 @@ export function useAccounts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, logDataAccess, toast]);
 
   const createAccount = async (accountData: Omit<Account, 'created_at' | 'updated_at'>) => {
     try {
+      if (!user) {
+        throw new Error('User must be authenticated to create accounts');
+      }
+
+
+
       const { data, error } = await supabase
         .from('chart_of_accounts')
-        .insert([accountData])
+        .insert([{ ...accountData, user_id: user.id }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Create account error:', error);
+        throw error;
+      }
+
+
+
+      // Log data access for leak detection
+      await logDataAccess('chart_of_accounts', 'INSERT', data.account_code);
 
       setAccounts(prev => [...prev, data as Account]);
       toast({
@@ -80,6 +114,7 @@ export function useAccounts() {
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create account';
+      console.error('createAccount error:', err);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -148,7 +183,7 @@ export function useAccounts() {
 
   useEffect(() => {
     fetchAccounts();
-  }, []);
+  }, [fetchAccounts]);
 
   return {
     accounts,

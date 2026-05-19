@@ -4,7 +4,7 @@
  * - Collapsible on mobile
  * - Highlights active module and calls onModuleChange
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Calculator, 
   FileText, 
@@ -14,9 +14,16 @@ import {
   ChevronLeft,
   Building2,
   PlusCircle,
-  Sparkles
+  Sparkles,
+  Shield,
+  UserCheck,
+  Search,
+  Package,
+  ShoppingCart,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -33,7 +40,7 @@ type MenuGroup = {
   items: Array<{
     id: string;
     label: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
   }>;
 };
 
@@ -54,7 +61,10 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Business Operations",
     items: [
+      { id: 'major-client', label: 'Major Client', icon: UserCheck },
       { id: 'invoices', label: 'Invoices', icon: FileText },
+      { id: 'sales-module', label: 'Sales Module', icon: ShoppingCart },
+      { id: 'inventory-management', label: 'Inventory Management', icon: Package },
     ]
   },
   {
@@ -70,31 +80,83 @@ const menuGroups: MenuGroup[] = [
       { id: 'tax-settings', label: 'Tax Settings', icon: Settings },
       { id: 'company-settings', label: 'Company Settings', icon: Building2 },
     ]
+  },
+  {
+    label: "Security & Monitoring",
+    items: [
+      { id: 'security', label: 'Security Dashboard', icon: Shield },
+    ]
+  },
+  {
+    label: "Support",
+    items: [
+      { id: 'help', label: 'Help & Support', icon: HelpCircle },
+    ]
   }
 ];
 
 export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange }: SidebarProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
+  
+  const filteredMenuGroups = menuGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(group => group.items.length > 0);
+
   return (
     <>
       {/* Overlay for mobile */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+        <div
+          className="fixed inset-0 z-40 lg:hidden bg-black/20 backdrop-blur-sm"
           onClick={onClose}
+          style={{ 
+            overscrollBehavior: 'contain',
+            touchAction: 'none'
+          }}
         />
       )}
       
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-brand-white border-r border-primary/10 z-50 transform transition-smooth duration-300 ease-in-out lg:relative lg:top-0 lg:h-[calc(100vh-4rem)] lg:translate-x-0 lg:z-auto shadow-premium",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed top-16 h-[calc(100vh-4rem)] w-72 bg-background z-50 transition-transform duration-300 ease-in-out overflow-hidden overscroll-contain shadow-elevated backdrop-blur-sm rounded-tr-2xl",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
+        style={{ 
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          left: '0px',
+          marginLeft: '0px',
+          paddingLeft: '0px',
+          borderTopRightRadius: '1rem',
+          borderBottomRightRadius: '0px',
+          borderTopLeftRadius: '0px',
+          borderBottomLeftRadius: '0px'
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-4 border-b border-primary/10">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-brand-white" />
@@ -110,12 +172,29 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </div>
+            
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search modules..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-3 py-4">
-            <div className="space-y-6 pb-24">
-              {menuGroups.map((group, index) => (
+          <ScrollArea className="flex-1 px-3 py-4 overscroll-contain">
+            <div
+              className="space-y-6 pb-24 overscroll-none"
+              style={{ 
+                overscrollBehavior: 'contain',
+                touchAction: 'pan-y'
+              }}
+            >
+              {filteredMenuGroups.map((group, index) => (
                 <div key={index} className="space-y-2">
                   <div className="px-3 mb-3">
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-primary/20 pb-1">{group.label}</h3>
@@ -123,15 +202,15 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeModule === item.id;
-                    
+
                     return (
                       <Button
                         key={item.id}
                         variant={isActive ? "default" : "ghost"}
-                        className={cn(
+                                                className={cn(
                           "w-full justify-start gap-3 h-11 px-3 text-sm font-medium transition-fast rounded-xl",
-                          isActive 
-                            ? "bg-gradient-primary text-brand-white shadow-glow-strong hover:bg-gradient-primary" 
+                          isActive
+                            ? "bg-gradient-primary text-brand-white shadow-glow-strong hover:bg-gradient-primary"
                             : "text-muted-foreground hover:text-primary hover:bg-primary/5 hover:shadow-card"
                         )}
                         onClick={() => {
@@ -152,8 +231,8 @@ export default function Sidebar({ isOpen, onClose, activeModule, onModuleChange 
             </div>
           </ScrollArea>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-primary/10">
+          {/* Footer - Hidden on mobile */}
+          <div className="p-4 border-t border-primary/10 hidden lg:block">
             <div className="bg-gradient-accent rounded-xl p-4 border border-primary/10">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">

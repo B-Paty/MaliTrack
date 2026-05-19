@@ -16,68 +16,98 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useEnhancedCompanySettings } from "@/hooks/useEnhancedCompanySettings";
 import { useTaxSettings } from "@/hooks/useTaxSettings";
 import { usePaymentSettings } from "@/hooks/usePaymentSettings";
+import { useInvoices } from "@/hooks/useInvoices";
+import { useMajorClients } from "@/hooks/useMajorClients";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  dateOfService: string;
-  dateOfInvoice: string;
-  clientName: string;
-  clientEmail: string;
-  clientAddress: string;
-  clientPhone: string;
-  items: InvoiceItem[];
-  subtotal: number;
-  taxAmount: number;
-  totalAmount: number;
-  termsAndConditions: string;
-  personalNote: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
-  dueDate: string;
-}
+// Use the Invoice types from the hook
+import type { Invoice, InvoiceItem } from "@/hooks/useInvoices";
 
 export default function Invoices() {
-  const { settings } = useCompanySettings();
+  const { settings } = useEnhancedCompanySettings();
   const { taxSettings } = useTaxSettings();
   const { paymentSettings } = usePaymentSettings();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const { invoices, loading: invoicesLoading, createInvoice, generateInvoiceNumber, deleteInvoices } = useInvoices();
+  const { clients, loading: clientsLoading } = useMajorClients();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'sent' | 'paid' | 'overdue'>('all');
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
-
-  // Generate unique invoice number
-  const generateInvoiceNumber = (): string => {
-    const year = new Date().getFullYear();
-    const count = invoices.length + 1;
-    return `INV-${year}-${String(count).padStart(4, '0')}`;
-  };
 
   // Create new invoice
   const [newInvoice, setNewInvoice] = useState<Partial<Invoice>>({
     invoiceNumber: generateInvoiceNumber(),
     dateOfService: new Date().toISOString().split('T')[0],
     dateOfInvoice: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
     items: [],
-    termsAndConditions: "Payment is due within 30 days of invoice date. Late payments may incur penalties as per our terms of service.",
+    termsAndConditions: `Payment Terms:
+• Payment is due within 3 days of invoice date (Due: ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()})
+• Late payments will incur a penalty of 2% per week on the outstanding amount
+• Please include invoice number in all payment references`,
     personalNote: "Thank you for your business! We appreciate your partnership.",
     status: 'draft'
   });
+
+  // Handle client selection
+  const handleClientSelection = (clientId: string) => {
+    const selectedClient = clients.find(client => client.id === clientId);
+    if (selectedClient) {
+      setNewInvoice(prev => ({
+        ...prev,
+        clientId: selectedClient.id,
+        clientName: selectedClient.client_name,
+        clientEmail: selectedClient.client_email || '',
+        clientPhone: selectedClient.client_phone || '',
+        clientAddress: selectedClient.client_address || '',
+      }));
+    }
+  };
+
+  // Handle invoice selection for bulk delete
+  const handleInvoiceSelection = (invoiceId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedInvoices(prev => [...prev, invoiceId]);
+    } else {
+      setSelectedInvoices(prev => prev.filter(id => id !== invoiceId));
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedInvoices.length === 0) return;
+    
+    try {
+      await deleteInvoices(selectedInvoices);
+      setSelectedInvoices([]);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Failed to delete invoices:', error);
+    }
+  };
+
+  // Select all invoices
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedInvoices(filteredInvoices.map(invoice => invoice.id!));
+    } else {
+      setSelectedInvoices([]);
+    }
+  };
+
+  // Filter invoices by status
+  const filteredInvoices = invoices.filter(invoice => 
+    statusFilter === 'all' || invoice.status === statusFilter
+  );
 
   // Add new item to invoice
   const addInvoiceItem = () => {
@@ -133,7 +163,7 @@ export default function Invoices() {
   };
 
   // Save invoice
-  const saveInvoice = () => {
+  const saveInvoice = async () => {
     if (!newInvoice.clientName || !newInvoice.items?.length) {
       alert('Please fill in client name and add at least one item');
       return;
@@ -141,39 +171,45 @@ export default function Invoices() {
 
     const { subtotal, taxAmount, totalAmount } = calculateTotals(newInvoice.items);
     
-    const invoice: Invoice = {
-      id: Math.random().toString(36).substr(2, 9),
-      invoiceNumber: newInvoice.invoiceNumber || generateInvoiceNumber(),
-      dateOfService: newInvoice.dateOfService || '',
-      dateOfInvoice: newInvoice.dateOfInvoice || '',
-      clientName: newInvoice.clientName || '',
-      clientEmail: newInvoice.clientEmail || '',
-      clientAddress: newInvoice.clientAddress || '',
-      clientPhone: newInvoice.clientPhone || '',
-      items: newInvoice.items || [],
-      subtotal,
-      taxAmount,
-      totalAmount,
-      termsAndConditions: newInvoice.termsAndConditions || '',
-      personalNote: newInvoice.personalNote || '',
-      status: newInvoice.status as 'draft' || 'draft',
-      dueDate: newInvoice.dueDate || ''
-    };
+    try {
+      await createInvoice({
+        invoiceNumber: newInvoice.invoiceNumber || generateInvoiceNumber(),
+        clientId: newInvoice.clientId,
+        clientName: newInvoice.clientName || '',
+        clientEmail: newInvoice.clientEmail || '',
+        clientAddress: newInvoice.clientAddress || '',
+        clientPhone: newInvoice.clientPhone || '',
+        dateOfService: newInvoice.dateOfService || '',
+        dateOfInvoice: newInvoice.dateOfInvoice || '',
+        dueDate: newInvoice.dueDate || '',
+        subtotal,
+        taxAmount,
+        totalAmount,
+        termsAndConditions: newInvoice.termsAndConditions || '',
+        personalNote: newInvoice.personalNote || '',
+        status: (newInvoice.status as 'draft') || 'draft',
+        items: newInvoice.items || []
+      });
 
-    setInvoices(prev => [...prev, invoice]);
-    setIsCreateDialogOpen(false);
-    
-    // Reset form
-    setNewInvoice({
-      invoiceNumber: generateInvoiceNumber(),
-      dateOfService: new Date().toISOString().split('T')[0],
-      dateOfInvoice: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      items: [],
-      termsAndConditions: "Payment is due within 30 days of invoice date. Late payments may incur penalties as per our terms of service.",
-      personalNote: "Thank you for your business! We appreciate your partnership.",
-      status: 'draft'
-    });
+      setIsCreateDialogOpen(false);
+      
+      // Reset form
+      setNewInvoice({
+        invoiceNumber: generateInvoiceNumber(),
+        dateOfService: new Date().toISOString().split('T')[0],
+        dateOfInvoice: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        items: [],
+        termsAndConditions: `Payment Terms:
+• Payment is due within 3 days of invoice date (Due: ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()})
+• Late payments will incur a penalty of 2% per week on the outstanding amount
+• Please include invoice number in all payment references`,
+        personalNote: "Thank you for your business! We appreciate your partnership.",
+        status: 'draft'
+      });
+    } catch (error) {
+      console.error('Failed to save invoice:', error);
+    }
   };
 
   // Export to PDF
@@ -306,6 +342,35 @@ export default function Invoices() {
                     value={newInvoice.dueDate}
                     onChange={(e) => setNewInvoice(prev => ({ ...prev, dueDate: e.target.value }))}
                   />
+                </div>
+              </div>
+
+              {/* Client Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Client Selection</h3>
+                <div>
+                  <Label htmlFor="clientSelect">Select Major Client *</Label>
+                  <Select onValueChange={handleClientSelection}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a major client..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientsLoading ? (
+                        <SelectItem value="loading" disabled>Loading clients...</SelectItem>
+                      ) : clients.length === 0 ? (
+                        <SelectItem value="no-clients" disabled>No major clients found</SelectItem>
+                      ) : (
+                        clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.client_name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Select a major client to auto-fill their information below
+                  </p>
                 </div>
               </div>
 
@@ -514,30 +579,106 @@ export default function Invoices() {
         </Dialog>
       </div>
 
+      {/* Status Filter */}
+      {invoices.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <Label>Filter by Status:</Label>
+            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Invoices</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">
+              Showing {filteredInvoices.length} of {invoices.length} invoices
+            </span>
+          </div>
+        </Card>
+      )}
+
+      {/* Bulk Actions */}
+      {filteredInvoices.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedInvoices.length === filteredInvoices.length && filteredInvoices.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <Label>Select All</Label>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {selectedInvoices.length} of {filteredInvoices.length} selected
+              </span>
+            </div>
+            {selectedInvoices.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Selected ({selectedInvoices.length})
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Invoices List */}
       <div className="grid gap-4">
-        {invoices.length === 0 ? (
+        {invoicesLoading ? (
+          <Card className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading invoices...</p>
+          </Card>
+        ) : filteredInvoices.length === 0 ? (
           <Card className="p-8 text-center">
             <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No invoices yet</h3>
-            <p className="text-muted-foreground mb-4">Create your first invoice to get started</p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Invoice
-            </Button>
+            <h3 className="text-lg font-semibold mb-2">
+              {statusFilter === 'all' ? 'No invoices yet' : `No ${statusFilter} invoices`}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {statusFilter === 'all' 
+                ? 'Create your first invoice to get started' 
+                : `No invoices found with status "${statusFilter}"`
+              }
+            </p>
+            {statusFilter === 'all' && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Invoice
+              </Button>
+            )}
           </Card>
         ) : (
-          invoices.map((invoice) => (
+          filteredInvoices.map((invoice) => (
             <Card key={invoice.id} className="p-4 lg:p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold">{invoice.invoiceNumber}</h3>
-                    {getStatusBadge(invoice.status)}
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedInvoices.includes(invoice.id!)}
+                    onCheckedChange={(checked) => handleInvoiceSelection(invoice.id!, checked as boolean)}
+                  />
+                  <div className="flex-1">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-2 mb-2">
+                      <h3 className="text-lg font-semibold">{invoice.invoiceNumber}</h3>
+                      {getStatusBadge(invoice.status)}
+                    </div>
+                    <p className="text-muted-foreground mb-1">Client: {invoice.clientName}</p>
+                    <p className="text-muted-foreground mb-1">Date: {formatDate(invoice.dateOfInvoice)}</p>
+                    <p className="text-muted-foreground">Due: {formatDate(invoice.dueDate)}</p>
                   </div>
-                  <p className="text-muted-foreground mb-1">Client: {invoice.clientName}</p>
-                  <p className="text-muted-foreground mb-1">Date: {formatDate(invoice.dateOfInvoice)}</p>
-                  <p className="text-muted-foreground">Due: {formatDate(invoice.dueDate)}</p>
                 </div>
                 
                 <div className="text-right lg:text-left lg:flex-shrink-0">
@@ -616,15 +757,20 @@ export default function Invoices() {
                   <h3 className="font-semibold mb-2">Bill To:</h3>
                   <p className="font-medium">{selectedInvoice.clientName}</p>
                   {selectedInvoice.clientAddress && (
-                    <p className="whitespace-pre-wrap">{selectedInvoice.clientAddress}</p>
+                    <p className="whitespace-pre-wrap text-sm">{selectedInvoice.clientAddress}</p>
                   )}
-                  {selectedInvoice.clientEmail && <p>{selectedInvoice.clientEmail}</p>}
-                  {selectedInvoice.clientPhone && <p>{selectedInvoice.clientPhone}</p>}
+                  {selectedInvoice.clientEmail && <p className="text-sm">Email: {selectedInvoice.clientEmail}</p>}
+                  {selectedInvoice.clientPhone && <p className="text-sm">Phone: {selectedInvoice.clientPhone}</p>}
                 </div>
                 <div>
                   <h3 className="font-semibold mb-2">From:</h3>
                   <p className="font-medium">{settings?.company_name || 'QSA Solutions'}</p>
-                  <p>Professional Accounting System</p>
+                  {settings?.address && (
+                    <p className="whitespace-pre-wrap">{settings.address}</p>
+                  )}
+                  {settings?.phone && <p>Phone: {settings.phone}</p>}
+                  {settings?.email && <p>Email: {settings.email}</p>}
+                  <p className="text-sm text-gray-600 mt-2">Professional Accounting System</p>
                 </div>
               </div>
 
@@ -644,8 +790,8 @@ export default function Invoices() {
                       <tr key={item.id} className="border-b">
                         <td className="py-2">{item.description}</td>
                         <td className="text-center py-2">{item.quantity}</td>
-                        <td className="text-right py-2">{formatCurrency(item.unitPrice)}</td>
-                        <td className="text-right py-2">{formatCurrency(item.total)}</td>
+                        <td className="text-right py-2">{formatCurrency(item.unitPrice)} Tsh</td>
+                        <td className="text-right py-2">{formatCurrency(item.total)} Tsh</td>
                       </tr>
                     ))}
                   </tbody>
@@ -657,16 +803,16 @@ export default function Invoices() {
                 <div className="w-64 space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>{formatCurrency(selectedInvoice.subtotal)}</span>
+                    <span>{formatCurrency(selectedInvoice.subtotal)} Tsh</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Tax ({taxSettings?.taxRate || 0}%):</span>
-                    <span>{formatCurrency(selectedInvoice.taxAmount)}</span>
+                    <span>Tax ({taxSettings?.taxRate || 0}% {taxSettings?.taxType || 'VAT'}):</span>
+                    <span>{formatCurrency(selectedInvoice.taxAmount)} Tsh</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total Amount:</span>
-                    <span>{formatCurrency(selectedInvoice.totalAmount)}</span>
+                    <span>{formatCurrency(selectedInvoice.totalAmount)} Tsh</span>
                   </div>
                 </div>
               </div>
@@ -725,8 +871,46 @@ export default function Invoices() {
                   </div>
                 )}
               </div>
+
+              {/* Professional Footer */}
+              <div className="border-t pt-6 mt-8">
+                <div className="text-center text-sm text-gray-600">
+                  <p className="font-semibold mb-2">{settings?.company_name || 'QSA Solutions'}</p>
+                  {settings?.address && (
+                    <p className="whitespace-pre-wrap">{settings.address}</p>
+                  )}
+                  <div className="flex justify-center gap-4 mt-2">
+                    {settings?.phone && <p>Phone: {settings.phone}</p>}
+                    {settings?.email && <p>Email: {settings.email}</p>}
+                  </div>
+                  <p className="mt-2 text-xs">Professional Accounting System - Thank you for your business!</p>
+                </div>
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>
+              Are you sure you want to delete {selectedInvoices.length} invoice(s)? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleBulkDelete}>
+                Delete {selectedInvoices.length} Invoice(s)
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

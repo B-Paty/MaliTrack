@@ -13,6 +13,7 @@
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export type PaymentSettings = {
   bank: {
@@ -38,18 +39,19 @@ const defaultPaymentSettings: PaymentSettings = {
     bankName: '',
     accountName: '',
     accountNumber: '',
-    cardImageUrl: '/images/card(1).png'
+    cardImageUrl: '/images/contactless.png'
   },
   vodacom: {
     enabled: true,
     businessName: '',
     lipaNamba: '',
-    vodacomImageUrl: '/images/LIPA.png'
+    vodacomImageUrl: '/public/images/LIPA.png'
   }
 };
 
 export function usePaymentSettings() {
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(defaultPaymentSettings);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -104,10 +106,15 @@ export function usePaymentSettings() {
           .from('company_settings')
           .update({ payment_settings: updates })
           .eq('id', existing.id);
-      } else {
+      } else if (user) {
         await supabase
           .from('company_settings')
-          .insert([{ company_name: 'QSA Solutions', primary_color: '#a1052d', payment_settings: updates }]);
+          .insert([{ 
+            company_name: 'QSA Solutions', 
+            primary_color: '#a1052d', 
+            payment_settings: updates,
+            user_id: user.id 
+          }]);
       }
     } catch (e) {
       // Keep localStorage as fallback, surface console warning

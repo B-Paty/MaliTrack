@@ -18,7 +18,8 @@ function hexToHslTriple(hex: string): string {
   const b = bigint & 255;
   const rNorm = r / 255, gNorm = g / 255, bNorm = b / 255;
   const max = Math.max(rNorm, gNorm, bNorm), min = Math.min(rNorm, gNorm, bNorm);
-  let h = 0, s = 0, l = (max + min) / 2;
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -321,6 +322,191 @@ export default function CompanySettings() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">These payment options will appear on exported invoices.</p>
+        </CardContent>
+      </Card>
+
+      {/* Account Code Description */}
+      <Card className="shadow-card border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Building2 className="h-5 w-5 text-primary" />
+            Chart of Accounts - Code Structure Guide
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="p-6 bg-muted/30 rounded-lg border border-border/50">
+            <h3 className="font-semibold text-foreground mb-4 text-lg">📋 Understanding Account Codes</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Our accounting system uses a structured numbering system to organize your accounts. Each account code follows a specific pattern to help categorize and identify different types of financial accounts.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Assets */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <h4 className="font-semibold text-foreground">Assets (1000-1999)</h4>
+                </div>
+                <div className="pl-5 space-y-2 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>• Cash & Bank Accounts</span>
+                    <span className="font-mono text-xs">1000-1099</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Accounts Receivable</span>
+                    <span className="font-mono text-xs">1100-1199</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Inventory</span>
+                    <span className="font-mono text-xs">1200-1299</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Fixed Assets</span>
+                    <span className="font-mono text-xs">1300-1999</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Liabilities */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <h4 className="font-semibold text-foreground">Liabilities (2000-2999)</h4>
+                </div>
+                <div className="pl-5 space-y-2 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>• Accounts Payable</span>
+                    <span className="font-mono text-xs">2000-2099</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Short-term Loans</span>
+                    <span className="font-mono text-xs">2100-2199</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Long-term Debt</span>
+                    <span className="font-mono text-xs">2200-2999</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Equity */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <h4 className="font-semibold text-foreground">Equity (3000-3999)</h4>
+                </div>
+                <div className="pl-5 space-y-2 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>• Owner's Capital</span>
+                    <span className="font-mono text-xs">3000-3099</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Retained Earnings</span>
+                    <span className="font-mono text-xs">3100-3199</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Current Year Earnings</span>
+                    <span className="font-mono text-xs">3200-3999</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Revenue */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                  <h4 className="font-semibold text-foreground">Revenue (4000-4999)</h4>
+                </div>
+                <div className="pl-5 space-y-2 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>• Sales Revenue</span>
+                    <span className="font-mono text-xs">4000-4099</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Service Revenue</span>
+                    <span className="font-mono text-xs">4100-4199</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Other Income</span>
+                    <span className="font-mono text-xs">4200-4999</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                <h4 className="font-semibold text-foreground">Expenses (5000-9999)</h4>
+              </div>
+              <div className="pl-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>• Cost of Goods Sold</span>
+                    <span className="font-mono text-xs">5000-5999</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Operating Expenses</span>
+                    <span className="font-mono text-xs">6000-6999</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>• Administrative Expenses</span>
+                    <span className="font-mono text-xs">7000-7999</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• Other Expenses</span>
+                    <span className="font-mono text-xs">8000-9999</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Best Practices */}
+          <div className="p-6 bg-primary/5 rounded-lg border border-primary/20">
+            <h3 className="font-semibold text-foreground mb-4 text-lg">💡 Best Practices</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                  <span>Use consistent numbering within each category</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                  <span>Leave gaps between account codes for future accounts</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                  <span>Use descriptive names that clearly identify the account purpose</span>
+                </li>
+              </ul>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                  <span>Group similar accounts together using consecutive numbers</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                  <span>Review and organize your chart of accounts regularly</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                  <span>Consult with your accountant for industry-specific needs</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Quick Reference */}
+          <div className="p-4 bg-info/10 border border-info/30 rounded-lg">
+            <h4 className="font-semibold text-foreground mb-2">📚 Quick Reference</h4>
+            <p className="text-sm text-muted-foreground">
+              When creating new accounts, follow this numbering system to maintain organization. 
+              The system helps ensure your financial reports are properly categorized and your accounting remains compliant with standard practices.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

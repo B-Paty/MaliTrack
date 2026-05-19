@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calculator, Save, Percent, Settings, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useTaxSettings } from "@/hooks/useTaxSettings";
 
 interface TaxRate {
   id: string;
@@ -19,6 +20,7 @@ interface TaxRate {
 
 export default function TaxSettings() {
   const { toast } = useToast();
+  const { taxSettings, updateTaxSettings } = useTaxSettings();
   
   const [taxType, setTaxType] = useState<'inclusive' | 'exclusive'>('exclusive');
   const [taxRates, setTaxRates] = useState<TaxRate[]>([
@@ -51,11 +53,22 @@ export default function TaxSettings() {
     description: ''
   });
 
+  // Initialize UI from persisted tax settings
+  useEffect(() => {
+    if (taxSettings) {
+      setTaxType(taxSettings.taxType || 'exclusive');
+      setTaxRates(prev => {
+        const activeRate = taxSettings.taxRate ?? 0;
+        return prev.map(r => ({ ...r, isActive: r.rate === activeRate }));
+      });
+    }
+  }, [taxSettings]);
+
   const handleTaxTypeChange = (checked: boolean) => {
     setTaxType(checked ? 'inclusive' : 'exclusive');
   };
 
-  const handleUpdateTaxRate = (id: string, field: keyof TaxRate, value: any) => {
+  const handleUpdateTaxRate = (id: string, field: keyof TaxRate, value: string | number | boolean) => {
     setTaxRates(prev => prev.map(rate => 
       rate.id === id ? { ...rate, [field]: value } : rate
     ));
@@ -96,11 +109,15 @@ export default function TaxSettings() {
     });
   };
 
-  const handleSaveSettings = () => {
-    toast({
-      title: "Success",
-      description: "Tax settings saved successfully"
-    });
+  const handleSaveSettings = async () => {
+    const active = taxRates.find(r => r.isActive);
+    const effectiveRate = active ? active.rate : 0;
+    try {
+      await updateTaxSettings({ taxType, taxRate: effectiveRate, taxName: active?.name || 'VAT', taxDescription: active?.description || '' });
+      toast({ title: "Success", description: `Saved: ${taxType} at ${effectiveRate}%` });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to save tax settings", variant: "destructive" });
+    }
   };
 
   const calculateTaxExample = (amount: number, rate: number) => {
@@ -149,29 +166,33 @@ export default function TaxSettings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between p-6 bg-muted/30 rounded-lg border border-border/50">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <Label htmlFor="tax-type" className="text-lg font-semibold text-foreground">
-                  Tax {taxType === 'inclusive' ? 'Inclusive' : 'Exclusive'}
-                </Label>
-                <Badge variant={taxType === 'inclusive' ? 'default' : 'secondary'} className="text-sm">
-                  {taxType === 'inclusive' ? 'Inclusive' : 'Exclusive'}
-                </Badge>
+          <div className="p-6 bg-muted/30 rounded-lg border border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-2 flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Label htmlFor="tax-type" className="text-lg font-semibold text-foreground">
+                    Tax {taxType === 'inclusive' ? 'Inclusive' : 'Exclusive'}
+                  </Label>
+                  <Badge variant={taxType === 'inclusive' ? 'default' : 'outline'} className="text-sm flex-shrink-0">
+                    {taxType === 'inclusive' ? 'Inclusive' : 'Exclusive'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {taxType === 'inclusive' 
+                    ? 'Tax is included in the displayed price. The system will calculate the net amount by removing tax.'
+                    : 'Tax is added to the base price. The system will calculate tax on top of the displayed amount.'
+                  }
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground max-w-md">
-                {taxType === 'inclusive' 
-                  ? 'Tax is included in the displayed price. The system will calculate the net amount by removing tax.'
-                  : 'Tax is added to the base price. The system will calculate tax on top of the displayed amount.'
-                }
-              </p>
+              <div className="flex-shrink-0">
+                <Switch
+                  id="tax-type"
+                  checked={taxType === 'inclusive'}
+                  onCheckedChange={handleTaxTypeChange}
+                  className="scale-125"
+                />
+              </div>
             </div>
-            <Switch
-              id="tax-type"
-              checked={taxType === 'inclusive'}
-              onCheckedChange={handleTaxTypeChange}
-              className="scale-125"
-            />
           </div>
 
           {/* Tax Calculation Example */}
@@ -183,7 +204,7 @@ export default function TaxSettings() {
             {(() => {
               const example = calculateTaxExample(100000, 18);
               return (
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                   <div className="text-center p-3 bg-background rounded-md border">
                     <p className="font-semibold text-foreground">Net Amount</p>
                     <p className="text-lg font-mono text-muted-foreground">
@@ -223,32 +244,34 @@ export default function TaxSettings() {
             <h3 className="font-semibold text-foreground text-lg">Current Tax Rates</h3>
             <div className="space-y-3">
               {taxRates.map(rate => (
-                <div key={rate.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-semibold text-foreground">{rate.name}</h4>
-                      <Badge variant={rate.isActive ? 'default' : 'secondary'} className="text-xs">
-                        {rate.rate}%
-                      </Badge>
-                      {rate.isActive && (
-                        <Badge variant="default" className="text-xs">Active</Badge>
-                      )}
+                <div key={rate.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-foreground truncate">{rate.name}</h4>
+                        <Badge variant={rate.isActive ? 'default' : 'outline'} className="text-xs flex-shrink-0">
+                          {rate.rate}%
+                        </Badge>
+                        {rate.isActive && (
+                          <Badge variant="default" className="text-xs flex-shrink-0">Active</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground break-words">{rate.description}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{rate.description}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={rate.isActive}
-                      onCheckedChange={(checked) => handleUpdateTaxRate(rate.id, 'isActive', checked)}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteTaxRate(rate.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      Remove
-                    </Button>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <Switch
+                        checked={rate.isActive}
+                        onCheckedChange={(checked) => handleUpdateTaxRate(rate.id, 'isActive', checked)}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteTaxRate(rate.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -258,7 +281,7 @@ export default function TaxSettings() {
           {/* Add New Tax Rate */}
           <div className="border-t border-border pt-6">
             <h3 className="font-semibold text-foreground text-lg mb-4">Add New Tax Rate</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="tax-name" className="text-sm font-semibold text-foreground">Tax Name</Label>
                 <Input
@@ -283,7 +306,7 @@ export default function TaxSettings() {
                   className="mt-1.5 h-11"
                 />
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end sm:col-span-2 lg:col-span-1">
                 <Button onClick={handleAddTaxRate} className="h-11 w-full">
                   Add Tax Rate
                 </Button>
@@ -310,11 +333,11 @@ export default function TaxSettings() {
             <CardTitle className="text-xl text-foreground">Active Tax Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {activeTaxRates.map(rate => (
                 <div key={rate.id} className="text-center p-4 bg-background rounded-lg border border-primary/20">
                   <p className="font-semibold text-foreground text-lg">{rate.rate}%</p>
-                  <p className="text-sm text-muted-foreground">{rate.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">{rate.name}</p>
                 </div>
               ))}
             </div>

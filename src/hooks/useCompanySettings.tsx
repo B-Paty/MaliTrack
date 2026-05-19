@@ -5,9 +5,10 @@
  * - Provides updateSettings that either inserts or updates
  * - Used by Company Settings page and exports/invoices for branding
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export interface CompanySettings {
   id?: string;
@@ -24,8 +25,9 @@ export function useCompanySettings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -56,10 +58,14 @@ export function useCompanySettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const updateSettings = async (updates: Partial<CompanySettings>) => {
     try {
+      if (!user) {
+        throw new Error('User must be authenticated to update settings');
+      }
+
       if (!settings?.id) {
         // Create new settings
         const { data, error } = await supabase
@@ -67,6 +73,7 @@ export function useCompanySettings() {
           .insert([{
             company_name: 'QSA Solutions',
             primary_color: '#a1052d',
+            user_id: user.id,
             ...updates,
           }])
           .select()
@@ -104,7 +111,7 @@ export function useCompanySettings() {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [fetchSettings]);
 
   return {
     settings,
